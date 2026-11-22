@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-labelledby="t">
+  <title id="t">Stick-figure traveller walking with a rolling suitcase</title>
+  <style>
+    .s { fill: none; stroke: currentColor; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+    .f { fill: currentColor; }
+    .limb { transform-box: view-box; }
+    .hip { transform-origin: 100px 110px; }
+    .shoulder { transform-origin: 100px 64px; }
+    .leg-a { animation: swing 1s ease-in-out infinite alternate; }
+    .leg-b { animation: swing 1s ease-in-out infinite alternate-reverse; }
+    .arm { animation: swing-arm 1s ease-in-out infinite alternate-reverse; }
+    .bob { animation: bob 0.5s ease-in-out infinite alternate; }
+    .wheel { transform-box: fill-box; transform-origin: center; animation: roll 0.6s linear infinite; }
+    .ground { stroke-dasharray: 10 12; animation: slide 1s linear infinite; }
+    @keyframes swing { from { transform: rotate(24deg); } to { transform: rotate(-24deg); } }
+    @keyframes swing-arm { from { transform: rotate(28deg); } to { transform: rotate(-28deg); } }
+    @keyframes bob { from { transform: translateY(0); } to { transform: translateY(-2.5px); } }
+    @keyframes roll { to { transform: rotate(360deg); } }
+    @keyframes slide { to { stroke-dashoffset: 22; } }
+    @media (prefers-reduced-motion: reduce) {
+      .leg-a, .leg-b, .arm, .bob, .wheel, .ground { animation: none; }
+    }
+  </style>
+
+  <!-- moving ground -->
+  <line class="s ground" x1="20" y1="170" x2="180" y2="170" stroke-width="2" opacity="0.5"/>
+
+  <!-- rolling suitcase (behind the walker) -->
+  <g>
+    <line class="s" x1="64" y1="122" x2="70" y2="102" stroke-width="3"/>
+    <rect class="s" x="44" y="122" width="34" height="38" rx="6"/>
+    <line class="s" x1="56" y1="130" x2="56" y2="152" stroke-width="2.5"/>
+    <line class="s" x1="66" y1="130" x2="66" y2="152" stroke-width="2.5"/>
+    <g class="wheel"><circle class="s" cx="51" cy="164" r="3.5" stroke-width="2.5"/><line class="s" x1="51" y1="161" x2="51" y2="167" stroke-width="1.5"/></g>
+    <g class="wheel"><circle class="s" cx="71" cy="164" r="3.5" stroke-width="2.5"/><line class="s" x1="71" y1="161" x2="71" y2="167" stroke-width="1.5"/></g>
+  </g>
+
+  <g class="bob">
+    <!-- head with a little cap -->
+    <circle class="s" cx="102" cy="40" r="12"/>
+    <path class="f" d="M90 37 a12 12 0 0 1 24 0 z"/>
+    <line class="s" x1="112" y1="36" x2="121" y2="37" stroke-width="3.5"/>
+
+    <!-- body -->
+    <line class="s" x1="100" y1="52" x2="100" y2="110"/>
+
+    <!-- arm pulling the suitcase -->
+    <line class="s" x1="100" y1="64" x2="70" y2="102"/>
+
+    <!-- swinging free arm -->
+    <g class="limb shoulder arm"><line class="s" x1="100" y1="64" x2="100" y2="100"/></g>
+
+    <!-- legs -->
+    <g class="limb hip leg-a"><path class="s" d="M100 110 L100 160 L106 160"/></g>
+    <g class="limb hip leg-b"><path class="s" d="M100 110 L100 160 L106 160"/></g>
+  </g>
+</svg>
