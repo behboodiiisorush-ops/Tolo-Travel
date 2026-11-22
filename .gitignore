@@ -1,3 +1,6 @@
 blender/render/frames/
 blender/render/street_frames/
 blender/render/street_still_*.png
+blender/train_pov/frames/
+blender/train_pov/post_tmp/
+blender/train_pov/test/
