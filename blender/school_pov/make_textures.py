@@ -36,14 +36,20 @@ def voice_msg():
     status(d, 1)
     text(d, (W / 2 + 20, 75), "مامان", 34)
     d.ellipse((24, 52, 70, 98), fill=(240, 170, 120))
-    d.rounded_rectangle((60, 300, W - 30, 400), radius=26, fill=(255, 255, 255))
-    d.ellipse((W - 95, 325, W - 45, 375), fill=(40, 90, 160))
-    d.polygon([(W - 78, 337), (W - 78, 363), (W - 58, 350)], fill=(255, 255, 255))
+    # the voice note
+    d.rounded_rectangle((60, 170, W - 30, 260), radius=26, fill=(255, 255, 255))
+    d.ellipse((W - 95, 190, W - 45, 240), fill=(40, 90, 160))
+    d.polygon([(W - 78, 202), (W - 78, 228), (W - 58, 215)], fill=(255, 255, 255))
     for i in range(18):
         h = 8 + 26 * abs(math.sin(i * 1.3))
         x = W - 120 - i * 11
-        d.rounded_rectangle((x, 350 - h / 2, x + 6, 350 + h / 2), radius=3, fill=(70, 120, 190))
-    text(d, (W / 2, 470), "پیام صوتی", 30, (40, 90, 160))
+        d.rounded_rectangle((x, 215 - h / 2, x + 6, 215 + h / 2), radius=3, fill=(70, 120, 190))
+    d.text((78, 248), "۰:۰۸", font=f(18), fill=(120, 120, 120), anchor="lm")
+    # its text, so the viewer can read what mum said
+    d.rounded_rectangle((40, 290, W - 30, 450), radius=26, fill=(255, 255, 255))
+    d.multiline_text((W / 2 + 5, 370), "داره اتفاقایی میفته...\nمواظب خودت باش!", font=f(28), fill=(30, 30, 30),
+                     anchor="mm", align="center", direction="rtl", language="fa", spacing=14)
+    text(d, (W / 2, 520), "پیام صوتی", 26, (40, 90, 160))
     return im
 
 

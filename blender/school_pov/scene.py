@@ -221,7 +221,8 @@ def make_soldier():
     for o in mask:
         o.name = "Soldier mask part"
     # bite mark just above the right glove
-    hp = p.p["handR"].matrix_world.translation
+    hand = p.p["handR"]  # the hand mesh keeps its origin at 0: use the centre of its geometry
+    hp = sum((Vector(c) for c in hand.bound_box), Vector()) / 8
     bite = p.add(ball(hp + Vector((0, 0.05, 0.12)), 0.035, toon("Bite", (0.55, 0.05, 0.08), 0.3), "bite",
                       scale=(1.2, 0.5, 0.8)), p.p["elbowR"])
     return p, mask, bite
@@ -389,7 +390,14 @@ def build_classroom():
     for dy in (-0.42, 0.42):
         box((CX + 4.0, 3.0 + dy, 1.7), (0.08, 0.16, 0.9), door_m, "Door side")
     door_glass = box((CX + 4.0, 3.0, 1.7), (0.03, 0.68, 0.85), toon("Door glass", (0.7, 0.85, 0.9), 0.5), "Door glass")
-    box((CX + 5.5, 3.0, 1.6), (3.0, 3.0, 3.2), toon("Corridor", (0.3, 0.3, 0.33), 0.05), "Corridor back")
+    corr = toon("Corridor", (0.3, 0.3, 0.33), 0.05)
+    box((CX + 6.6, 3.0, 1.6), (0.12, 3.0, 3.2), corr, "Corridor back")
+    for cy in (1.5, 4.5):
+        box((CX + 5.3, cy, 1.6), (2.6, 0.12, 3.2), corr, "Corridor side")
+    box((CX + 5.3, 3.0, 3.2), (2.6, 3.0, 0.1), corr, "Corridor ceiling")
+    bpy.ops.object.light_add(type="POINT", location=(CX + 5.6, 3.0, 2.6))
+    bpy.context.object.data.energy = 120
+    bpy.context.object.data.color = (0.8, 0.9, 1.0)
     # west wall with three big windows over the yard
     for y0, y1 in ((-4.5, -3.4), (-1.6, -0.9), (0.9, 1.6), (3.4, 4.5)):
         box((CX - 4.0, (y0 + y1) / 2, 1.6), (0.12, y1 - y0, 3.2), wall, "West pillar")
@@ -535,7 +543,7 @@ def build_stairs_roof():
     # roof
     rz = 4.8
     box((RX, 20, rz - 0.1), (24, 24, 0.2), toon("Roof", (0.6, 0.58, 0.55), 0.12), "Roof")
-    box((RX + 0.55, 8.25, rz + 1.2), (2.2, 0.15, 2.4), wall, "Roof hut front")
+    box((RX + 0.55, 8.25, rz + 2.2), (2.2, 0.15, 0.4), wall, "Roof hut lintel")
     for sx in (-1, 1):
         box((RX + 0.55 + sx * 1.1, 8.25, rz + 1.2), (0.15, 0.2, 2.4), wall, "Door frame")
     for sx, sy, w, d in ((0, 32, 24, 0.3), (0, 8.1, 24, 0.3), (-12, 20, 0.3, 24), (12, 20, 0.3, 24)):
@@ -744,15 +752,15 @@ def build():
             if 28.0 <= t < 33.0:
                 a_look = (65, -10)
             if 39.0 <= t < 45.0:
-                a_pos, a_look = Vector((CX - 3.3, -0.9, 0)), (0, -30)
+                a_pos, a_look = Vector((CX - 3.25, -2.5, 0)), (0, -30)
             if 45.0 <= t < 51.0:
                 a_pos = Vector((CX + 2.2, 2.0, 0)) if t < 47.4 else push_desk.location + Vector((0.35, -0.75, -0.0))
                 a_pos.z = 0
                 a_look = (0, 0)
             if 51.0 <= t < 57.0:
-                a_pos, a_look = Vector((CX + 0.5, -1.0, 0)), (40, 0)
+                a_pos, a_look = Vector((CX + 0.4, -2.4, 0)), (40, 0)
             if 57.0 <= t < 63.0:
-                a_pos, a_look = Vector((CX - 3.3, -1.1, 0)), (-90, 10)
+                a_pos, a_look = Vector((CX - 3.2, -2.3, 0)), (-90, 10)
             arian.pose(f, t, a_pos, facing=0 if t < 39 else (90 if 39 <= t < 45 or 57 <= t < 63 else -45 if t < 51 else 150),
                        sit=a_sit, seat_h=0.42, look=a_look, lean=0, worry=0.8 if t < 33 else 1.5,
                        reach=(90, 0) if 47.4 < t < 51 else ((160, -20) if t > 60.2 else None),
@@ -760,14 +768,14 @@ def build():
             # Mahsa (front left) and Kian (by the window)
             m_pos, m_face, m_sit = Vector((CX - 1.78, 1.25, 0)), 0, 1.0
             if 39.0 <= t < 51.0:
-                m_pos, m_face, m_sit = Vector((CX - 3.25, 0.85, 0)), 100, 0.0
+                m_pos, m_face, m_sit = Vector((CX - 3.2, 2.3, 0)), 100, 0.0
             if t >= 51.0:
-                m_pos, m_face, m_sit = Vector((CX - 0.8, -1.0, 0)), 160, 0.0
+                m_pos, m_face, m_sit = Vector((CX - 1.3, -3.4, 0)), 150, 0.0
             mahsa.pose(f, t, m_pos, facing=m_face, sit=m_sit, seat_h=0.42, look=(lerp(0, 150, seg(t, 28.5, 29) * (
                 1 - seg(t, 31, 31.4))) if t < 33 else 0, -25 if 39 <= t < 45 else 0), lean=0,
                 worry=1.6 if t > 33 else 0.6)
             kc = seg(t, 51.0, 51.6)
-            k_pos2 = Vector((CX - 2.42, -0.15, 0)) if t < 39 else Vector((CX - 3.25, -0.75, 0))
+            k_pos2 = Vector((CX - 2.42, -0.15, 0)) if t < 39 else Vector((CX - 3.2, -1.95, 0))
             if t >= 51.0:
                 k_pos2 = Vector((CX - 3.3, -3.9, 0))
             kian.pose(f, t, k_pos2, facing=0 if t < 39 else (95 if t < 51 else 45), sit=1.0 if t < 39 else 0.0, seat_h=0.42,
@@ -776,7 +784,7 @@ def build():
                 sx, sy = seats[i]
                 hide = t >= 39.0
                 cower = seg(t, 37.5, 38.2)
-                pos_s = Vector((sx, sy - 0.15, 0)) if not hide else Vector((CX - 1.0 + 0.5 * i, -3.6 + 0.15 * (i % 2), 0))
+                pos_s = Vector((sx, sy - 0.15, 0)) if not hide else Vector((CX - 0.6 + 0.75 * (i % 4), -3.75 + 0.7 * (i // 4), 0))
                 s.pose(f, t, pos_s, facing=0 if not hide else 160, sit=0 if hide else 1, seat_h=0.42,
                        crouch=0.6 if hide else 0, look=((20 * math.sin(i + t * 0.3)) if t < 33 else (-15, 25)[i % 2], 0),
                        lean=0, worry=1.6 if t > 33 else 0.7, hug=cower if not hide else 0.5)
@@ -784,16 +792,16 @@ def build():
             # stairs: teacher, Mahsa, Arian ahead; Kian behind holding my hand
             y_me = lerp(0.2, 7.6, min(1, (t - 63.0) / 6.0))
             if t < 69.0:
-                for p, dy, dx in ((kazemi, 2.4, 0.2), (mahsa, 1.6, -0.0), (arian, 0.9, 0.3)):
-                    yy = min(7.7, y_me + dy)
-                    p.pose(f, t, Vector((RX + 0.55 + dx, yy, 0.2 * (yy / 0.3))), facing=0, run=1, run_rate=1.7,
+                for p, dy, dx in ((kazemi, 3.0, 0.25), (mahsa, 2.0, -0.2), (arian, 1.05, 0.35)):
+                    yy = y_me + dy
+                    p.pose(f, t, Vector((RX + 0.55 + dx, yy, min(rz, 0.2 * (yy / 0.3)))), facing=0, run=1, run_rate=1.7,
                            lean=-18, worry=1.8)
                 yk = max(0.0, y_me - 0.9)
                 kian.pose(f, t, Vector((RX + 0.6, yk, 0.2 * (yk / 0.3))), facing=0, run=1, run_rate=2.0, lean=-15,
                           reach=(70, 15), look=(0, 15), worry=2.0)
             else:
                 v = seg(t, 69.0, 72.0)
-                for p, x0, y0 in ((kazemi, -1.5, 13.0), (mahsa, -0.6, 12.0), (arian, 0.6, 12.5), (kian, -0.2, 9.9)):
+                for p, x0, y0 in ((kazemi, -1.5, 13.0), (mahsa, -0.6, 12.0), (arian, 0.6, 12.5), (kian, -0.45, 9.9)):
                     p.pose(f, t, Vector((RX + x0, y0 + (3.0 * v if p is not kian else 0.4 * v), rz)), facing=0,
                            run=1 if p is not kian else 0.3, run_rate=1.6, lean=-12, worry=1.8,
                            look=(0, 0) if p is not kian else (0, 20))

@@ -38,6 +38,9 @@ SPEAKERS = {  # caption key -> (name shown, colour)
     "Heli": ("بلندگوی هلیکوپتر", (70, 90, 60)),
     "Soldier": ("سرباز", (70, 90, 60)),
 }
+TEX = os.path.join(HERE, "textures")
+# moments when the phone fills the screen so its message can be read: (start, end, screen)
+PHONE_SHOTS = [(21.6, 25.6, "voice"), (25.6, 27.5, "failed"), (55.2, 57.0, "failed")]
 LAST = 1800          # last rendered frame (75 s)
 CARD_SECONDS = 5
 
@@ -61,7 +64,47 @@ def pill(d, cx, cy, text, color, size=44):
     d.text((cx, cy), text, font=f, fill=(255, 255, 255), anchor="mm", direction="rtl", language="fa")
 
 
+_phones = {}
+
+
+def phone_card(key):
+    """The phone texture with a dark rounded bezel, about half the screen wide."""
+    if key not in _phones:
+        scr = Image.open(os.path.join(TEX, f"phone_{key}.png")).convert("RGB").resize((500, 1000), Image.LANCZOS)
+        card = Image.new("RGBA", (560, 1060), (0, 0, 0, 0))
+        d = ImageDraw.Draw(card)
+        d.rounded_rectangle((0, 0, 559, 1059), radius=60, fill=(20, 20, 24, 255), outline=(70, 70, 80, 255), width=4)
+        mask = Image.new("L", scr.size, 0)
+        ImageDraw.Draw(mask).rounded_rectangle((0, 0, 499, 999), radius=36, fill=255)
+        card.paste(scr, (30, 30), mask)
+        _phones[key] = card
+    return _phones[key]
+
+
+def phone_overlay(img, t):
+    for start, end, key in PHONE_SHOTS:
+        if start <= t < end:
+            first = not any(abs(e - start) < 1e-6 for _, e, _ in PHONE_SHOTS)  # slide in only on a new shot
+            last = not any(abs(s - end) < 1e-6 for s, _, _ in PHONE_SHOTS)
+            k_in = min(1.0, (t - start) / 0.25) if first else 1.0
+            k_out = min(1.0, (end - t) / 0.25) if last else 1.0
+            k = min(k_in, k_out)
+            k = 1 - (1 - k) ** 3
+            card = phone_card(key)
+            x = (W - card.width) // 2
+            y = int(lerp_i(H, 120, k))
+            dim = Image.new("RGB", img.size, (0, 0, 0))
+            img = Image.blend(img, dim, 0.35 * k)
+            img.paste(card, (x, y), card)
+    return img
+
+
+def lerp_i(a, b, k):
+    return a + (b - a) * k
+
+
 def overlay(img, t):
+    img = phone_overlay(img, t)
     d = ImageDraw.Draw(img)
     # episode badge
     pill(d, W - 150, 150, "زنگ آخر", (40, 90, 190), 46)
@@ -72,7 +115,7 @@ def overlay(img, t):
             if who is None:
                 draw_text(d, (W // 2, int(H * 0.42)), text, int(92 * (0.85 + 0.15 * k)), stroke=11)
             else:
-                y = int(H * 0.6)
+                y = int(H * (0.72 if any(a <= t < b for a, b, _ in PHONE_SHOTS) else 0.6))
                 name, col = SPEAKERS[who]
                 pill(d, W // 2, y - 105, name, col)
                 draw_text(d, (W // 2, y), text, int(84 * (0.85 + 0.15 * k)))
@@ -129,6 +172,13 @@ def main():
         "ffmpeg", "-loglevel", "error", "-y", "-framerate", str(FPS), "-i", os.path.join(TMP, "c_%04d.png"),
         "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "20", "-movflags", "+faststart", out], check=True)
     print(out)
+    sfx = os.path.join(OUT, "sfx.wav")
+    if os.path.exists(sfx):  # the same picture with the sound effects under it
+        out2 = os.path.join(OUT, "last_bell_sfx.mp4")
+        subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", out, "-i", sfx, "-map", "0:v", "-map", "1:a",
+                        "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart", out2],
+                       check=True)
+        print(out2)
 
 
 if __name__ == "__main__":
