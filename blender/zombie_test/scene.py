@@ -453,6 +453,15 @@ sc.view_settings.look = "AgX - Medium High Contrast"
 sc.render.image_settings.file_format = "PNG"
 
 args = sys.argv
+if "--eevee" in args:
+    sc.render.engine = "BLENDER_EEVEE"
+    ee = sc.eevee
+    ee.taa_render_samples = 32
+    ee.use_raytracing = True
+    ee.use_shadows = True
+    ee.shadow_ray_count = 2
+    ee.use_volumetric_shadows = False
+    sc.render.resolution_x, sc.render.resolution_y = 720, 1280
 if "--save" in args:
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(HERE, "zombie_test.blend"))
 if "--still" in args:
