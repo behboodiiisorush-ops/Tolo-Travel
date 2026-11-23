@@ -399,7 +399,7 @@ def build_classroom():
     for x in (-3.9, 3.9):
         box((CX + x, 0, 0.35), (0.06, 9, 0.7), lower, "Lower paint")
     # blackboard, clock, loudspeaker, poster, drawings
-    plane((CX, 4.43, 1.75), (3.6, 1.45), (D(90), 0, D(180)), image_mat("Chalkboard", os.path.join(TEX, "chalkboard.png"),
+    plane((CX, 4.39, 1.75), (3.6, 1.45), (D(90), 0, 0), image_mat("Chalkboard", os.path.join(TEX, "chalkboard.png"),
                                                                      0.9), "Blackboard")
     box((CX, 4.42, 1.75), (3.8, 0.03, 1.6), toon("Board frame", (0.5, 0.3, 0.15)), "Board frame")
     box((CX, 4.3, 0.95), (3.6, 0.15, 0.04), toon("Chalk tray", (0.5, 0.3, 0.15)), "Chalk tray")
@@ -461,26 +461,26 @@ def build_classroom():
 def build_yard():
     """Schoolyard below the classroom window, the gate and the street beyond."""
     gz = -5.0
-    box((CX - 22, 0, gz - 0.05), (36, 40, 0.1), toon("Yard", (0.68, 0.64, 0.58)), "Yard")
-    box((CX - 22, 0, gz + 0.005), (14, 8, 0.01), toon("Court", (0.85, 0.45, 0.35)), "Court")
+    box((CX - 14, 0, gz - 0.05), (22, 40, 0.1), toon("Yard", (0.68, 0.64, 0.58)), "Yard")
+    box((CX - 12, 0, gz + 0.005), (10, 8, 0.01), toon("Court", (0.85, 0.45, 0.35)), "Court")
     for y in (-3.8, 3.8):
         box((CX - 22, y, gz + 0.02), (14, 0.08, 0.01), toon("Court line", (0.98, 0.98, 0.95), 0.4), "Court line")
     box((CX - 3.0, 0, gz / 2), (2, 40, -gz), toon("School facade", (0.98, 0.88, 0.6), 0.15), "Facade")
     sw = toon("Yard wall", (0.92, 0.82, 0.62), 0.15)
-    box((CX - 32, -9, gz + 1.2), (0.4, 18, 2.4), sw, "Yard wall")
-    box((CX - 32, 11, gz + 1.2), (0.4, 14, 2.4), sw, "Yard wall")
+    box((CX - 21, -9, gz + 1.2), (0.4, 18, 2.4), sw, "Yard wall")
+    box((CX - 21, 11, gz + 1.2), (0.4, 14, 2.4), sw, "Yard wall")
     for k in range(11):
-        rod((CX - 32, -1.2 + k * 0.22, gz), (CX - 32, -1.2 + k * 0.22, gz + 2.2), 0.025, toon("Gate", (0.2, 0.35, 0.3)),
+        rod((CX - 21, -1.2 + k * 0.22, gz), (CX - 21, -1.2 + k * 0.22, gz + 2.2), 0.025, toon("Gate", (0.2, 0.35, 0.3)),
             "Gate bar")
-    box((CX - 32, 0, gz + 2.2), (0.08, 2.6, 0.08), toon("Gate", (0.2, 0.35, 0.3)), "Gate top")
-    box((CX - 40, 0, gz - 0.04), (14, 60, 0.1), toon("Street", (0.25, 0.26, 0.28)), "Street")
+    box((CX - 21, 0, gz + 2.2), (0.08, 2.6, 0.08), toon("Gate", (0.2, 0.35, 0.3)), "Gate top")
+    box((CX - 29, 0, gz - 0.04), (14, 60, 0.1), toon("Street", (0.25, 0.26, 0.28)), "Street")
     for k in range(6):  # houses across the street
         c = random.choice([(0.95, 0.7, 0.55), (0.75, 0.85, 0.95), (0.95, 0.9, 0.6), (0.95, 0.75, 0.8)])
         h = random.uniform(5, 9)
-        box((CX - 50, -15 + k * 6, gz + h / 2), (6, 5.4, h), toon(f"House {c}", c, 0.15), "House")
+        box((CX - 38, -15 + k * 6, gz + h / 2), (6, 5.4, h), toon(f"House {c}", c, 0.15), "House")
     for y in (-6, 7):
-        rod((CX - 26, y, gz), (CX - 26, y, gz + 2.2), 0.15, toon("Trunk", (0.45, 0.3, 0.2)), "Tree trunk")
-        ball((CX - 26, y, gz + 3.2), 1.5, toon("Tree", (0.3, 0.62, 0.3)), "Tree")
+        rod((CX - 17, y, gz), (CX - 17, y, gz + 2.2), 0.15, toon("Trunk", (0.45, 0.3, 0.2)), "Tree trunk")
+        ball((CX - 17, y, gz + 3.2), 1.5, toon("Tree", (0.3, 0.62, 0.3)), "Tree")
     return gz
 
 
@@ -610,7 +610,8 @@ def build():
                 pa, pb, pc = Vector((HX - 3.3, -0.5, 1.5)), Vector((HX + 0.9, -1.9, 1.5)), Vector((HX + 1.9, -3.6, 1.5))
                 pos = pa.lerp(pb, min(1, u * 1.6)) if u < 0.625 else pb.lerp(pc, (u - 0.625) / 0.375)
                 pos.z += 0.04 * abs(math.sin(math.pi * t * 2.2))
-                yaw = lerp(215, 205, seg(t, 6, 8.5))
+                yaw = lerp(172, 155, seg(t, 6.0, 8.0))
+                yaw = lerp(yaw, 205, seg(t, 8.3, 8.9))
                 pitch = -8
                 yaw = lerp(yaw, 35, seg(t, 9.0, 9.5) * (1 - seg(t, 10.0, 10.4)))
                 if t > 10.4:
@@ -621,7 +622,7 @@ def build():
         elif t < 15.0:
             u = (t - 11.0) / 4.0
             pos = Vector((SX + 1.1, lerp(3.0, 16.6, u), 1.5 + 0.04 * abs(math.sin(math.pi * t * 2.4))))
-            yaw = lerp(0, -45, seg(t, 11.5, 11.9) * (1 - seg(t, 12.6, 13.0)))
+            yaw = lerp(0, -55, seg(t, 11.5, 11.8) * (1 - seg(t, 12.4, 12.8)))
             pitch = -4
             hand_r = (0.3, -0.5 + 0.04 * math.sin(t * 7), -0.4)
             hand_l = (-0.3, -0.5 - 0.04 * math.sin(t * 7), -0.4)
@@ -717,7 +718,7 @@ def build():
         # street
         rezaei.pose(f, t, Vector((SX + 0.9, 17.4, 0)), facing=180, look=(0, 5),
                     wave=seg(t, 13.5, 13.7) * (1 - seg(t, 14.8, 15.0)))
-        truck.location = (SX + 4.5, lerp(-25, 60, seg(t, 11.2, 13.4)), 0)
+        truck.location = (SX + 4.5, lerp(-12, 45, seg(t, 11.2, 13.6)), 0)
         truck.keyframe_insert("location", frame=f)
 
         # class + stairs + roof: the kids and the teacher
@@ -728,7 +729,7 @@ def build():
             k_face = 0 if writing else 180
             k_reach = (160, -10) if writing else None
             if 45.0 <= t < 51.0:
-                k_pos = Vector((CX + 2.6, 2.3, 0))
+                k_pos = Vector((CX + 1.2, 3.6, 0))
                 k_face, k_reach = -60, (90, 10)
             if 51.0 <= t < 57.0:
                 k_pos, k_face, k_reach = Vector((CX + 1.0, 2.0, 0)), 150, None
@@ -798,13 +799,13 @@ def build():
                            look=(0, 0) if p is not kian else (0, 20))
         # rezaei the zombie, in the yard below the window
         turn = seg(t, 42.9, 43.4)
-        rezaei_z.pose(f, t, Vector((CX - 28.5, 0.4, gz)), facing=lerp(90, -90, turn), look=(0, lerp(0, 35, turn)),
+        rezaei_z.pose(f, t, Vector((CX - 15.5, 0.4, gz)), facing=lerp(90, -90, turn), look=(0, lerp(0, 35, turn)),
                       reach=(lerp(60, 85, turn), 5), reach2=(lerp(60, 85, turn), -5), worry=0.0, lean=0)
         # zombies at the gate / behind the door / under the stair railing
         for i, z in enumerate(zombies):
             wob = 6 * math.sin(t * 2.2 + i)
             if i < 5:  # pushing the yard gate
-                zp = Vector((CX - 33.0 - 0.3 * (i % 2), -1.6 + i * 0.8, gz))
+                zp = Vector((CX - 22.0 - 0.3 * (i % 2), -1.6 + i * 0.8, gz))
                 z.pose(f, t, zp, facing=-90 + wob, reach=(85 + wob, 5), reach2=(80 - wob, -5),
                        look=(0, 10 + wob), worry=0.0, lean=0)
             elif i == 5:  # corridor, then at the stairs
