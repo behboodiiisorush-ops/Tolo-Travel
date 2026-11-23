@@ -12,3 +12,5 @@ blender/school_pov/frames/
 blender/school_pov/post_tmp/
 blender/school_pov/textures/
 *.blend1
+blender/zombie_test/frames/
+blender/zombie_test/test/
