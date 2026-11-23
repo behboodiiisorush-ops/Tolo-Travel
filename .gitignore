@@ -7,3 +7,7 @@ blender/train_pov/test/
 __pycache__/
 blender/train_pov/textures/
 blender/train_pov/voices/fitted/
+blender/school_pov/test/
+blender/school_pov/frames/
+blender/school_pov/post_tmp/
+blender/school_pov/textures/
