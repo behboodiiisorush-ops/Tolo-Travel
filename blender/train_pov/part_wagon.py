@@ -158,7 +158,7 @@ def build_outside():
         parts.append(rod((x, y, -1.3), (x, y, 1.5), 0.25, pole_m, "Trunk"))
         parts.append(ball((x, y, 3.0), random.uniform(1.8, 2.8), random.choice(leaf), "Crown"))
 
-    # the border: fence, floodlights, gate, guard huts, flags
+    # the border: fence, floodlights, barrier, guard hut (no flags or national symbols)
     by = STOP_S
     fence = toon("Fence", (0.55, 0.6, 0.62), 0.15)
     for k in range(-20, 21):
@@ -177,9 +177,6 @@ def build_outside():
     parts.append(box((-16, by + 4, 0.2), (3, 3, 3), hut, "Guard hut"))
     parts.append(box((-16, by + 4, 1.85), (3.6, 3.6, 0.3), toon("Hut roof", (0.85, 0.3, 0.2), 0.15), "Hut roof"))
     parts.append(box((-14.48, by + 4, 0.6), (0.06, 1.4, 0.8), toon("Hut window", (0.95, 0.85, 0.4), 1.0), "Hut win"))
-    for k, c in enumerate([(0.1, 0.5, 0.25), (0.95, 0.95, 0.95), (0.85, 0.12, 0.12)]):
-        parts.append(box((-12.8, by - 2, 4.5 - k * 0.45), (0.04, 1.6, 0.45), toon(f"Flag {k}", c, 0.3), "Flag"))
-    parts.append(rod((-12.8, by - 2.85, -1.3), (-12.8, by - 2.85, 5.0), 0.05, fence, "Flag pole"))
     for p in parts:
         parent_keep(p, world)
     guards = []
