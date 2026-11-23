@@ -565,7 +565,7 @@ else:
     rz = build_stairs_roof()
     heli, rotor, spot = build_heli()
     kazemi, arian, mahsa, kian = (add(cast.spawn(k)) for k in ("kazemi", "arian", "mahsa", "kian"))
-    soldier = add(cast.spawn("soldier", bite=("upperarm_r", (0, 0, 0), 0.88)))
+    soldier = add(cast.spawn("soldier", bite=("lowerarm_r", (0, 0, 0), 0.22)))
     zombies = [add(cast.spawn_extra("passerby", i, zombie=1.0)) for i in (5, 6)]
     # the soldier's eyes turn: a second, dead pair of eyes swapped in at 72.9 s
     eyes = soldier.parts["Eyes"][0]

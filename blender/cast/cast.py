@@ -306,9 +306,12 @@ def zombify(ch, level=1.0, seed=0, bite=None):
                 b = max(b, 0.85 * M.smooth(0.14, 0.05, hd) * (0.5 + 0.5 * math.sin(p.z * 90 + p.x * 60)))
             b *= level
         g = level * max(M.smooth(0.04, 0.012, (p - eyeL).length), M.smooth(0.04, 0.012, (p - eyeR).length))
+        bt = 0.0
         if bite_pt is not None:
-            b = max(b, M.smooth(0.13, 0.06, (p - bite_pt).length) * (0.65 + 0.35 * math.sin(p.z * 160 + p.x * 90)))
-        return b, g, 0.0
+            d = (p - bite_pt).length
+            bt = M.smooth(0.11, 0.05, d) * (0.75 + 0.25 * math.sin(p.z * 160 + p.x * 90))
+            g = max(g, 0.6 * M.smooth(0.17, 0.09, d))      # bruised ring around the bite
+        return b, g, bt
 
     M.paint(body, "zblood", body_fn)
 
@@ -341,7 +344,12 @@ def zombify(ch, level=1.0, seed=0, bite=None):
         if sw is not None:
             ssw = M.float_input(nt, bsdf, "Subsurface Weight")
             nt.links.new(M.fmix(nt, ssw, 0.0, a[0]), sw)
-        return M.mix(nt, c, blood, a[0])
+        c = M.mix(nt, c, blood, a[0])
+        fresh_red = M.mix(nt, (0.42, 0.015, 0.02), (0.16, 0.0, 0.0), fresh)
+        c = M.mix(nt, c, fresh_red, a[2])
+        rough2 = M.float_input(nt, bsdf, "Roughness")
+        nt.links.new(M.fmix(nt, rough2, 0.08, a[2]), bsdf.inputs["Roughness"])
+        return c
 
     M.recolor(body, skin)
     M.recolor_bsdf(body, final)
