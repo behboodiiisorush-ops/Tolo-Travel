@@ -14,3 +14,8 @@ blender/school_pov/textures/
 *.blend1
 blender/zombie_test/frames/
 blender/zombie_test/test/
+blender/cast/vendor/
+blender/*/frames_*/
+blender/last_bell_real/frames/
+blender/last_bell_real/test/
+blender/last_bell_real/post_tmp/
