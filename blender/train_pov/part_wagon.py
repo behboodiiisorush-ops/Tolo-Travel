@@ -233,6 +233,7 @@ def build_phone(cam):
         bpy.ops.mesh.primitive_plane_add(size=1, location=(0, 0, 0.0065))
         sc = bpy.context.object
         sc.scale = (0.07, 0.145, 1)
+        bpy.ops.object.transform_apply(scale=True)  # keep_scale() toggles scale later
         sc.name = f"Phone screen {key}"
         sc.data.materials.append(phone_screen_mat(f"Screen {key}", os.path.join(HERE, "textures", fn)))
         parent_keep(sc, phone)
@@ -241,8 +242,8 @@ def build_phone(cam):
     return phone, screens
 
 
-def keep_scale(o, f, visible):
-    o.scale = (1, 1, 1) if visible else (0.001, 0.001, 0.001)
+def keep_scale(o, f, visible, size=1.0):
+    o.scale = (size, size, size) if visible else (0.001, 0.001, 0.001)
     o.keyframe_insert("scale", frame=f)
 
 
@@ -464,10 +465,10 @@ def build():
 
         # ---------------- POV hands and props
         phone_vis = 31.9 <= t < 38.0 or 59.9 <= t < 62.4
-        keep_scale(phone, f, phone_vis)
+        keep_scale(phone, f, phone_vis, size=1.4)  # a small phone in one hand
         keep_scale(screens["call"], f, t < 40)
         keep_scale(screens["voice"], f, t >= 40)
-        phone.location = (0.03, -0.24, -0.42)
+        phone.location = (0.06, -0.21, -0.46)
         phone.rotation_euler = (D(-25), 0, D(-4))
         phone.keyframe_insert("location", frame=f)
         phone.keyframe_insert("rotation_euler", frame=f)
@@ -480,8 +481,8 @@ def build():
             arms.set(f, "L", (-0.3, -0.45 + sw, -0.45))
             arms.set(f, "R", (0.3, -0.45 - sw, -0.45))
         elif phone_vis:
-            arms.set(f, "R", (0.06, -0.3, -0.42))
-            arms.set(f, "L", (-0.05, -0.32, -0.43))
+            arms.set(f, "R", (0.1, -0.33, -0.45))
+            arms.set(f, "L", (-0.26, -0.42, -0.46))
         elif bis_vis:
             arms.set(f, "R", (0.13, -0.32, -0.4))
             arms.set(f, "L", world_to_cam(cam, lena.hand_world("L")) if t < 40.0 else (-0.25, -0.4, -0.45))
