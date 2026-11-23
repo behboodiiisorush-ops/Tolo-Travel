@@ -136,8 +136,8 @@ def build_house():
     P.box((HX - 1.2, -4.5, 2.8), (5.6, 0.12, 5.6), w, "Front wall")
     P.box((HX + 3.4, -4.5, 2.8), (1.2, 0.12, 5.6), w, "Front wall")
     P.box((HX + 2.0, -4.5, 3.9), (1.6, 0.12, 3.4), w, "Above door")
-    hinge = P.empty("Front door hinge", (HX + 1.55, -4.48, 0))
-    door = P.box((HX + 2.0, -4.48, 1.1), (0.9, 0.06, 2.2), m("wood"), "Front door", bevel=0.01)
+    hinge = P.empty("Front door hinge", (HX + 1.6, -4.48, 0))
+    door = P.box((HX + 2.2, -4.48, 1.1), (1.2, 0.06, 2.2), m("wood"), "Front door", bevel=0.01)
     P.parent_keep(door, hinge)
     P.plane((HX + 2.0, -6.0, 1.3), (4, 3.2), m("sky_day"), (D(90), 0, 0), "Outside light")
     for k in range(12):  # stairs down the west wall
@@ -173,7 +173,7 @@ def build_house():
     P.box(tvc + Vector((0, -0.12, 0)), (1.62, 0.04, 0.96), m("studio"), "Studio wall")
     P.box(tvc + Vector((0, 0.0, -0.33)), (0.9, 0.12, 0.25), P.mat("News desk", (0.85, 0.86, 0.9), 0.3, emit=(0.4, 0.45, 0.55),
                                                                   strength=0.6), "News desk")
-    P.plane(tvc + Vector((0, 0.07, -0.42)), (1.6, 0.16), m("banner"), (D(90), 0, 0), "Banner")
+    P.plane(tvc + Vector((0, 0.07, -0.42)), (1.6, 0.16), m("banner"), (D(90), 0, D(180)), "Banner")
     P.plane(tvc + Vector((0, 0.11, 0)), (1.62, 0.96), m("screen_glass"), (D(90), 0, 0), "Screen glass")
     P.area_light(tvc + Vector((0, 0.05, 0.3)), tvc + Vector((0, -0.2, 0)), 8, 1.0, (0.8, 0.88, 1.0), name="TV studio light")
     P.area_light(tvc + Vector((0, 0.4, 0)), tvc + Vector((0, 3, 0)), 25, 1.6, (0.6, 0.75, 1.0), name="TV glow")
