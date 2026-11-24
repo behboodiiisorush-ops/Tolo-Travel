@@ -291,3 +291,82 @@ def window(center, width, height, axis, sky, frame_m, depth=0.06, bars=2):
             box((cx, cy, cz + dz), (width, depth, 0.06), frame_m, "Window frame")
         for k in range(1, bars):
             box((cx - width / 2 + k * width / bars, cy, cz), (0.04, depth, height), frame_m, "Window bar")
+
+
+# ------------------------------------------------------------------ cel-shaded comic look (Cycles)
+def toonify(sat=0.55, lift=0.08, size=0.75, ambient=0.28):
+    """Turn every material in the file into a flat cel-shaded paint (Toon BSDF + soft ambient),
+    muted towards grey; keeps alpha (hair cards). Pair it with enable_outlines()."""
+    done = set()
+    trees = []
+    for m in bpy.data.materials:
+        if m.node_tree:
+            trees.append(m.node_tree)
+    for g in bpy.data.node_groups:
+        if g.type == "SHADER":
+            trees.append(g)
+    for nt in trees:
+        if nt.name in done:
+            continue
+        done.add(nt.name)
+        for b in [n for n in nt.nodes if n.type == "BSDF_PRINCIPLED"]:
+            outs = [l for l in nt.links if l.from_node == b]
+            if not outs:
+                continue
+            bc = b.inputs["Base Color"]
+            if bc.is_linked:
+                col = bc.links[0].from_socket
+            else:
+                rgb = nt.nodes.new("ShaderNodeRGB")
+                rgb.outputs[0].default_value = bc.default_value
+                col = rgb.outputs[0]
+            hsv = nt.nodes.new("ShaderNodeHueSaturation")
+            hsv.inputs["Saturation"].default_value = sat
+            hsv.inputs["Value"].default_value = 1.0 + lift
+            nt.links.new(col, hsv.inputs["Color"])
+            toon = nt.nodes.new("ShaderNodeBsdfToon")
+            toon.component = "DIFFUSE"
+            toon.inputs["Size"].default_value = size
+            toon.inputs["Smooth"].default_value = 0.04
+            nt.links.new(hsv.outputs[0], toon.inputs["Color"])
+            em = nt.nodes.new("ShaderNodeEmission")
+            em.inputs["Strength"].default_value = ambient
+            nt.links.new(hsv.outputs[0], em.inputs["Color"])
+            add = nt.nodes.new("ShaderNodeAddShader")
+            nt.links.new(toon.outputs[0], add.inputs[0])
+            nt.links.new(em.outputs[0], add.inputs[1])
+            out = add.outputs[0]
+            al = b.inputs["Alpha"]
+            if al.is_linked or al.default_value < 1:
+                tr = nt.nodes.new("ShaderNodeBsdfTransparent")
+                mx = nt.nodes.new("ShaderNodeMixShader")
+                if al.is_linked:
+                    nt.links.new(al.links[0].from_socket, mx.inputs[0])
+                else:
+                    mx.inputs[0].default_value = al.default_value
+                nt.links.new(tr.outputs[0], mx.inputs[1])
+                nt.links.new(out, mx.inputs[2])
+                out = mx.outputs[0]
+            for l in outs:
+                to = l.to_socket
+                nt.links.remove(l)
+                nt.links.new(out, to)
+
+
+def enable_outlines(scene, thickness=1.6):
+    """Thick black comic outlines (Freestyle)."""
+    scene.render.use_freestyle = True
+    scene.render.line_thickness_mode = "ABSOLUTE"
+    scene.render.line_thickness = thickness
+    vl = scene.view_layers[0]
+    vl.use_freestyle = True
+    fs = vl.freestyle_settings
+    fs.crease_angle = math.radians(125)
+    ls = fs.linesets[0] if fs.linesets else fs.linesets.new("Lines")
+    ls.select_by_visibility = True
+    ls.select_silhouette = ls.select_border = True
+    ls.select_crease = False
+    if ls.linestyle is None:
+        ls.linestyle = bpy.data.linestyles.new("Comic")
+    ls.linestyle.color = (0.02, 0.02, 0.02)
+    ls.linestyle.thickness = thickness

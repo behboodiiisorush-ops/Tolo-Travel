@@ -845,6 +845,10 @@ sc.view_settings.view_transform = "AgX"
 sc.view_settings.look = "AgX - Medium High Contrast"
 sc.render.image_settings.file_format = "PNG"
 
+if "--toon" in args:  # cel-shaded comic look test
+    P.toonify()
+    P.enable_outlines(sc, 1.6)
+    sc.view_settings.look = "None"
 if "--board-frames" in args:  # frames in which the blackboard is on screen
     from bpy_extras.object_utils import world_to_camera_view
     bo = bpy.data.objects["Blackboard"]
