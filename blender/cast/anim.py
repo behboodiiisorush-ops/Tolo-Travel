@@ -105,9 +105,15 @@ def pose_spec(st):
     arms = st.get("arms", "rest")
     k = st.get("arms_w", 1.0)
     swing = 14 * walk * s
-    if arms == "rest":
-        _arm(spec, "l", swing - 4, 10 + 4 * walk)
-        _arm(spec, "r", -swing - 4, 10 + 4 * walk)
+    if arms == "rest":   # relaxed: arms a little away from the body, soft elbows, palms to the thighs
+        sw = 24 * walk * s
+        idle = 2.5 * math.sin(t * 1.3 + seed) * (1 - walk)
+        _arm(spec, "l", sw + 6 + idle, 14 + 6 * walk + 8 * max(0, sw / 24), down=37, twist=-14)
+        _arm(spec, "r", -sw + 6 - idle, 14 + 6 * walk + 8 * max(0, -sw / 24), down=37, twist=-14)
+        _add(spec, "clavicle_l", z=2 * math.sin(t * 1.3 + seed))
+        _add(spec, "clavicle_r", z=-2 * math.sin(t * 1.3 + seed))
+        _add(spec, "hand_l", x=-8, z=4 * math.sin(t * 0.9 + seed))
+        _add(spec, "hand_r", x=-8, z=-4 * math.sin(t * 0.9 + seed))
     elif arms == "desk":
         _arm(spec, "l", 18, 72, down=50, twist=-15)
         _arm(spec, "r", 18, 72, down=50, twist=-15)

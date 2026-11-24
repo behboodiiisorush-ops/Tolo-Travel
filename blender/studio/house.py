@@ -280,9 +280,24 @@ def build():
         put(P.box((-0.45, 0.45 + k * 0.18, 0.04), (0.12, 0.28, 0.08), M["dark"], "Shoe"), PR)
     # ---- kitchen (like the reference: sink under the window, cabinets, drawers)
     put(P.box((-2.45, 0.32, 0.45), (3.4, 0.6, 0.9), M["cabinet"], "Base cabinets", bevel=0.01), F)
-    put(P.box((-2.45, 0.32, 0.92), (3.45, 0.64, 0.04), M["counter"], "Counter"), F)
-    put(P.box((-2.5, 0.32, 0.86), (0.6, 0.42, 0.14), M["metal"], "Sink basin", bevel=0.02), F)
-    put(P.box((-2.5, 0.32, 0.86), (0.5, 0.34, 0.15), M["dark"], "Sink inside"), F)
+    # counter top with a real hole for the sink
+    for x0, x1, y0, y1 in ((-4.175, -2.78, 0.0, 0.64), (-2.22, -0.725, 0.0, 0.64), (-2.78, -2.22, 0.0, 0.12),
+                           (-2.78, -2.22, 0.52, 0.64)):
+        put(P.box(((x0 + x1) / 2, (y0 + y1) / 2, 0.92), (x1 - x0, y1 - y0, 0.04), M["counter"], "Counter"), F)
+    # recessed stainless basin: bottom, four sides, drain
+    sx, sy, bw, bd, dep = -2.5, 0.32, 0.56, 0.4, 0.18
+    put(P.box((sx, sy, 0.94 - dep), (bw, bd, 0.012), M["metal"], "Sink bottom"), F)
+    for dx, dy, w_, d_ in ((-bw / 2, 0, 0.012, bd), (bw / 2, 0, 0.012, bd), (0, -bd / 2, bw, 0.012), (0, bd / 2, bw, 0.012)):
+        put(P.box((sx + dx, sy + dy, 0.94 - dep / 2), (w_, d_, dep), M["metal"], "Sink side"), F)
+    put(P.box((sx, sy, 0.94), (bw + 0.04, bd + 0.04, 0.008), M["metal"], "Sink rim") , F)
+    put(P.cyl((sx, sy, 0.94 - dep + 0.007), (sx, sy, 0.94 - dep + 0.01), 0.03, M["dark"], "Drain"), F)
+    rim = [o for o in bpy.data.objects if o.name.startswith("Sink rim")][-1]
+    hole = P.box((sx, sy, 0.94), (bw - 0.01, bd - 0.01, 0.05), M["metal"], "rim cut")
+    bo = rim.modifiers.new("cut", "BOOLEAN")
+    bo.object = hole
+    bo.operation = "DIFFERENCE"
+    hole.hide_render = True
+    hole.hide_viewport = True
     put(P.cyl((-2.5, 0.08, 0.94), (-2.5, 0.08, 1.22), 0.018, M["metal"], "Tap"), F)
     put(P.cyl((-2.5, 0.08, 1.22), (-2.5, 0.3, 1.16), 0.016, M["metal"], "Tap spout"), F)
     put(P.box((-2.45, 0.2, 2.05), (3.4, 0.36, 0.7), M["cabinet"], "Wall cabinets", bevel=0.01), F)

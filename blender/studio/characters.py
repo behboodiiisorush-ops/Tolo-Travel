@@ -395,6 +395,12 @@ class StudioCharacter(cast.Character):
 
     def animate(self, frame, t, pos, facing=0.0, z_extra=0.0, scale=1.0, hands="relaxed", **st):
         super().animate(frame, t, pos, facing, z_extra, scale, **st)
+        if st.get("look_at") is None:     # straight ahead of the face (+ head turn), from this frame's position
+            yaw, pitch = st.get("look", (0.0, 0.0))
+            a = math.radians(facing + yaw)
+            fwd = Vector((-math.sin(a), math.cos(a), math.sin(math.radians(pitch))))
+            eye_h = self.rig.pose.bones["head"].bone.head_local.z + 0.12
+            st["look_at"] = Vector(pos) + Vector((0, 0, eye_h + z_extra)) + fwd * 2.5
         # the base class keys all pose bones; overwrite face + finger channels with our own values
         self.face_pose(frame, t, dict(st, t=t))
         self.hands_pose(frame, hands)
