@@ -1,45 +1,19 @@
-"""Dialogue of «واگن آخر ۲ — برگشت» (shared by the Blender scenes and post.py)."""
+"""Narration and on-screen text of «واگن آخر ۲».
 
-# (start, end, speaker, text) in seconds of the whole film.  Speaker keys map to
-# characters (their jaw moves) and to caption colours in post.py.
+Episode 2 is told with voice-over only (no lip-sync): we kneel in the open door of the train
+at the border, holding Lena's hand while the train starts rolling back towards the last wagon.
+"""
+
+# (start, end, speaker, text): "Me" is the narrator's voice-over, nobody's jaw moves.
 CAPTIONS = [
-    (0.3, 3.0, None, "قطار برگشت عقب...\nو من توش بودم."),
-    # seq 1 — goodbye at the border (inside our car)
-    (3.5, 4.8, "Mom", "قول بده برگردی."),
-    (5.0, 6.0, "Me", "قول میدم، مامان."),
-    (6.3, 7.6, "Lena", "منم میام پیشت!"),
-    (7.8, 9.0, "Me", "نه لنا. مواظب مامان باش."),
-    (9.4, 10.9, "Lena", "اینو بده به مامان‌بزرگ."),
-    (11.3, 12.6, "Rahim", "وقت نیست! پیاده شید!"),
-    (13.0, 14.0, "Mom", "خدا پشت و پناهت."),
-    # seq 2 — the train goes back
-    (15.0, 16.4, "Jalal", "منم می‌مونم. تنها نمیری."),
-    (17.0, 18.3, "Radio", "خط پشت سر... زیر آتیشه."),
-    (18.6, 20.0, "Rahim", "باید قبل از تاریکی برسیم."),
-    (21.0, 22.4, "Me", "صبر کن مامان‌بزرگ...\nداریم میایم."),
-    (23.0, 24.0, "Jalal", "اونجا رو ببین!"),
-    (24.6, 26.0, "Rahim", "واگن آخر! ترمز!"),
-    # seq 3 — the lone wagon
-    (28.0, 29.4, "Me", "مامان‌بزرگ! صدامو می‌شنوی؟"),
-    (30.4, 31.8, "Grandma", "اینجام! در گیر کرده!"),
-    (32.2, 33.4, "Jalal", "با هم! یک، دو، سه!"),
-    (34.6, 35.8, "Grandma", "می‌دونستم میای."),
-    (36.2, 37.6, "Me", "لنا اینو برات فرستاد."),
-    (38.0, 39.2, "Grandma", "دختر نازم..."),
-    (39.8, 41.2, "Rahim", "بجنبید! صدای جت میاد!"),
-    (41.6, 43.0, "Grandma", "پام... شما برید، من کُندم."),
-    (43.2, 44.6, "Me", "بدون تو هیچ‌جا نمیرم."),
-    # seq 4 — back to the train
-    (46.5, 47.8, "Jalal", "آروم... یواش... آفرین."),
-    (49.0, 50.0, "Rahim", "دستتو بده!"),
-    (51.5, 52.8, "Me", "سوار شدیم! برو!"),
-    # seq 5 — towards the border again
-    (56.8, 58.0, "Grandma", "لنا منتظرمونه؟"),
-    (58.3, 59.4, "Me", "آره... با بغل باز."),
-    (59.8, 61.2, "Mom phone", "الو؟! پیداش کردی؟"),
-    (61.4, 62.6, "Me", "پیداش کردم مامان."),
-    (63.0, 64.4, "Radio", "مرز... تا ده دقیقه دیگه\nبسته میشه."),
-    (64.6, 65.8, "Rahim", "تا مرز...\nپونزده دقیقه راهه."),
+    (0.4, 4.0, "Me", "قطار داره برمی‌گرده..."),
+    (45.0, 49.8, "Me", "اگه برم، لنا تنها می‌مونه.\nاگه بمونم، مامان‌بزرگ تنها می‌مونه."),
 ]
 
-END = 66.0  # last second of rendered film, the question card follows
+# the viewer question, shown at the start, in the middle and on the final card
+QUESTION = "اگه تو بودی از قطار پیاده می‌شدی یا می‌موندی؟"
+QUESTION_AT = [(0.8, 4.6), (26.5, 30.0)]
+SUB_QUESTION = "قسمت ۳ رو چی انتخاب می‌کنی؟"
+
+END = 52.0        # last rendered second; the question card follows
+CARD_SECONDS = 10  # 5 s question + 5 s hold

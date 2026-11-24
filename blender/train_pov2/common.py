@@ -199,8 +199,9 @@ class POVArms:
         shoulder = Vector((sx * 0.22, -0.5, 0.15))
         hand = Vector(hand_local)
         d = hand - shoulder
-        if d.length > 0.8:  # arm can't stretch further than this
-            hand = shoulder + d.normalized() * 0.8
+        reach = getattr(self, "reach", 0.8)
+        if d.length > reach:  # arm can't stretch further than this
+            hand = shoulder + d.normalized() * reach
             d = hand - shoulder
         if d.length < 0.05:
             d = Vector((0, 0, -0.1))
@@ -441,7 +442,9 @@ class Person:
 
     def hand_world(self, side):
         bpy.context.view_layer.update()
-        return self.p[f"hand{side}"].matrix_world.translation.copy()
+        o = self.p[f"hand{side}"]
+        centre = sum((Vector(v) for v in o.bound_box), Vector()) / 8  # mesh origins may sit at 0,0,0
+        return o.matrix_world @ centre
 
 
 # ---------------------------------------------------------------- hair & accessories
