@@ -31,3 +31,8 @@ blender/train_pov3/post_tmp/
 blender/train_pov3/test/
 blender/train_pov3/voices/fitted/
 blender/train_pov3/*.log
+blender/train_pov4/frames/
+blender/train_pov4/post_tmp/
+blender/train_pov4/test/
+blender/train_pov4/voices/fitted/
+blender/train_pov4/*.log
