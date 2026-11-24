@@ -77,7 +77,7 @@ def overlay(img, t):
             else:
                 name, col = SPEAKERS[who]
                 y = int(H * 0.68)
-                pill(d, W // 2, y - 105, name, col)
+                pill(d, W // 2, y - 105 - 50 * text.count("\n"), name, col)
                 draw_text(d, (W // 2, y), text, int(80 * (0.85 + 0.15 * k)))
     if t < 0.5:
         img = Image.blend(Image.new("RGB", img.size, (0, 0, 0)), img, t / 0.5)
