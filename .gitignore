@@ -19,3 +19,9 @@ blender/*/frames_*/
 blender/last_bell_real/frames/
 blender/last_bell_real/test/
 blender/last_bell_real/post_tmp/
+blender/train_pov2/frames/
+blender/train_pov2/post_tmp/
+blender/train_pov2/test/
+blender/train_pov2/textures/
+blender/train_pov2/voices/fitted/
+blender/train_pov2/*.log
