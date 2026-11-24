@@ -432,3 +432,49 @@ class StudioCharacter(cast.Character):
 
 def spawn(key, zombie=0.0, name=None):
     return StudioCharacter(key, zombie=zombie, name=name)
+
+
+# ------------------------------------------------------------------ fast outlines (inverted hull, Cycles-friendly)
+def _hull_mat():
+    m = bpy.data.materials.get("Hull outline")
+    if m:
+        return m
+    m = bpy.data.materials.new("Hull outline")
+    nt = m.node_tree
+    nt.nodes.clear()
+    out = nt.nodes.new("ShaderNodeOutputMaterial")
+    geo = nt.nodes.new("ShaderNodeNewGeometry")
+    lp = nt.nodes.new("ShaderNodeLightPath")
+    inv = nt.nodes.new("ShaderNodeMath")
+    inv.operation = "SUBTRACT"
+    inv.inputs[0].default_value = 1.0
+    nt.links.new(lp.outputs["Is Camera Ray"], inv.inputs[1])
+    mx = nt.nodes.new("ShaderNodeMath")
+    mx.operation = "MAXIMUM"
+    nt.links.new(geo.outputs["Backfacing"], mx.inputs[0])
+    nt.links.new(inv.outputs[0], mx.inputs[1])
+    em = nt.nodes.new("ShaderNodeEmission")
+    em.inputs["Color"].default_value = (0.012, 0.01, 0.01, 1)
+    tr = nt.nodes.new("ShaderNodeBsdfTransparent")
+    mix = nt.nodes.new("ShaderNodeMixShader")
+    nt.links.new(mx.outputs[0], mix.inputs[0])
+    nt.links.new(em.outputs[0], mix.inputs[1])
+    nt.links.new(tr.outputs[0], mix.inputs[2])
+    nt.links.new(mix.outputs[0], out.inputs["Surface"])
+    return m
+
+
+def hull_outlines(ch, thickness=0.0045, skip=("pupil", "glint", "lid", "mouth", "brow")):
+    """Black silhouette lines around a character: a flipped, slightly larger shell that only shows at the rims."""
+    m = _hull_mat()
+    for o in ch.objects:
+        if o.type != "MESH" or o.hide_render or any(k in o.name.lower() for k in skip):
+            continue
+        o.data.materials.append(m)
+        sd = o.modifiers.new("Outline", "SOLIDIFY")
+        sd.thickness = thickness / max(1e-6, o.matrix_world.to_scale().x)
+        sd.offset = 1.0
+        sd.use_flip_normals = True
+        sd.use_rim = False
+        sd.material_offset = len(o.data.materials) - 1
+        sd.material_offset_rim = len(o.data.materials) - 1

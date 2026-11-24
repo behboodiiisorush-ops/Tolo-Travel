@@ -201,7 +201,7 @@ for t_, p_ in ((0.0, (-2.62, 2.12, 0.98)), (1.4, (-2.6, 2.1, 1.02)), (2.6, (-2.6
 
 # paths
 me_crawl = Path([(-3.2, 2.3), (-1.6, 2.0), (-0.45, 1.8), (0.0, 2.15), (0.0, 4.55), (-0.45, 5.0), (-1.3, 5.0)])
-ar_crawl = Path([(-1.45, 2.6), (-1.0, 1.9), (-0.1, 1.85), (0.05, 2.4), (0.05, 4.6), (-0.5, 5.05), (-1.9, 5.25)])
+ar_crawl = Path([(-1.15, 2.65), (-0.9, 1.9), (-0.1, 1.85), (0.05, 2.4), (0.05, 4.6), (-0.5, 5.05), (-1.9, 5.25)])
 i1_in = Path([(0.0, -0.4), (0.0, 1.7), (-0.4, 1.72)])
 i1_kitchen = Path([(-0.2, 1.7), (-1.0, 1.5), (-1.55, 1.25)])
 i1_out = Path([(-1.55, 1.25), (-0.9, 1.6), (-0.05, 1.3), (0.0, 0.55)])
@@ -307,7 +307,7 @@ def ar_state(t):
         la = cam_point(t)
         if 17.2 < t < 22.4:
             la = Vector((-1.4, 1.4, 0.4))
-        return (-1.45 + lunge, 2.6, 0), f, dict(crawl=1, arms="crawl", phase=0.9, look_at=la, brows="worried", worry=1.5,
+        return (-1.15 + lunge, 2.65, 0), f, dict(crawl=1, arms="crawl", phase=0.9, look_at=la, brows="worried", worry=1.5,
                                                 talking=speaking("arian", t), look=(0, 15), mouth=dict(frown=0.1))
     if t < 40.0:
         s = ar_crawl.L * seg(t, 30.7, 39.0) if t < 39.0 else ar_crawl.L
@@ -500,7 +500,7 @@ for key in ("rule1", "rule2", "rule3", "rule4", "rule5", "rule5_g1", "rule5_g2")
     sp_ = P.plane((0, 0, 0.0005), (0.068, 0.142), sm, (0, 0, 0), f"Phone screen {key}")
     sp_.parent = phone
     screens[key] = sp_
-grip = P.empty("Phone grip", (0.012, -0.072, -0.015))
+grip = P.empty("Phone grip", (0.045, -0.165, -0.02))
 grip.parent = phone
 for o in [pbody] + list(screens.values()):
     H.put(o, PRC)
@@ -565,6 +565,8 @@ ut = bpy.data.objects["Under table bounce"]
 for t_, e in ((6.2, 0), (6.3, 10), (30.7, 10), (31.5, 0)):
     ut.data.energy = e
     ut.data.keyframe_insert("energy", frame=fr(t_))
+H.put(P.area_light((-1.0, 5.0, 1.9), (-2.4, 5.7, 1.4), 22, 0.8, (1.0, 0.88, 0.75), name="Bedroom fill"), LC)
+H.put(P.area_light((-1.4, 2.0, 1.9), (-2.3, 3.0, 1.1), 18, 0.8, (1.0, 0.9, 0.8), name="Kitchen fill"), LC)
 lamp = P.area_light((5.1, 4.4, 1.5), (3.2, 3.5, 0.5), 45, 0.5, (1.0, 0.75, 0.5), name="Floor lamp light")
 H.put(lamp, LC)
 H.put(P.area_light((-0.3, 3.2, 2.55), (0, 3.2, 0), 14, 1.0, (0.55, 0.65, 0.95), name="Hall moonlight"), LC)
@@ -580,6 +582,7 @@ pol = [P.area_light((2.8, -0.3, 1.5), (3.2, 3.5, 1.0), 0, 0.7, (1.0, 0.08, 0.06)
 for li in pol:
     H.put(li, LC)
     li.data.keyframe_insert("energy", frame=1)
+    li.data.keyframe_insert("energy", frame=fr(67.0) - 1)
 f = fr(67.0)
 k = 0
 while f < N + 2:
@@ -609,8 +612,11 @@ sc.view_settings.view_transform = "AgX"
 sc.view_settings.look = "AgX - Medium Low Contrast"
 sc.view_settings.exposure = float(os.environ.get("EXPOSURE", "0.4"))
 sc.world.color = (0.02, 0.025, 0.04)
-if os.environ.get("OUTLINES", "1") == "1":
+if os.environ.get("OUTLINES", "hull") == "freestyle":
     P.enable_outlines(sc, 1.1)
+else:
+    for ch in (me, arian, nina, i1, i2):
+        C.hull_outlines(ch)
 args = sys.argv
 if "--still" in args:
     os.makedirs(os.path.join(HERE, "test"), exist_ok=True)
