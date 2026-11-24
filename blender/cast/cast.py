@@ -444,9 +444,36 @@ def cartoon_face(ch):
         M.recolor_bsdf(o, eyes)
 
 
+def comic_eyes(ch):
+    """Flat comic eyes: white sclera with a big solid black pupil (from the iris of the eye texture)."""
+    def eyes(nt, bsdf, c):
+        bw = nt.nodes.new("ShaderNodeRGBToBW")
+        nt.links.new(c, bw.inputs["Color"])
+        r = nt.nodes.new("ShaderNodeMapRange")
+        r.inputs["From Min"].default_value = 0.33
+        r.inputs["From Max"].default_value = 0.4
+        nt.links.new(bw.outputs[0], r.inputs["Value"])
+        return M.mix(nt, (0.02, 0.02, 0.025), (0.97, 0.97, 0.95), r.outputs["Result"])
+    for o in ch.parts.get("Eyes", []):
+        M.recolor_bsdf(o, eyes)
+    def bold(nt, bsdf, c):   # solid, opaque brows
+        al = bsdf.inputs["Alpha"]
+        if al.is_linked:
+            src = al.links[0].from_socket
+            m = nt.nodes.new("ShaderNodeMath")
+            m.operation = "MULTIPLY"
+            m.use_clamp = True
+            m.inputs[1].default_value = 5.0
+            nt.links.new(src, m.inputs[0])
+            nt.links.new(m.outputs[0], al)
+        return M.mix(nt, c, (0.035, 0.025, 0.02), 1.0)
+    for o in ch.parts.get("Eyebrows", []) + ch.parts.get("Eyelashes", []):
+        M.recolor_bsdf(o, bold)
+
+
 # ---------------------------------------------------------------------------- spawn
 CARTOON = {  # MakeHuman targets that push a realistic face towards a cartoon one
-    "l-eye-scale-incr": 1.0, "r-eye-scale-incr": 1.0, "head-round": 0.7, "head-scale-vert-incr": 0.3,
+    "l-eye-scale-incr": 1.0, "r-eye-scale-incr": 1.0, "head-round": 0.4, "head-scale-vert-incr": 0.15,
     "nose-scale-horiz-decr": 0.6, "nose-scale-vert-decr": 0.5, "nose-scale-depth-decr": 0.6,
     "mouth-scale-horiz-decr": 0.3, "head-age-decr": 0.6,
 }

@@ -390,7 +390,7 @@ def toonify(sat=0.55, lift=0.08, size=0.75, ambient=0.28):
                 nt.links.new(out, to)
 
 
-def enable_outlines(scene, thickness=1.6, exclude=(), contour_only=()):
+def enable_outlines(scene, thickness=1.6, exclude=(), contour_only=(), bold=()):
     """Thick black comic outlines (Freestyle). exclude: objects that get no lines (eyes, lashes...).
     contour_only: objects (characters) that only get their outer outline, so faces stay clean."""
     scene.render.use_freestyle = True
@@ -404,10 +404,10 @@ def enable_outlines(scene, thickness=1.6, exclude=(), contour_only=()):
     ls.select_by_visibility = True
     ls.select_silhouette = ls.select_border = True
     ls.select_crease = False
-    if exclude or contour_only:
+    if exclude or contour_only or bold:
         col = bpy.data.collections.new("No outline")
         scene.collection.children.link(col)
-        for o in list(exclude) + list(contour_only):
+        for o in list(exclude) + list(contour_only) + list(bold):
             if col not in o.users_collection:
                 col.objects.link(o)
         ls.select_by_collection = True
@@ -431,3 +431,17 @@ def enable_outlines(scene, thickness=1.6, exclude=(), contour_only=()):
         l2.linestyle = bpy.data.linestyles.new("People lines")
         l2.linestyle.color = (0.03, 0.02, 0.02)
         l2.linestyle.thickness = thickness * 0.55     # thinner on people so faces stay clean
+    if bold:   # eyebrows drawn as bold strokes
+        bc = bpy.data.collections.new("Bold lines")
+        scene.collection.children.link(bc)
+        for o in bold:
+            bc.objects.link(o)
+        l3 = fs.linesets.new("Brows")
+        l3.select_by_visibility = True
+        l3.select_silhouette = l3.select_border = True
+        l3.select_crease = False
+        l3.select_by_collection = True
+        l3.collection = bc
+        l3.linestyle = bpy.data.linestyles.new("Brow lines")
+        l3.linestyle.color = (0.02, 0.015, 0.01)
+        l3.linestyle.thickness = thickness * 1.1
