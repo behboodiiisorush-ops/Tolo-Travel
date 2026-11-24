@@ -25,3 +25,4 @@ blender/train_pov2/test/
 blender/train_pov2/textures/
 blender/train_pov2/voices/fitted/
 blender/train_pov2/*.log
+blender/train_pov2/render_*.log
