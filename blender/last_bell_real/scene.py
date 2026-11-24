@@ -118,7 +118,7 @@ def m(key):
         "tyre": lambda: P.mat("Tyre", (0.05, 0.05, 0.05), 0.8),
         "rail_red": lambda: P.grime(P.mat("Rail paint", (0.55, 0.12, 0.1), 0.45, 0.3), 6.0, 0.6, 0.15, 0.02),
         "stair": lambda: P.grime(P.mat("Stair stone", (0.55, 0.54, 0.52), 0.6), 6.0, 0.75, 0.15, 0.03),
-        "board": lambda: P.image("Chalkboard", os.path.join(TEX, "chalkboard.png"), 0.0, 0.85),
+        "board": lambda: P.image("Chalkboard", os.path.join(HERE, "textures", "board_en.png"), 0.0, 0.85),
         "banner": lambda: P.image("Banner", os.path.join(TEX, "tv_banner.png"), 1.5, 0.5),
         "studio": lambda: P.mat("Studio", (0.12, 0.25, 0.5), 0.6, emit=(0.15, 0.3, 0.6), strength=1.2),
         "tv": lambda: P.mat("TV black", (0.03, 0.03, 0.035), 0.25),
@@ -317,7 +317,7 @@ def build_classroom():
     P.box((CX, 4.42, 0.5), (8, 0.05, 1.0), low, "Lower paint")
     P.box((CX, -4.42, 0.5), (8, 0.05, 1.0), low, "Lower paint")
     # board, clock, loudspeaker, map-free poster, drawings
-    P.plane((CX, 4.42, 1.75), (3.6, 1.45), m("board"), (D(90), 0, D(180)), "Blackboard")
+    P.plane((CX, 4.42, 1.75), (3.6, 1.45), m("board"), (D(90), 0, 0), "Blackboard")
     P.box((CX, 4.44, 1.75), (3.8, 0.03, 1.6), m("wood"), "Board frame")
     P.box((CX, 4.36, 0.98), (3.6, 0.1, 0.03), m("wood"), "Chalk tray")
     bpy.ops.mesh.primitive_cylinder_add(radius=0.18, depth=0.04, location=(CX - 2.6, 4.42, 2.6), rotation=(D(90), 0, 0),
@@ -845,6 +845,19 @@ sc.view_settings.view_transform = "AgX"
 sc.view_settings.look = "AgX - Medium High Contrast"
 sc.render.image_settings.file_format = "PNG"
 
+if "--board-frames" in args:  # frames in which the blackboard is on screen
+    from bpy_extras.object_utils import world_to_camera_view
+    bo = bpy.data.objects["Blackboard"]
+    pts = [bo.matrix_world @ v.co for v in bo.data.vertices]
+    seen = []
+    for f in range(F0, F1 + 1):
+        sc.frame_set(f)
+        for p_ in pts + [sum(pts, Vector()) / len(pts)]:
+            u = world_to_camera_view(sc, cam, p_)
+            if 0 <= u.x <= 1 and 0 <= u.y <= 1 and u.z > 0:
+                seen.append(f)
+                break
+    print("BOARD", " ".join(map(str, seen)))
 if "--save" in args:
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(HERE, f"last_bell_{PART}.blend"))
 if "--still" in args:
