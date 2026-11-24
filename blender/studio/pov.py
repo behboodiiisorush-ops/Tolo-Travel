@@ -69,3 +69,32 @@ class POV(C.StudioCharacter):
                 p = Vector(target)
             tgt.location = p + Vector((0, 0, lift))
             tgt.keyframe_insert("location", frame=f)
+
+
+def drive_camera(pov, frames):
+    """Analytic POV camera: position follows the head bone (Copy Location + offset), orientation from
+    heading / pitch / roll per frame -> exact framing, no roll from twisted crawl poses.
+    frames: iterable of (frame, heading_deg, pitch_deg, roll_deg, eye_up, eye_fwd)"""
+    cam = pov.cam
+    for c in list(cam.constraints):
+        cam.constraints.remove(c)
+    c = cam.constraints.new("COPY_LOCATION")
+    c.target = pov.rig
+    c.subtarget = "head"
+    c.use_offset = True
+    cam.rotation_mode = "QUATERNION"
+    prev = None
+    from mathutils import Matrix
+    for f, hd, pt, rl, up, fw in frames:
+        h = math.radians(hd)
+        d = Vector((-math.sin(h), math.cos(h), 0))
+        cam.location = d * fw + Vector((0, 0, up))
+        m = Matrix.Rotation(h, 3, "Z") @ Matrix.Rotation(math.radians(90 + pt), 3, "X") @ Matrix.Rotation(math.radians(rl), 3, "Z")
+        q = m.to_quaternion()
+        if prev is not None and prev.dot(q) < 0:
+            q.negate()
+        prev = q
+        cam.rotation_quaternion = q
+        cam.keyframe_insert("location", frame=f)
+        cam.keyframe_insert("rotation_quaternion", frame=f)
+    pov._cam_bound = True

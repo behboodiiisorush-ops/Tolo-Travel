@@ -146,6 +146,9 @@ class Character:
         spec = anim.pose_spec(st)
         ext = anim.leg_extent(spec, self.thigh_len, self.calf_len)
         drop = (ext - (self.thigh_len + self.calf_len)) * scale
+        cr = st.get("crawl", 0.0)
+        if cr:   # on hands and knees the hips sit about a thigh-length above the floor
+            drop = drop * (1 - cr) + cr * (-(self.calf_len + 0.02))
         loc = Vector(pos) + Vector((0, 0, drop + z_extra))
         rz = math.radians(facing) + math.pi
         rig = self.rig

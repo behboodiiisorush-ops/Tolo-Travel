@@ -25,3 +25,4 @@ blender/toon_test/post_tmp/
 blender/studio/frames/
 blender/studio/test/
 blender/studio/post_tmp/
+blender/studio/out/*.wav

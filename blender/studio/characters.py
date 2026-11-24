@@ -51,6 +51,14 @@ SHEET = {
                    hair=("short", (0.42, 0.42, 0.42)),
                    clothes={"male_elegantsuit01": (0.08, 0.08, 0.09), "culturalibre_male_boots": (0.07, 0.06, 0.06)}),
 }
+SHEET["me"] = dict(fa="من", desc="POV boy 15, dark curly hair, grey hoodie, jeans, white sneakers",
+                   gender=1.0, age=0.4, height=0.55, weight=0.45, skin=(0.84, 0.65, 0.5), hair=("messy", (0.07, 0.05, 0.05)),
+                   clothes={"elvs_hooded_sweat_jacket1": (0.42, 0.43, 0.45), "punkduck_male_classic_jeans": (0.14, 0.17, 0.26),
+                            "culturalibre_sneakers": (0.92, 0.92, 0.9)})
+SHEET["intruder"] = dict(fa="نقاب‌دار", desc="masked intruder, black knit mask (eyes only), dark work clothes, boots",
+                         gender=1.0, age=0.6, height=0.7, weight=0.62, skin=(0.07, 0.07, 0.08), hair=None, mask=(0.06, 0.06, 0.07),
+                         clothes={"elvs_crude_t-shirt_male": (0.06, 0.06, 0.07), "elvs_hooded_sweat_jacket1": (0.07, 0.07, 0.08),
+                                  "punkduck_male_classic_jeans": (0.08, 0.08, 0.09), "culturalibre_male_boots": (0.05, 0.05, 0.05)})
 ZOMBIE_SKIN = (0.6, 0.66, 0.56)
 
 
@@ -299,7 +307,13 @@ class StudioCharacter(cast.Character):
         md.invert_vertex_group = True
         md.threshold = 0.35
         self._add_face_bones()
-        build_head(self, skin, d["hair"][0], d["hair"][1], zombie=bool(zombie))
+        if d.get("mask"):
+            build_head(self, d["mask"], "short", d["mask"], zombie=False)
+            for o in self.face_objects:
+                if any(k in o.name for k in ("hair", "mouth", "nose", "ear", "brow")):
+                    o.hide_render = True
+        else:
+            build_head(self, skin, d["hair"][0], d["hair"][1], zombie=bool(zombie))
         self.objects = [o for o in bpy.data.objects if o == rig or o.parent == rig]
         # look target
         self.look_target = P.empty(f"{self.name} look")

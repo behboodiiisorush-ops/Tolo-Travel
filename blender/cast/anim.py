@@ -80,6 +80,16 @@ def pose_spec(st):
         _add(spec, "spine_02", x=9 * sham, y=5 * sham * s)
         _add(spec, "neck_01", x=-6 * sham, y=9 * sham)
         _add(spec, "head", y=(15 + 4 * math.sin(1.7 * t + seed)) * sham, x=-14 * sham)
+    crawl = st.get("crawl", 0.0)
+    if crawl:  # hands and knees: torso level, thighs down, shins back, arms down to the floor, alternating
+        for side, sg in (("l", s), ("r", -s)):
+            _add(spec, f"thigh_{side}", x=(-78 - 14 * sg) * crawl)
+            _add(spec, f"calf_{side}", x=(92 + 10 * max(0, sg)) * crawl)
+            _add(spec, f"foot_{side}", x=20 * crawl)
+        _add(spec, "pelvis", x=78 * crawl, z=5 * crawl * s)
+        _add(spec, "spine_01", x=4 * crawl)
+        _add(spec, "neck_01", x=-30 * crawl)
+        _add(spec, "head", x=-25 * crawl)
     climb = st.get("climb", 0.0)
     if climb:  # running up stairs: swing leg lifted high, stance leg almost straight
         for side, sg in (("l", s), ("r", -s)):
@@ -146,6 +156,14 @@ def pose_spec(st):
     elif arms == "run":
         _arm(spec, "l", 40 * s + 10, 85)
         _arm(spec, "r", -40 * s + 10, 85)
+    elif arms == "crawl":    # hands planted ahead on the floor, alternating with the knees
+        _arm(spec, "l", 86 + 12 * c, 8 + 10 * max(0, c), down=40)
+        _arm(spec, "r", 86 - 12 * c, 8 + 10 * max(0, -c), down=40)
+        _add(spec, "hand_l", x=-55)
+        _add(spec, "hand_r", x=-55)
+    elif arms == "boost":    # both hands up, lifting someone
+        _arm(spec, "l", 165, 25, down=30)
+        _arm(spec, "r", 165, 25, down=30)
     elif arms == "hug":
         _arm(spec, "l", 50, 115, down=58)
         _arm(spec, "r", 50, 115, down=58)
