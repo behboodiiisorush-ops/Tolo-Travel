@@ -5,6 +5,7 @@ Outputs (all 80 s):
   out/last_bell_real.mp4        captions, no sound (for the user's own voices)
   out/last_bell_real_clean.mp4  no captions, no sound
   out/last_bell_real_sfx.mp4    captions + the synthesised sound effects of the cartoon (same timeline)
+  out/last_bell_real_voice.mp4  captions + the user's voices (voice.py) + effects
 """
 import os, sys, shutil, subprocess
 from PIL import Image
@@ -53,6 +54,9 @@ def main():
         i += 1
     encode(os.path.join(TMP, "c_%04d.png"), os.path.join(OUT, "last_bell_real.mp4"))
     encode(os.path.join(TMP, "k_%04d.png"), os.path.join(OUT, "last_bell_real_clean.mp4"))
+    mix = os.path.join(OUT, "mix.wav")      # the user's voices + effects (voice.py)
+    if os.path.exists(mix):
+        encode(os.path.join(TMP, "c_%04d.png"), os.path.join(OUT, "last_bell_real_voice.mp4"), mix)
     sfx = os.path.join(SP, "out", "sfx.wav")
     if os.path.exists(sfx):
         encode(os.path.join(TMP, "c_%04d.png"), os.path.join(OUT, "last_bell_real_sfx.mp4"), sfx)
