@@ -353,8 +353,9 @@ def toonify(sat=0.55, lift=0.08, size=0.75, ambient=0.28):
                 nt.links.new(out, to)
 
 
-def enable_outlines(scene, thickness=1.6, exclude=()):
-    """Thick black comic outlines (Freestyle). exclude: objects that get no lines (eyes, lashes...)."""
+def enable_outlines(scene, thickness=1.6, exclude=(), contour_only=()):
+    """Thick black comic outlines (Freestyle). exclude: objects that get no lines (eyes, lashes...).
+    contour_only: objects (characters) that only get their outer outline, so faces stay clean."""
     scene.render.use_freestyle = True
     scene.render.line_thickness_mode = "ABSOLUTE"
     scene.render.line_thickness = thickness
@@ -366,11 +367,12 @@ def enable_outlines(scene, thickness=1.6, exclude=()):
     ls.select_by_visibility = True
     ls.select_silhouette = ls.select_border = True
     ls.select_crease = False
-    if exclude:
+    if exclude or contour_only:
         col = bpy.data.collections.new("No outline")
         scene.collection.children.link(col)
-        for o in exclude:
-            col.objects.link(o)
+        for o in list(exclude) + list(contour_only):
+            if col not in o.users_collection:
+                col.objects.link(o)
         ls.select_by_collection = True
         ls.collection = col
         ls.collection_negation = "EXCLUSIVE"
@@ -378,3 +380,17 @@ def enable_outlines(scene, thickness=1.6, exclude=()):
         ls.linestyle = bpy.data.linestyles.new("Comic")
     ls.linestyle.color = (0.02, 0.02, 0.02)
     ls.linestyle.thickness = thickness
+    if contour_only:
+        cc = bpy.data.collections.new("Contour only")
+        scene.collection.children.link(cc)
+        for o in contour_only:
+            cc.objects.link(o)
+        l2 = fs.linesets.new("Characters")
+        l2.select_by_visibility = True
+        l2.select_silhouette = True
+        l2.select_border = l2.select_crease = False
+        l2.select_by_collection = True
+        l2.collection = cc
+        l2.linestyle = bpy.data.linestyles.new("People lines")
+        l2.linestyle.color = (0.03, 0.02, 0.02)
+        l2.linestyle.thickness = thickness * 0.55     # thinner on people so faces stay clean

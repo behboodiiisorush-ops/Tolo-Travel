@@ -192,7 +192,9 @@ for ch in (arian, zomb):
 # ------------------------------------------------------------ cartoon look
 P.toonify(sat=0.95, lift=0.12, size=0.6, ambient=0.34)
 face_bits = [o for ch in (arian, zomb) for k in ("Eyes", "Eyelashes", "Eyebrows", "Teeth") for o in ch.parts.get(k, [])]
-P.enable_outlines(sc, 2.5, exclude=face_bits)
+people = [o for ch in (arian, zomb) for o in ch.objects if o.type == "MESH" and o not in face_bits]
+P.enable_outlines(sc, 2.5, exclude=face_bits, contour_only=people)
+P.area_light((1.0, -0.35, 0.55), (1.35, 0.05, 0.85), 10, 0.25, (1.0, 0.95, 0.9), name="Face fill")   # soft light on faces
 sc.render.engine = "CYCLES"
 sc.cycles.samples = 10
 sc.cycles.use_denoising = True
@@ -202,7 +204,7 @@ sc.render.fps = FPS
 sc.frame_start, sc.frame_end = 1, N
 sc.render.use_persistent_data = True
 sc.render.use_motion_blur = True
-sc.render.motion_blur_shutter = 0.35
+sc.render.motion_blur_shutter = 0.12
 sc.view_settings.view_transform = "Standard"
 args = sys.argv
 if "--still" in args:
