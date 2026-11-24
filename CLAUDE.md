@@ -6,6 +6,7 @@
   new film idea instead of designing new faces. New recurring people get added to `cast.py` + a sheet.
 - Setup on a fresh machine: `blender/cast/setup.sh`, then run scripts with `blender/cast/bpy.sh script.py`.
 - Example of a full film built on the cast: `blender/last_bell_real/` (render in parts, `run_all.sh`).
+- The whole workflow is the project skill `/film-3d` (`.claude/skills/film-3d/SKILL.md`).
 - Older cartoon (toon) films: `blender/school_pov/`, `blender/train_pov/`.
 
 ## Rules the user set
