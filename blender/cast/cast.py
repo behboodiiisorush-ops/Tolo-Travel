@@ -445,13 +445,21 @@ def cartoon_face(ch):
 
 
 # ---------------------------------------------------------------------------- spawn
+CARTOON = {  # MakeHuman targets that push a realistic face towards a cartoon one
+    "l-eye-scale-incr": 1.0, "r-eye-scale-incr": 1.0, "head-round": 0.7, "head-scale-vert-incr": 0.3,
+    "nose-scale-horiz-decr": 0.6, "nose-scale-vert-decr": 0.5, "nose-scale-depth-decr": 0.6,
+    "mouth-scale-horiz-decr": 0.3, "head-age-decr": 0.6,
+}
+STYLE = None   # set to CARTOON (before spawning) for the cartoon films
+
+
 def _build(key, d, quality):
     hero = quality == "hero"
     clothes = list(d["clothes"].keys())
     body, rig, parts = M.build_human(
         key.capitalize(), gender=d["gender"], age=d["age"], height=d["height"], weight=d["weight"],
         muscle=d["muscle"], skin=d["skin"], skin_type="ENHANCED_SSS" if hero else "MAKESKIN",
-        hair=d.get("hair"), brow=d.get("brow", "eyebrow001"), clothes=clothes, subdiv=1 if hero else 0)
+        hair=d.get("hair"), brow=d.get("brow", "eyebrow001"), clothes=clothes, subdiv=1 if hero else 0, style=STYLE)
     ch = Character(key, d, body, rig, parts, quality)
     M.tint(body, d.get("skin_tint", WARM))
     for o in parts.get("Hair", []) + parts.get("Eyebrows", []):

@@ -113,6 +113,7 @@ sc.world = w
 w.color = (0.7, 0.72, 0.76)
 
 # ------------------------------------------------------------ people
+cast.STYLE = cast.CARTOON          # cartoon faces: big eyes, round head, small nose
 arian = cast.spawn("arian")
 zomb = cast.spawn("rezaei", zombie=1.0, name="RezaeiZ", quality="extra")
 cast.cartoon_face(arian)
@@ -190,10 +191,13 @@ for f in range(1, N + 1):
     grip.location = (0.01 + 0.004 * math.sin(t * 1.3), lerp(-0.42, -0.05, up) + breathe, -0.2)
     grip.keyframe_insert("location", frame=f)
 for ch in (arian, zomb):
-    ch.rig.pose.bones["head"].scale = (1.12, 1.12, 1.12)   # bigger heads = more cartoon
+    ch.rig.pose.bones["head"].scale = (1.15, 1.15, 1.15)   # bigger heads = more cartoon
 
 # ------------------------------------------------------------ cartoon look
-P.toonify(sat=0.95, lift=0.12, size=0.6, ambient=0.34)
+P.flatten_textures(skip_objects=arian.parts["Eyes"] + zomb.parts["Eyes"],
+                   colors={"Arian.body": (0.93, 0.72, 0.58), "RezaeiZ.body": (0.62, 0.7, 0.58), "jeans": (0.22, 0.28, 0.45),
+                           "eyebrow": (0.08, 0.05, 0.04), "eyelash": (0.05, 0.04, 0.03)})
+P.toonify(sat=1.0, lift=0.1, size=0.6, ambient=0.34)
 face_bits = [o for ch in (arian, zomb) for k in ("Eyes", "Teeth") for o in ch.parts.get(k, [])]
 people = [o for ch in (arian, zomb) for o in ch.objects if o.type == "MESH" and o not in face_bits]
 P.enable_outlines(sc, 2.5, exclude=face_bits, contour_only=people)

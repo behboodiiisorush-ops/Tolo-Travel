@@ -276,12 +276,17 @@ def _mhclo(kind, name):
 
 def build_human(name, *, gender, age, height=0.5, weight=0.5, muscle=0.5, proportions=0.5,
                 race=(0.15, 0.65, 0.2), skin="young_caucasian_male", skin_type="ENHANCED_SSS",
-                hair=None, brow="eyebrow001", lashes="eyelashes01", clothes=(), subdiv=1, extra=()):
+                hair=None, brow="eyebrow001", lashes="eyelashes01", clothes=(), subdiv=1, extra=(), style=None):
     m = TargetService.get_default_macro_info_dict()
     m.update(gender=gender, age=age, height=height, weight=weight, muscle=muscle, proportions=proportions)
     m["race"] = {"asian": race[0], "caucasian": race[1], "african": race[2]}
     body = HumanService.create_human(macro_detail_dict=m)
     body.name = name
+    TDIR = os.path.join(os.path.dirname(_mpfb.__file__), "data", "targets")
+    for tname, w in (style or {}).items():      # face/body shape targets (before the assets are fitted)
+        hits = glob.glob(os.path.join(TDIR, "*", tname + ".target.gz"))
+        if hits:
+            TargetService.load_target(body, hits[0], weight=w, name=tname)
     rig = HumanService.add_builtin_rig(body, "game_engine")
     rig.name = name + "_rig"
     HumanService.set_character_skin(f"{A}/skins/{skin}/{skin}.mhmat", body, skin_type=skin_type)

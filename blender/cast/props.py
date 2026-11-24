@@ -294,6 +294,42 @@ def window(center, width, height, axis, sky, frame_m, depth=0.06, bars=2):
 
 
 # ------------------------------------------------------------------ cel-shaded comic look (Cycles)
+def _mean_color(img):
+    import numpy as np
+    px = np.array(img.pixels[:], dtype=np.float32).reshape(-1, 4)[::97]
+    a = px[:, 3] > 0.5
+    c = px[a, :3].mean(0) if a.any() else px[:, :3].mean(0)
+    return tuple(float(v) for v in c) + (1.0,)
+
+
+def flatten_textures(skip=("eye",), skip_objects=(), colors=None):
+    """Replace every colour texture by its average colour (solid cartoon paint); keeps alpha links.
+    skip_objects: keep their textures (eyes). colors: {material name part: sRGB colour} overrides."""
+    keep = {ms.material.name for o in skip_objects for ms in o.material_slots if ms.material}
+    for m in bpy.data.materials:
+        trees = [m.node_tree] if m.node_tree else []
+        trees += [n.node_tree for n in (m.node_tree.nodes if m.node_tree else []) if n.type == "GROUP" and n.node_tree]
+        if m.name in keep or any(k in m.name.lower() for k in skip):
+            continue
+        over = next((c for k, c in (colors or {}).items() if k in m.name), None)
+        for nt in trees:
+            for n in list(nt.nodes):
+                if n.type != "TEX_IMAGE" or not n.image:
+                    continue
+                nm = n.image.name.lower()
+                if any(k in nm for k in ("normal", "nrm", "norm", "bump", "rough", "spec", "sss", "_ao", "displ")):
+                    continue
+                links = [l for l in nt.links if l.from_node == n and l.from_socket.name == "Color"]
+                if not links:
+                    continue
+                rgb = nt.nodes.new("ShaderNodeRGB")
+                rgb.outputs[0].default_value = (lin(over) + (1,)) if over else _mean_color(n.image)
+                for l in links:
+                    to = l.to_socket
+                    nt.links.remove(l)
+                    nt.links.new(rgb.outputs[0], to)
+
+
 def toonify(sat=0.55, lift=0.08, size=0.75, ambient=0.28):
     """Turn every material in the file into a flat cel-shaded paint (Toon BSDF + soft ambient),
     muted towards grey; keeps alpha (hair cards). Pair it with enable_outlines()."""
@@ -323,7 +359,7 @@ def toonify(sat=0.55, lift=0.08, size=0.75, ambient=0.28):
                 col = rgb.outputs[0]
             hsv = nt.nodes.new("ShaderNodeHueSaturation")
             hsv.inputs["Saturation"].default_value = sat
-            hsv.inputs["Value"].default_value = 1.0 + lift
+            hsv.inputs["Value"].default_value = 1.0 + (0.0 if skin else lift)
             nt.links.new(col, hsv.inputs["Color"])
             toon = nt.nodes.new("ShaderNodeBsdfToon")
             toon.component = "DIFFUSE"
@@ -331,7 +367,7 @@ def toonify(sat=0.55, lift=0.08, size=0.75, ambient=0.28):
             toon.inputs["Smooth"].default_value = 0.04
             nt.links.new(hsv.outputs[0], toon.inputs["Color"])
             em = nt.nodes.new("ShaderNodeEmission")
-            em.inputs["Strength"].default_value = ambient * (1.45 if skin else 1.0)
+            em.inputs["Strength"].default_value = ambient * (1.15 if skin else 1.0)
             nt.links.new(hsv.outputs[0], em.inputs["Color"])
             add = nt.nodes.new("ShaderNodeAddShader")
             nt.links.new(toon.outputs[0], add.inputs[0])
