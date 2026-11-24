@@ -58,7 +58,6 @@ def overlay(img, t):
     if a <= t <= b + 0.4:
         k = ease((t - a) / 0.35) * (1 - ease((t - b) / 0.35))
         y = int(-260 + (110 + 260) * k)
-        img.alpha_composite(CARD, (50, y))
         if t - a < 0.12:  # red flash on arrival
             img.alpha_composite(Image.new("RGBA", img.size, (220, 0, 0, 60)))
     d = ImageDraw.Draw(img)

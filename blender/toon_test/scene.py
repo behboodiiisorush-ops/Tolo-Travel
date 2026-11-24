@@ -129,8 +129,8 @@ cam.data.sensor_width = 36
 cam.data.clip_start = 0.03
 for f in range(1, N + 1):
     t = (f - 1) / FPS
-    yaw = lerp(-86, 10, seg(t, 2.0, 2.5))                         # Arian -> the phone (overlay)
-    pitch = lerp(-6, -35, seg(t, 2.0, 2.5))
+    yaw = lerp(-86, -20, seg(t, 2.0, 2.5))                        # Arian -> my phone
+    pitch = lerp(-6, -14, seg(t, 2.0, 2.5))
     yaw = lerp(yaw, 2, seg(t, 4.6, 5.1))                          # up at the door
     pitch = lerp(pitch, 12, seg(t, 4.6, 5.1))
     yaw = lerp(yaw, -80, seg(t, 6.8, 7.3))                        # back to Arian
@@ -155,10 +155,37 @@ for f in range(1, N + 1):
                   walk=go, phase=2 * math.pi * 1.6 * t,
                   look=(lerp(5, -40, seg(t, 4.7, 5.1)) if t < 6.8 else 0, 12), worry=1.8,
                   talking=talk(t, 0.4, 1.9) or talk(t, 5.3, 6.6) or talk(t, 7.0, 7.9) or talk(t, 8.2, 9.2))
+    zomb.hide(f, t < 4.75)
     zomb.animate(f, t, (0.0, 3.1 - 0.12 * seg(t, 4.9, 5.2), 0), 180, arms="bang",
                  z_extra=-2.0 * (1 - seg(t, 4.8, 5.1)), scream=1.0)
 arian.flush()
 zomb.flush()
+
+# ------------------------------------------------------------ my hand + phone (POV, cartoon)
+PHONE = (2.0, 4.7)   # seconds the phone is up
+grip = P.empty("Phone grip")
+grip.parent = cam
+skin = P.mat("My skin", (0.93, 0.74, 0.6), 0.6)
+sleeve = P.mat("My sleeve", (0.16, 0.25, 0.5), 0.8)
+phone_m = P.mat("Phone", (0.1, 0.1, 0.12), 0.3)
+parts = [P.box((0, 0, 0), (0.076, 0.156, 0.01), phone_m, "Phone body", bevel=0.007),
+         P.plane((0, 0, 0.0056), (0.069, 0.146), P.image("Phone screen", os.path.join(HERE, "textures", "phone_rule.png"), 1.8),
+                 name="Phone screen"),
+         P.box((-0.006, -0.055, -0.024), (0.07, 0.085, 0.03), skin, "Palm", bevel=0.012),          # behind the phone
+         P.cyl((-0.043, -0.07, -0.008), (-0.047, 0.005, 0.006), 0.011, skin, "Thumb"),            # along the left edge
+         P.cyl((-0.02, -0.11, -0.03), (-0.03, -0.17, -0.045), 0.032, skin, "Wrist"),
+         P.cyl((-0.026, -0.15, -0.04), (-0.09, -0.75, -0.26), 0.05, sleeve, "Sleeve")]
+for k in range(4):   # finger tips curling round the right edge
+    parts.append(P.sphere((0.041, -0.045 + k * 0.024, -0.006), 0.011, skin, "Finger tip", (1.0, 1.2, 1.0)))
+for o in parts:
+    o.parent = grip
+grip.rotation_euler = (math.radians(-10), math.radians(6), 0)
+for f in range(1, N + 1):
+    t = (f - 1) / FPS
+    up = seg(t, PHONE[0], PHONE[0] + 0.45) * (1 - seg(t, PHONE[1] - 0.35, PHONE[1]))
+    breathe = 0.004 * math.sin(t * 2.3)
+    grip.location = (0.01 + 0.004 * math.sin(t * 1.3), lerp(-0.42, -0.05, up) + breathe, -0.2)
+    grip.keyframe_insert("location", frame=f)
 for ch in (arian, zomb):
     ch.rig.pose.bones["head"].scale = (1.12, 1.12, 1.12)   # bigger heads = more cartoon
 
