@@ -34,16 +34,10 @@ PRESETS = {
                      "acrusher=bits=10:mix=0.25,volume=1.3",
     "mom_phone": "rubberband=pitch=0.95:formant=preserved:pitchq=quality,highpass=f=350,lowpass=f=3400,"
                  "acrusher=bits=12:mix=0.15,volume=1.2",
-    # --- the same characters made from ONE adult male voice (episode 2 was recorded that way) ---
-    "lena_m": "rubberband=pitch=1.78:formant=shifted:pitchq=quality,highpass=f=260,"
-              "equalizer=f=3500:t=q:w=1.2:g=3",
-    "mom_far_m": "rubberband=pitch=1.5:formant=shifted:pitchq=quality,highpass=f=200,lowpass=f=4500,"
-                 "aecho=0.8:0.6:120|260:0.25|0.15,volume=1.4",
-    "grandma_echo_m": "rubberband=pitch=1.38:tempo=0.94:formant=shifted:pitchq=quality,vibrato=f=5.5:d=0.25,"
-                      "highpass=f=350,lowpass=f=3300,acrusher=bits=10:mix=0.2,"
-                      "aecho=0.8:0.7:300|600:0.35|0.2,volume=1.3",
-    "rahim_m": "rubberband=pitch=0.86:formant=preserved:pitchq=quality,equalizer=f=180:t=q:w=1:g=3,"
-               "aecho=0.8:0.5:90:0.2",
+    # --- episode 2: every character was recorded with their own voice, so no pitch changes;
+    #     only where the sound comes from ---
+    "far": "highpass=f=200,lowpass=f=5000,aecho=0.8:0.6:120|260:0.25|0.15,volume=1.3",
+    "message_echo": "highpass=f=350,lowpass=f=3300,acrusher=bits=10:mix=0.2,aecho=0.8:0.7:300|600:0.35|0.2,volume=1.3",
     "phone": "highpass=f=350,lowpass=f=3400,acrusher=bits=12:mix=0.15",
     "radio": "highpass=f=500,lowpass=f=2800,acrusher=bits=8:mix=0.35,volume=1.6",
 }

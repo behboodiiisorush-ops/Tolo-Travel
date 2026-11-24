@@ -16,8 +16,8 @@ import numpy as np
 
 from voice_fx import PRESETS
 
-# which colouring each speaker gets (recorded voices are re-used for several characters)
-FX = {"Lena": "lena_m", "Mom": "mom_far_m", "Grandma voice": "grandma_echo_m", "Rahim": "rahim_m"}
+# where a voice comes from (every character has their own recorded voice; no pitch changes)
+FX = {"Mom": "far", "Grandma voice": "message_echo"}
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SR = 48000
