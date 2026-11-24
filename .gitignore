@@ -19,3 +19,6 @@ blender/*/frames_*/
 blender/last_bell_real/frames/
 blender/last_bell_real/test/
 blender/last_bell_real/post_tmp/
+blender/toon_test/frames/
+blender/toon_test/test/
+blender/toon_test/post_tmp/
