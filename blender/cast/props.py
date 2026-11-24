@@ -309,6 +309,7 @@ def toonify(sat=0.55, lift=0.08, size=0.75, ambient=0.28):
         if nt.name in done:
             continue
         done.add(nt.name)
+        skin = nt.name.endswith(".body")          # MPFB skin: flatter, brighter, fewer face shadows
         for b in [n for n in nt.nodes if n.type == "BSDF_PRINCIPLED"]:
             outs = [l for l in nt.links if l.from_node == b]
             if not outs:
@@ -326,11 +327,11 @@ def toonify(sat=0.55, lift=0.08, size=0.75, ambient=0.28):
             nt.links.new(col, hsv.inputs["Color"])
             toon = nt.nodes.new("ShaderNodeBsdfToon")
             toon.component = "DIFFUSE"
-            toon.inputs["Size"].default_value = size
+            toon.inputs["Size"].default_value = 0.92 if skin else size
             toon.inputs["Smooth"].default_value = 0.04
             nt.links.new(hsv.outputs[0], toon.inputs["Color"])
             em = nt.nodes.new("ShaderNodeEmission")
-            em.inputs["Strength"].default_value = ambient
+            em.inputs["Strength"].default_value = ambient * (1.45 if skin else 1.0)
             nt.links.new(hsv.outputs[0], em.inputs["Color"])
             add = nt.nodes.new("ShaderNodeAddShader")
             nt.links.new(toon.outputs[0], add.inputs[0])

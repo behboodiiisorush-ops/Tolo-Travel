@@ -115,6 +115,7 @@ w.color = (0.7, 0.72, 0.76)
 # ------------------------------------------------------------ people
 arian = cast.spawn("arian")
 zomb = cast.spawn("rezaei", zombie=1.0, name="RezaeiZ", quality="extra")
+cast.cartoon_face(arian)
 
 
 def talk(t, a, b):
@@ -129,7 +130,7 @@ cam.data.sensor_width = 36
 cam.data.clip_start = 0.03
 for f in range(1, N + 1):
     t = (f - 1) / FPS
-    yaw = lerp(-86, -20, seg(t, 2.0, 2.5))                        # Arian -> my phone
+    yaw = lerp(-83, -20, seg(t, 2.0, 2.5))                        # Arian -> my phone
     pitch = lerp(-6, -14, seg(t, 2.0, 2.5))
     yaw = lerp(yaw, 2, seg(t, 4.6, 5.1))                          # up at the door
     pitch = lerp(pitch, 12, seg(t, 4.6, 5.1))
@@ -144,11 +145,13 @@ for f in range(1, N + 1):
                   0.55 - 0.12 * crawl + 0.02 * math.sin(t * 9) * (t > 8.2)))
     cam.location = pos
     cam.rotation_euler = (D(90 + pitch + wobble(t, 0) * amp), D(wobble(t, 4) * amp * 0.6), D(yaw + wobble(t, 9) * amp))
+    cam.data.lens = 18 + 5 * (1 - seg(t, 1.9, 2.3)) * (t < 4) + 5 * seg(t, 6.8, 7.2) * (1 - seg(t, 8.0, 8.4))
     cam.keyframe_insert("location", frame=f)
     cam.keyframe_insert("rotation_euler", frame=f)
+    cam.data.keyframe_insert("lens", frame=f)
     grab = seg(t, 6.9, 7.2) * (1 - seg(t, 8.0, 8.3))
     go = seg(t, 8.0, 8.4)
-    a_pos = Vector((1.35 - 0.9 * seg(t, 8.0, 9.0), 0.05 - 1.4 * seg(t, 8.3, 10.0), 0))
+    a_pos = Vector((1.05 - 0.6 * seg(t, 8.0, 9.0), 0.05 - 1.4 * seg(t, 8.3, 10.0), 0))
     arian.animate(f, t, a_pos, lerp(88, 180, go), crouch=1 - 0.4 * go, z_extra=-0.12 - 0.1 * go, lean=4 + 30 * go,
                   arms=("hug" if grab < 0.5 and go < 0.5 else ("shamble" if go > 0.5 else "rest")),
                   arm_r=(lerp(50, 85, grab), lerp(110, 15, grab)) if grab > 0 else None,
@@ -191,7 +194,7 @@ for ch in (arian, zomb):
 
 # ------------------------------------------------------------ cartoon look
 P.toonify(sat=0.95, lift=0.12, size=0.6, ambient=0.34)
-face_bits = [o for ch in (arian, zomb) for k in ("Eyes", "Eyelashes", "Eyebrows", "Teeth") for o in ch.parts.get(k, [])]
+face_bits = [o for ch in (arian, zomb) for k in ("Eyes", "Teeth") for o in ch.parts.get(k, [])]
 people = [o for ch in (arian, zomb) for o in ch.objects if o.type == "MESH" and o not in face_bits]
 P.enable_outlines(sc, 2.5, exclude=face_bits, contour_only=people)
 P.area_light((1.0, -0.35, 0.55), (1.35, 0.05, 0.85), 10, 0.25, (1.0, 0.95, 0.9), name="Face fill")   # soft light on faces

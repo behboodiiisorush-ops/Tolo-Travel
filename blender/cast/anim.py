@@ -225,6 +225,7 @@ def face(st):
     return {
         "eyebrows-left-inner-up": fear * (1 - z), "eyebrows-right-inner-up": fear * (1 - z),
         "eyebrows-left-down": 0.9 * z, "eyebrows-right-down": 0.9 * z,
+        "eyebrows-left-up": 0.6 * fear * (1 - z), "eyebrows-right-up": 0.6 * fear * (1 - z),
         "eye-left-opened-up": max(0.7 * fear, 0.5 * z + 0.5 * scream),
         "eye-right-opened-up": max(0.7 * fear, 0.5 * z + 0.5 * scream),
         "eye-left-closure": b, "eye-right-closure": b,

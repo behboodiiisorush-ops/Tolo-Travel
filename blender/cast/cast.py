@@ -430,6 +430,20 @@ def _zombie_cloth(o, mouth, level, r):
     M.surface_wrap(o, holes)
 
 
+# ---------------------------------------------------------------------------- cartoon faces
+def cartoon_face(ch):
+    """Readable comic faces: solid dark bold brows, dark lashes, high-contrast eyes."""
+    for o in ch.parts.get("Eyebrows", []) + ch.parts.get("Eyelashes", []):
+        M.recolor_bsdf(o, lambda nt, bsdf, c: M.mix(nt, c, (0.025, 0.018, 0.015), 0.92))
+    def eyes(nt, bsdf, c):
+        bc = nt.nodes.new("ShaderNodeBrightContrast")
+        bc.inputs["Contrast"].default_value = 0.55
+        nt.links.new(c, bc.inputs["Color"])
+        return bc.outputs[0]
+    for o in ch.parts.get("Eyes", []):
+        M.recolor_bsdf(o, eyes)
+
+
 # ---------------------------------------------------------------------------- spawn
 def _build(key, d, quality):
     hero = quality == "hero"
