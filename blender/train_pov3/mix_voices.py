@@ -1,8 +1,8 @@
 """
 Place every voice clip at its line's start time and mix it over the sound effects.
 
-    python3 mix_voices.py   # voices/clips/*.wav + out/sfx.wav + out/last_wagon2_full.mp4
-                            #   -> out/voices.wav, out/last_wagon2_voiced.mp4
+    python3 mix_voices.py   # voices/clips/*.wav + out/sfx.wav + out/last_wagon3_full.mp4
+                            #   -> out/voices.wav, out/last_wagon3_voiced.mp4
 
 Clips are listed in voices/clips.txt (start, end, speaker, file).  A clip never
 starts before the previous one has finished, so lines don't talk over each other.
@@ -17,11 +17,13 @@ import numpy as np
 from voice_fx import PRESETS
 
 # where a voice comes from (every character has their own recorded voice; no pitch changes)
-FX = {"Mom": "far", "Grandma voice": "message_echo"}
+# lines that may sound over the end of the previous one (mum's scream cuts into the narration)
+OVERLAP_OK = {"mom1.wav"}
+FX = {"Mom": "far", "Grandma far": "very_far", "Rahim": "room"}
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SR = 48000
-DUR = 70.0
+DUR = 81.6
 
 
 def read_wav(path):
@@ -52,11 +54,13 @@ def main():
                         f"rubberband=tempo={tempo:.3f}:formant=preserved", "-ar", str(SR), dst], check=True)
         x = read_wav(dst)
         x = x / max(1e-6, np.abs(x).max()) * 0.9
-        t = max(float(a), prev_end + 0.05)
+        overlap = name in OVERLAP_OK
+        t = float(a) if overlap else max(float(a), prev_end + 0.05)
         i = int(t * SR)
         n = min(len(x), len(track) - i)
         track[i:i + n] += x[:n]
-        prev_end = t + len(x) / SR
+        if not overlap:
+            prev_end = t + len(x) / SR
         if t - float(a) > 0.3:
             print(f"note: {name} starts {t - float(a):.1f}s late (previous line ran long)")
     out_voice = os.path.join(HERE, "out", "voices.wav")
@@ -67,14 +71,14 @@ def main():
         w.writeframes((np.clip(track, -1, 1) * 32767).astype(np.int16).tobytes())
     # voices up front, effects ducked a little underneath
     subprocess.run([
-        "ffmpeg", "-loglevel", "error", "-y", "-i", os.path.join(HERE, "out", "last_wagon2_full.mp4"),
+        "ffmpeg", "-loglevel", "error", "-y", "-i", os.path.join(HERE, "out", "last_wagon3_full.mp4"),
         "-i", os.path.join(HERE, "out", "sfx.wav"), "-i", out_voice,
         "-filter_complex",
         "[1:a]volume=0.55[fx];[2:a]aformat=channel_layouts=stereo,volume=1.0[vo];"
         "[fx][vo]amix=inputs=2:normalize=0,loudnorm=I=-15:TP=-1.5:LRA=11[a]",
         "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest",
-        os.path.join(HERE, "out", "last_wagon2_voiced.mp4")], check=True)
-    print(os.path.join(HERE, "out", "last_wagon2_voiced.mp4"))
+        os.path.join(HERE, "out", "last_wagon3_voiced.mp4")], check=True)
+    print(os.path.join(HERE, "out", "last_wagon3_voiced.mp4"))
 
 
 if __name__ == "__main__":

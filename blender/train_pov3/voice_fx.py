@@ -37,6 +37,8 @@ PRESETS = {
     # --- episode 2: every character was recorded with their own voice, so no pitch changes;
     #     only where the sound comes from ---
     "far": "highpass=f=200,lowpass=f=5000,aecho=0.8:0.6:120|260:0.25|0.15,volume=1.3",
+    "very_far": "highpass=f=400,lowpass=f=2500,aecho=0.8:0.8:400|800:0.4|0.25,volume=0.8",
+    "room": "aecho=0.8:0.4:40:0.15",
     "message_echo": "highpass=f=350,lowpass=f=3300,acrusher=bits=10:mix=0.2,aecho=0.8:0.7:300|600:0.35|0.2,volume=1.3",
     "phone": "highpass=f=350,lowpass=f=3400,acrusher=bits=12:mix=0.15",
     "radio": "highpass=f=500,lowpass=f=2800,acrusher=bits=8:mix=0.35,volume=1.6",

@@ -1,8 +1,8 @@
 """
-Post-processing for «واگن آخر ۲»: frames rendered on twos -> 24 fps, fisheye look, upscale to
+Post-processing for «واگن آخر ۳ — در بسته شد»: frames rendered on twos -> 24 fps, fisheye look, upscale to
 1080x1920, narration captions, the viewer question (start, middle, final card), episode badge.
 
-    python3 post.py     # frames/ -> out/last_wagon2_full.mp4 (+ out/last_wagon2_sfx.mp4 with effects)
+    python3 post.py     # frames/ -> out/last_wagon3_full.mp4 (+ out/last_wagon3_sfx.mp4 with effects)
 Needs ffmpeg and Pillow with raqm (right-to-left Persian shaping).
 """
 
@@ -22,13 +22,17 @@ FPS = 24
 W, H = 1080, 1920
 
 sys.path.insert(0, HERE)
-from captions import CAPTIONS, CARD_SECONDS, END, NARRATION, QUESTION, QUESTION_AT, SUB_QUESTION  # noqa: E402
+from captions import CAPTIONS, CARD_SECONDS, END, KEY_OF, NARRATION, QUESTION  # noqa: E402
+
+MEANWHILE = (KEY_OF["sol1"][0] - 1.3, KEY_OF["sol1"][0] + 1.4)  # "همون لحظه، کنار مرز..." over the cut
 
 SPEAKERS = {  # caption key -> (name shown, colour), the same as episode 1
     "Me": ("من", (60, 160, 80)),
     "Mom": ("مامان", (150, 40, 80)),
     "Lena": ("لنا", (210, 50, 45)),
-    "Grandma voice": ("پیام صوتی مامان‌بزرگ", (30, 110, 90)),
+    "Grandma far": ("مامان‌بزرگ (از دور)", (190, 30, 40)),
+    "Soldier1": ("سرباز", (80, 100, 55)),
+    "Soldier2": ("سرباز", (80, 100, 55)),
     "Rahim": ("عمو رحیم", (235, 120, 20)),
 }
 
@@ -39,7 +43,14 @@ def font(size):
     return ImageFont.truetype(FONT, size, layout_engine=ImageFont.Layout.RAQM)
 
 
-def draw_text(d, xy, text, size, fill=(255, 255, 255), stroke=9):
+def draw_text(d, xy, text, size, fill=(255, 255, 255), stroke=9, max_w=W - 90):
+    """Centred RTL text; long lines shrink until they fit the frame width."""
+    while size > 30:
+        l, t, r, b = d.multiline_textbbox(xy, text, font=font(size), anchor="mm", align="center", direction="rtl",
+                                          language="fa", stroke_width=stroke, spacing=18)
+        if r - l <= max_w:
+            break
+        size -= 3
     d.multiline_text(xy, text, font=font(size), fill=fill, anchor="mm", align="center", direction="rtl",
                      language="fa", stroke_width=stroke, stroke_fill=(15, 15, 15), spacing=18)
 
@@ -65,12 +76,15 @@ def question_banner(d, k):
 
 def overlay(img, t):
     d = ImageDraw.Draw(img)
-    pill(d, W - 180, 150, "واگن آخر ۲", (200, 40, 40), 46)
-    for a, b in QUESTION_AT:
-        if a <= t <= b:
-            question_banner(d, min(1.0, (t - a) / 0.15))
-    for start, end, who, text in CAPTIONS:
-        if start <= t <= end:
+    pill(d, W - 180, 150, "واگن آخر ۳", (200, 40, 40), 46)
+    a, b = MEANWHILE
+    if a <= t <= b:
+        k = min(1.0, (t - a) / 0.3, (b - t) / 0.3)
+        draw_text(d, (W // 2, 360), "همون لحظه، کنار مرز...", int(70 * (0.9 + 0.1 * k)),
+                  fill=(255, 235, 150), stroke=9)
+    current = [c for c in CAPTIONS if c[0] <= t <= c[1]]
+    for start, end, who, text in current[-1:]:  # when two lines overlap, the newer one wins
+        if True:
             k = min(1.0, (t - start) / 0.15)
             if start in NARRATION:
                 draw_text(d, (W // 2, int(H * 0.7)), text, int(76 * (0.85 + 0.15 * k)), stroke=10)
@@ -89,16 +103,16 @@ def final_card(img, k):
     if k < 0.05:
         return img
     d = ImageDraw.Draw(img)
-    draw_text(d, (W // 2, 520), "اگه تو بودی\nاز قطار پیاده می‌شدی\nیا می‌موندی؟", int(96 * (0.8 + 0.2 * k)),
-              stroke=12)
-    for i, (label, col) in enumerate((("پیاده می‌شدم", (30, 110, 200)), ("می‌موندم", (200, 40, 45)))):
+    draw_text(d, (W // 2, 500), "اگه تو بودی،\nدنبال مامان‌بزرگ می‌گشتی...\nیا لنا رو برمی‌گردوندی\nپیش مامان؟",
+              int(84 * (0.8 + 0.2 * k)), stroke=12)
+    for i, (label, col) in enumerate((("دنبال مامان‌بزرگ می‌گشتم", (30, 110, 200)),
+                                      ("لنا رو می‌بردم پیش مامان", (200, 40, 45)))):
         y = 950 + i * 220
         d.rounded_rectangle((140, y - 80, W - 140, y + 80), radius=60, fill=col, outline=(255, 255, 255), width=8)
-        d.text((W // 2, y), label, font=font(66), fill=(255, 255, 255), anchor="mm", direction="rtl", language="fa")
+        d.text((W // 2 + 30, y), label, font=font(54), fill=(255, 255, 255), anchor="mm", direction="rtl", language="fa")
         d.ellipse((170, y - 45, 260, y + 45), fill=(255, 255, 255))
         d.text((215, y), "AB"[i], font=font(56), fill=col, anchor="mm")
-    draw_text(d, (W // 2, 1440), SUB_QUESTION, 64, fill=(255, 230, 120), stroke=9)
-    draw_text(d, (W // 2, 1560), "جوابت رو کامنت کن", 58, stroke=8)
+    draw_text(d, (W // 2, 1480), "جوابت رو کامنت کن", 64, fill=(255, 230, 120), stroke=9)
     return img
 
 
@@ -127,14 +141,14 @@ def main():
     for j in range(CARD_SECONDS * FPS):
         final_card(last.copy(), min(1.0, j / 12)).save(os.path.join(TMP, f"c_{i:04d}.png"))
         i += 1
-    out = os.path.join(OUT, "last_wagon2_full.mp4")
+    out = os.path.join(OUT, "last_wagon3_full.mp4")
     subprocess.run([
         "ffmpeg", "-loglevel", "error", "-y", "-framerate", str(FPS), "-i", os.path.join(TMP, "c_%04d.png"),
         "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "20", "-movflags", "+faststart", out], check=True)
     print(out)
     sfx = os.path.join(OUT, "sfx.wav")
     if os.path.exists(sfx):
-        out_fx = os.path.join(OUT, "last_wagon2_sfx.mp4")
+        out_fx = os.path.join(OUT, "last_wagon3_sfx.mp4")
         subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", out, "-i", sfx, "-map", "0:v", "-map", "1:a",
                         "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest", out_fx], check=True)
         print(out_fx)
