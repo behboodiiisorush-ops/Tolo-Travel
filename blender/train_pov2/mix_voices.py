@@ -21,7 +21,7 @@ FX = {"Lena": "lena", "Grandma": "grandma", "Mom": "mom", "Mom phone": "mom_phon
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SR = 48000
-DUR = 62.0
+DUR = 70.0
 
 
 def read_wav(path):

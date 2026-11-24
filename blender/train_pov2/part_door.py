@@ -28,7 +28,7 @@ random.seed(42)
 ODOOR = -11.3          # our door (y, on the -X side of the train)
 FZ = FLOOR_Z           # train floor height
 PLAT_Z = 0.6           # low platform at the border
-LAST_Y = -70.0         # the last wagon, far down the track
+LAST_Y = -82.0         # the last wagon, far down the track
 KNEEL = 0.55           # eye height above the floor (sitting on the door step)
 
 
@@ -38,7 +38,7 @@ def speed(t):
         return 0.0
     if t < 35.0:
         return -0.4 * seg(t, 2.0, 6.0)
-    return -lerp(0.4, 1.05, seg(t, 35.0, 39.0))
+    return -lerp(lerp(0.4, 1.05, seg(t, 35.0, 39.0)), 1.6, seg(t, 50.0, 53.0))
 
 
 _S = [0.0]
@@ -59,9 +59,9 @@ def build_world():
     rails(0, -200, 80, 0)
     concrete = toon("Platform", (0.62, 0.6, 0.58), 0.15)
     edge = toon("Platform edge", (0.95, 0.8, 0.15), 0.35)
-    box((-3.9, -15, PLAT_Z / 2), (4.3, 70, PLAT_Z), concrete, "Platform", bevel=0.03)
-    box((-1.85, -15, PLAT_Z + 0.005), (0.12, 70, 0.01), edge, "Platform edge line")
-    for y in range(-48, 20, 3):  # paving joints
+    box((-3.9, -35, PLAT_Z / 2), (4.3, 110, PLAT_Z), concrete, "Platform", bevel=0.03)
+    box((-1.85, -35, PLAT_Z + 0.005), (0.12, 110, 0.01), edge, "Platform edge line")
+    for y in range(-88, 20, 3):  # paving joints
         box((-3.9, y, PLAT_Z + 0.004), (4.3, 0.04, 0.01), toon("Joint", (0.5, 0.48, 0.47), 0.1), "Joint")
     # the border: fence, floodlights, barrier, hut, people behind the fence
     fence = toon("Fence", (0.55, 0.6, 0.62), 0.15)
@@ -70,7 +70,7 @@ def build_world():
     for z in (1.0, 1.7, 2.4, 2.85):
         box((-8, -45, z), (0.03, 105, 0.03), fence, "Fence wire")
     lamp = glow_mat("Flood", (1.0, 0.95, 0.75), 9.0)
-    for k in (-60, -36, -12, 12):
+    for k in (-84, -60, -36, -12, 12):
         rod((-12, k, 0), (-12, k, 9.3), 0.2, fence, "Light tower")
         box((-11.6, k, 9.3), (0.6, 1.4, 0.7), lamp, "Floodlight")
     red_w = [toon("Barrier red", (0.9, 0.12, 0.1), 0.2), toon("Barrier white", (0.97, 0.97, 0.95), 0.3)]
@@ -179,15 +179,16 @@ def build():
 
         # ---------------- Lena: on the platform beside the door, facing us, walking sideways
         trot = seg(t, 35.0, 39.0)
+        sprint = seg(t, 50.0, 53.0)
         lpos = Vector((-2.35, ODOOR + ty + 0.1, PLAT_Z))
         looks_up = seg(t, 40.0, 40.6)
         lena.pose(f, t, lpos, facing=-90, run=min(1.0, v / 0.4) * lerp(0.45, 1.0, trot) if t > 2.2 else 0.0,
-                  run_rate=lerp(1.0, 1.9, trot), lean=0, look=(lerp(0, -8, looks_up), lerp(10, 18, looks_up)),
+                  run_rate=lerp(1.0, 1.9, trot) + 0.7 * sprint, lean=-10 * sprint, look=(lerp(0, -8, looks_up), lerp(10, 18, looks_up)),
                   reach2=(lerp(92, 98, looks_up), -12), worry=lerp(1.4, 1.9, looks_up))
 
         # ---------------- Mum behind the fence, waving us to come
-        mom.pose(f, t, mom_pos, facing=-70, wave=1.0 if (8 <= t < 20) else 0.0,
-                 reach=(130, 30) if not (8 <= t < 20) else None, look=(0, 8), worry=1.6)
+        mom.pose(f, t, mom_pos, facing=-70, wave=1.0 if (8 <= t < 20 or t >= 50) else 0.0,
+                 reach=(130, 30) if not (8 <= t < 20 or t >= 50) else None, look=(0, 8), worry=1.6)
 
         # ---------------- camera: kneeling in the door, moving with the train
         lena_dir = (90, -20)
@@ -213,11 +214,15 @@ def build():
         yaw = lerp(yaw, last_yaw, k4); pitch = lerp(pitch, 2, k4); lean = max(lean, k4)
         # the eyes "focus" on the last wagon: a slow zoom in
         cam.data.lens = 12 + 22 * max(seg(t, 30.6, 34.0) * (1 - seg(t, 34.6, 35.0)),
-                                      seg(t, 47.9, 49.3) * (1 - seg(t, 49.6, 50.3)))
+                                      seg(t, 47.9, 49.3) * (1 - seg(t, 49.6, 50.3)),
+                                      seg(t, 56.4, 57.4) * (1 - seg(t, 57.9, 58.4)))
         cam.data.keyframe_insert("lens", frame=f)
+        # 50-60: Lena running hard; a last quick look at the wagon (56-58), back to her
+        k5 = seg(t, 56.0, 56.5) * (1 - seg(t, 57.9, 58.4))
+        yaw = lerp(yaw, last_yaw, k5); pitch = lerp(pitch, 2, k5); lean = max(lean, k5)
         pos = kneel + Vector((-0.6 * lean, 0, 0.35 * lean)) + Vector((0, ty, 0))
         pos += Vector((-0.12, 0, -0.05)) * seg(t, 40.0, 40.6) * (1 - seg(t, 45.0, 45.4))  # lean towards her
-        amp = 0.06 + 0.25 * min(1.0, v / 0.4) * (0.4 + 0.6 * trot)
+        amp = 0.06 + 0.25 * min(1.0, v / 0.4) * (0.4 + 0.6 * trot) + 0.25 * sprint
         for te, kk in ((2.0, 2.2), (35.2, 1.2)):
             if te <= t < te + 0.6:
                 amp += kk * (1 - (t - te) / 0.6)

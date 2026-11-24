@@ -4,6 +4,6 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 PY="${BLENDER_PY:-../cast/vendor/venv/bin/python}"
-"$PY" part_door.py --render --range 1 1248     # on twos: every second frame
+"$PY" part_door.py --render --range 1 1440     # on twos: every second frame
 python3 sfx.py
 python3 post.py

@@ -2,7 +2,7 @@
 Sound effects + ambience for «واگن آخر ۲ — برگشت» (no voices — those are recorded by hand).
 
 Everything is synthesised with numpy, so there are no third-party sound files.
-Writes out/sfx.wav (62 s, 48 kHz stereo); post.py / mix_voices.py put it under the video.
+Writes out/sfx.wav (70 s, 48 kHz stereo); post.py / mix_voices.py put it under the video.
 """
 
 import math
@@ -13,7 +13,7 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SR = 48000
-DUR = 62.0
+DUR = 70.0
 N = int(SR * DUR)
 rng = np.random.default_rng(7)
 L = np.zeros(N)
@@ -148,8 +148,8 @@ def tone(freq, length, gain=1.0):
 def build():
     t = tt(N)
     # the same speeds as part_door.py: creeping back from 2 s, faster from 35 s
-    speed = np.interp(t, [0, 2, 6, 35, 39, 52, 62], [0, 0, 0.4, 0.4, 1.05, 1.05, 0])
-    on = (t < 52).astype(float)
+    speed = np.interp(t, [0, 2, 6, 35, 39, 50, 53, 60, 70], [0, 0, 0.4, 0.4, 1.05, 1.05, 1.6, 1.6, 0])
+    on = (t < 60).astype(float)
 
     # our train: heavy slow wheel knocks, a low rumble that grows; brake hiss at the start
     rumble = norm(band(noise(N), 25, 200)) * (0.05 + 0.25 * speed) * on
@@ -162,10 +162,12 @@ def build():
     clunk = band(noise(int(0.6 * SR)), 30, 500) * np.exp(-tt(int(0.6 * SR)) * 9)
     put(norm(clunk), 2.0, 0.8)
     put(norm(clunk) * 0.7, 35.2, 0.6)
+    put(norm(clunk) * 0.8, 50.2, 0.6)
+    put(whistle(1.2), 54.0, 0.45, 0.0)
 
     # border ambience: crowd behind the fence, floodlight hum, dogs, wind
     crowd = norm(band(noise(N), 250, 1800)) * (0.6 + 0.4 * np.abs(np.sin(2 * np.pi * 0.6 * t)))
-    put(crowd * curve([(0, 0.07), (30, 0.05), (52, 0.03), (52.1, 0), (62, 0)]), 0, 1.0, -0.6)
+    put(crowd * curve([(0, 0.07), (30, 0.05), (60, 0.03), (60.1, 0), (70, 0)]), 0, 1.0, -0.6)
     hum = np.sin(2 * np.pi * 100 * t) * 0.5 + np.sin(2 * np.pi * 200 * t) * 0.2
     put(hum * 0.02 * on, 0, 1.0, -0.4)
     wind = norm(band(noise(N), 150, 1500)) * (0.7 + 0.3 * np.sin(2 * np.pi * 0.11 * t))
@@ -178,16 +180,17 @@ def build():
 
     # our breathing: slow at first, faster as the train speeds up and in the key line
     bt = 0.3
-    while bt < 51:
+    while bt < 59.5:
         n = int(0.55 * SR)
         breath = band(noise(n), 300, 3000) * env(n, 0.18, 0.3)
         g = 0.1 if bt < 30 else 0.14
         put(breath, bt, g)
-        bt += 1.6 if bt < 35 else 1.1
+        bt += 1.6 if bt < 35 else (1.1 if bt < 50 else 0.75)
 
     # Lena's footsteps on the platform: walking, then trotting
     footsteps(2.4, 35.0, 1.9, 0.12, -0.3)
-    footsteps(35.0, 51.8, 3.4, 0.16, -0.3)
+    footsteps(35.0, 50.0, 3.4, 0.16, -0.3)
+    footsteps(50.0, 59.8, 4.6, 0.2, -0.3)
 
     # whistles: one at the start, one long and close in shot 2 ("the train gets louder")
     put(whistle(1.6), 2.4, 0.3, 0.3)
@@ -197,20 +200,21 @@ def build():
     far = clack_track(np.full(N, 6.0)) * 0.6
     far = band(far, 100, 1800)
     put(norm(far) * curve([(0, 0), (29.5, 0), (30.5, 0.18), (34.6, 0.18), (35.2, 0.02), (47, 0.02),
-                           (48, 0.14), (50, 0.14), (50.6, 0), (62, 0)]), 0, 1.0, 0.0)
+                           (48, 0.14), (50, 0.14), (50.6, 0), (56.2, 0), (56.8, 0.16), (58, 0.16), (58.5, 0), (70, 0)]), 0, 1.0, 0.0)
 
     # heartbeat: under the key line, then on the question card, then silence
-    heartbeat(40.0, 52.0, 92, 0.35)
-    heartbeat(52.0, 61.0, 100, 0.55)
-    put(tone(200, 0.12, 0.4) * np.exp(-tt(int(0.12 * SR)) * 20), 52.05, 1.0)  # card thump
+    heartbeat(40.0, 50.0, 92, 0.35)
+    heartbeat(50.0, 60.0, 120, 0.45)
+    heartbeat(60.0, 69.0, 100, 0.55)
+    put(tone(200, 0.12, 0.4) * np.exp(-tt(int(0.12 * SR)) * 20), 60.05, 1.0)  # card thump
 
     # tension pad that swells towards the key line and the card
     pad = sum(np.sin(2 * np.pi * f * t + k) for k, f in enumerate((55, 65.4, 82.4, 110)))
     pad *= 0.5 + 0.5 * np.sin(2 * np.pi * 0.07 * t)
-    put(norm(pad) * curve([(0, 0.0), (2, 0.05), (25, 0.06), (30, 0.07), (40, 0.08), (45, 0.11), (52, 0.12),
-                           (60.5, 0.12), (61.2, 0), (62, 0)]), 0, 1.0)
+    put(norm(pad) * curve([(0, 0.0), (2, 0.05), (25, 0.06), (30, 0.07), (40, 0.08), (45, 0.11), (52, 0.12), (60, 0.13),
+                           (68.5, 0.12), (69.2, 0), (70, 0)]), 0, 1.0)
 
-    fade = curve([(0, 1), (61.0, 1), (61.3, 0), (62, 0)])
+    fade = curve([(0, 1), (69.0, 1), (69.3, 0), (70, 0)])
     out = np.stack([L * fade, R * fade], axis=1)
     out /= max(1e-9, np.max(np.abs(out))) / 0.89
     return out
