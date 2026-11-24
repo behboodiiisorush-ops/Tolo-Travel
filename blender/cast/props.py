@@ -353,8 +353,8 @@ def toonify(sat=0.55, lift=0.08, size=0.75, ambient=0.28):
                 nt.links.new(out, to)
 
 
-def enable_outlines(scene, thickness=1.6):
-    """Thick black comic outlines (Freestyle)."""
+def enable_outlines(scene, thickness=1.6, exclude=()):
+    """Thick black comic outlines (Freestyle). exclude: objects that get no lines (eyes, lashes...)."""
     scene.render.use_freestyle = True
     scene.render.line_thickness_mode = "ABSOLUTE"
     scene.render.line_thickness = thickness
@@ -366,6 +366,14 @@ def enable_outlines(scene, thickness=1.6):
     ls.select_by_visibility = True
     ls.select_silhouette = ls.select_border = True
     ls.select_crease = False
+    if exclude:
+        col = bpy.data.collections.new("No outline")
+        scene.collection.children.link(col)
+        for o in exclude:
+            col.objects.link(o)
+        ls.select_by_collection = True
+        ls.collection = col
+        ls.collection_negation = "EXCLUSIVE"
     if ls.linestyle is None:
         ls.linestyle = bpy.data.linestyles.new("Comic")
     ls.linestyle.color = (0.02, 0.02, 0.02)
