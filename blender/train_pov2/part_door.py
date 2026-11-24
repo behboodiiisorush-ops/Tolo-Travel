@@ -160,7 +160,6 @@ def build():
     build_last_wagon()
     train = build_our_train()
     lena, mom = make_lena(), make_mom()
-    show([o for o in bpy.data.objects if o.name.startswith("Lena bunny")], 1, False)  # she gave it away
 
     cam = make_camera(scene)
     arms = POVArms(cam)
@@ -184,11 +183,11 @@ def build():
         looks_up = seg(t, 40.0, 40.6)
         lena.pose(f, t, lpos, facing=-90, run=min(1.0, v / 0.4) * lerp(0.45, 1.0, trot) if t > 2.2 else 0.0,
                   run_rate=lerp(1.0, 1.9, trot), lean=0, look=(lerp(0, -8, looks_up), lerp(10, 18, looks_up)),
-                  reach2=(lerp(92, 98, looks_up), -12), worry=lerp(1.4, 1.9, looks_up), talk=False)
+                  reach2=(lerp(92, 98, looks_up), -12), worry=lerp(1.4, 1.9, looks_up))
 
         # ---------------- Mum behind the fence, waving us to come
         mom.pose(f, t, mom_pos, facing=-70, wave=1.0 if (8 <= t < 20) else 0.0,
-                 reach=(130, 30) if not (8 <= t < 20) else None, look=(0, 8), worry=1.6, talk=False)
+                 reach=(130, 30) if not (8 <= t < 20) else None, look=(0, 8), worry=1.6)
 
         # ---------------- camera: kneeling in the door, moving with the train
         lena_dir = (90, -20)

@@ -523,7 +523,7 @@ def make_lena():
     scarf_wrap(p, (0.98, 0.5, 0.65))
     white = toon("Bunny", (0.97, 0.95, 0.94))
     pink = toon("Bunny pink", (0.98, 0.6, 0.7))
-    hp = p.p["handR"].matrix_world.translation
+    hp = p.hand_world("R")
     el = p.p["elbowR"]
     p.add(ball(hp + Vector((0.02, 0.06, -0.12)), 0.08, white, "bunny body"), el)
     p.add(ball(hp + Vector((0.02, 0.06, 0.0)), 0.06, white, "bunny head"), el)

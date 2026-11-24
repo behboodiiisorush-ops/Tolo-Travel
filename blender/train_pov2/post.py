@@ -22,7 +22,15 @@ FPS = 24
 W, H = 1080, 1920
 
 sys.path.insert(0, HERE)
-from captions import CAPTIONS, CARD_SECONDS, END, QUESTION, QUESTION_AT, SUB_QUESTION  # noqa: E402
+from captions import CAPTIONS, CARD_SECONDS, END, NARRATION, QUESTION, QUESTION_AT, SUB_QUESTION  # noqa: E402
+
+SPEAKERS = {  # caption key -> (name shown, colour), the same as episode 1
+    "Me": ("من", (60, 160, 80)),
+    "Mom": ("مامان", (150, 40, 80)),
+    "Lena": ("لنا", (210, 50, 45)),
+    "Grandma voice": ("پیام صوتی مامان‌بزرگ", (30, 110, 90)),
+    "Rahim": ("عمو رحیم", (235, 120, 20)),
+}
 
 LAST = int(END * FPS)
 
@@ -64,7 +72,13 @@ def overlay(img, t):
     for start, end, who, text in CAPTIONS:
         if start <= t <= end:
             k = min(1.0, (t - start) / 0.15)
-            draw_text(d, (W // 2, int(H * 0.7)), text, int(76 * (0.85 + 0.15 * k)), stroke=10)
+            if start in NARRATION:
+                draw_text(d, (W // 2, int(H * 0.7)), text, int(76 * (0.85 + 0.15 * k)), stroke=10)
+            else:
+                name, col = SPEAKERS[who]
+                y = int(H * 0.68)
+                pill(d, W // 2, y - 105, name, col)
+                draw_text(d, (W // 2, y), text, int(80 * (0.85 + 0.15 * k)))
     if t < 0.5:
         img = Image.blend(Image.new("RGB", img.size, (0, 0, 0)), img, t / 0.5)
     return img
