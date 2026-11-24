@@ -80,6 +80,15 @@ def pose_spec(st):
         _add(spec, "spine_02", x=9 * sham, y=5 * sham * s)
         _add(spec, "neck_01", x=-6 * sham, y=9 * sham)
         _add(spec, "head", y=(15 + 4 * math.sin(1.7 * t + seed)) * sham, x=-14 * sham)
+    climb = st.get("climb", 0.0)
+    if climb:  # running up stairs: swing leg lifted high, stance leg almost straight
+        for side, sg in (("l", s), ("r", -s)):
+            lift = max(0.0, sg)
+            _add(spec, f"thigh_{side}", x=-(8 + 62 * lift) * climb)
+            _add(spec, f"calf_{side}", x=(6 + 85 * lift) * climb)
+            _add(spec, f"foot_{side}", x=-12 * lift * climb)
+        _add(spec, "pelvis", z=6 * climb * s)
+        _add(spec, "spine_01", x=6 * climb, z=-5 * climb * s)
     if sit:
         for side in ("l", "r"):
             _add(spec, f"thigh_{side}", x=-88 * sit, z=(4 if side == "l" else -4) * sit)
@@ -113,11 +122,12 @@ def pose_spec(st):
         r = st.get("reach", 80)
         _arm(spec, "l", r + 5 * math.sin(t * 2 + seed), 12, down=40)
         _arm(spec, "r", r - 8 + 5 * math.sin(t * 2.3 + seed), 16, down=40)
-    elif arms == "push":
-        _arm(spec, "l", 75, 28, down=38)
-        _arm(spec, "r", 75, 28, down=38)
-        _add(spec, "spine_01", x=14)
-        _add(spec, "spine_02", x=8)
+    elif arms == "push":  # hands on a waist-high desk, shoving in pulses
+        pulse = 8 * math.sin(t * 7.5 + seed)
+        _arm(spec, "l", 42 + pulse, 18 - pulse, down=40)
+        _arm(spec, "r", 42 - pulse, 18 + pulse, down=40)
+        _add(spec, "spine_01", x=16)
+        _add(spec, "spine_02", x=10)
     elif arms == "bang":
         _arm(spec, "l", 110 + 25 * math.sin(t * 9 + seed), 25 + 20 * math.sin(t * 9 + seed), down=30)
         _arm(spec, "r", 110 + 25 * math.sin(t * 9 + seed + 2.5), 25 + 20 * math.sin(t * 9 + seed + 2.5), down=30)
@@ -142,6 +152,16 @@ def pose_spec(st):
     elif arms == "chalk":
         _arm(spec, "r", 35, 70, down=46)
         _arm(spec, "l", -2, 12)
+    tk = st.get("talking")
+    g = (1.0 if tk is True else float(tk or 0.0)) if tk else 0.0
+    if g and arms in ("rest", "desk", "chalk", "mug"):   # talk with the hands and the head
+        w1 = math.sin(t * 4.1 + seed)
+        w2 = math.sin(t * 3.3 + 1.3 + seed)
+        _add(spec, "upperarm_r", x=-(14 + 10 * w1) * min(1.0, 0.5 + g))
+        _add(spec, "lowerarm_r", x=-(28 + 18 * w2) * min(1.0, 0.5 + g))
+        _add(spec, "upperarm_l", x=-(6 + 6 * w2) * min(1.0, 0.5 + g))
+        _add(spec, "lowerarm_l", x=-(12 + 10 * w1) * min(1.0, 0.5 + g))
+        _add(spec, "head", x=4 * math.sin(t * 5.3 + seed) * g, z=5 * math.sin(t * 1.9 + seed) * g)
     for side in ("l", "r"):
         o = st.get(f"arm_{side}")
         if o:
@@ -192,7 +212,11 @@ def face(st):
     scream = st.get("scream", 0.0)
     smile = st.get("smile", 0.0)
     b = 0.0 if z else blink(t, seed)
-    mouth = talk(t, seed) if st.get("talking") else 0.04 * fear
+    tk = st.get("talking")
+    if isinstance(tk, bool):
+        mouth = talk(t, seed) if tk else 0.04 * fear
+    else:  # audio level 0..1 of this character's voice at this frame
+        mouth = 0.06 + 0.9 * float(tk or 0.0) if tk else 0.04 * fear
     if z:
         g = 0.5 + 0.25 * math.sin(2.3 * t + seed) + 0.15 * math.sin(5.1 * t + seed)
         mouth = max(g, scream)

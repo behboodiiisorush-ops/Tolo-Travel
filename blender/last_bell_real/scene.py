@@ -47,11 +47,37 @@ SPEAKER_KEY = {"Mom": "mom", "Anchor": "anchor", "Rezaei": "rezaei", "Kazemi": "
                "Mahsa": "mahsa", "Kian": "kian", "Soldier": "soldier"}
 
 
+def _load_voice():
+    """Lip sync from the real dialogue track: where each line plays (voice.py) and how loud it is."""
+    import json, wave
+    import numpy as np
+    jt, wv = os.path.join(HERE, "out", "voice_times.json"), os.path.join(HERE, "out", "voice.wav")
+    if not (os.path.exists(jt) and os.path.exists(wv)):
+        return None, None
+    with wave.open(wv) as w:
+        sr = w.getframerate()
+        a = np.frombuffer(w.readframes(w.getnframes()), np.int16).astype(np.float32)[::w.getnchannels()] / 32768
+    hop = sr // 100                       # 10 ms RMS envelope
+    env = np.sqrt(np.convolve(a ** 2, np.ones(hop * 4) / (hop * 4), mode="same"))[::hop]
+    ref = float(np.percentile(env[env > 0.01], 90)) if np.any(env > 0.01) else 1.0
+    return json.load(open(jt)), np.clip(env / ref, 0, 1)
+
+
+VOICE_TIMES, VOICE_ENV = _load_voice()
+
+
 def talking(key, t):
-    for a, b, who, _ in CAPTIONS:
-        if who and SPEAKER_KEY.get(who) == key and a - 0.05 <= t <= b:
-            return True
-    return False
+    """0 when silent, else the loudness (0..1) of this character's line at time t."""
+    if VOICE_TIMES is None:
+        for a, b, who, _ in CAPTIONS:
+            if who and SPEAKER_KEY.get(who) == key and a - 0.05 <= t <= b:
+                return True
+        return False
+    for v in VOICE_TIMES:
+        if v["who"] and SPEAKER_KEY.get(v["who"]) == key and v["start"] <= t <= v["end"]:
+            i = int(t * 100)
+            return max(0.02, float(VOICE_ENV[min(i, len(VOICE_ENV) - 1)]))
+    return 0.0
 
 
 # ==================================================================== materials
@@ -583,6 +609,10 @@ SEATS = [(CX - 2.42, 1.4), (CX - 1.78, -1.4), (CX + 1.78, 1.4), (CX + 2.42, 0.0)
          (CX + 0.32, -2.8), (CX + 1.78, -1.4)]
 
 
+PUSH_DIR = Vector((1.15, 1.25, 0)).normalized()          # the desk slides towards the door
+PUSH_PERP = Vector((PUSH_DIR.y, -PUSH_DIR.x, 0))
+
+
 def desk_loc(t):
     return Vector((CX + 2.1, 1.75, 0)).lerp(Vector((CX + 3.25, 3.0, 0)), seg(t, 47.5, 50.5))
 
@@ -628,14 +658,19 @@ for f in range(F0, F1 + 1):
         # teacher
         writing = t < 15.4 or (16.9 < t < 18.6)
         k_pos, k_face, k_arms = Vector((CX + 0.6, 3.55, 0)), (0 if writing else 180), ("write" if writing else "chalk")
+        k_walk = 0.0
         if 45.0 <= t < 51.0:
-            k_pos, k_face, k_arms = Vector((CX + 1.2, 3.6, 0)), -60, "push"
+            k_pos, k_face, k_arms = Vector((CX + 1.2, 3.6, 0)), -60, "rest"
+            if t > 47.4:   # pushes the desk with Arian (and me)
+                k_pos, k_face, k_arms = desk_loc(t) - 0.62 * PUSH_DIR - 0.38 * PUSH_PERP, -42.6, "push"
+                k_walk = seg(t, 47.4, 47.6) * (1 - seg(t, 50.4, 50.6))
         if 51.0 <= t < 57.0:
             k_pos, k_face, k_arms = Vector((CX + 1.0, 2.0, 0)), 150, "rest"
         if 57.0 <= t < 63.0:
             k_pos, k_face, k_arms = Vector((CX + 2.8, 2.6, 0)), 135, ("wave" if t > 61.6 else "rest")
         kazemi.animate(f, t, k_pos, k_face, arms=k_arms, look=(0, 3), worry=0.9 if t < 33 else 1.6,
-                       talking=talking("kazemi", t))
+                       talking=talking("kazemi", t), walk=k_walk, phase=2 * math.pi * 1.3 * t,
+                       lean=22 if k_arms == "push" else 0)
         # Arian, next to me
         a_pos, a_sit, a_face = Vector((CX + 0.32, -0.12, 0)), 1.0 if t < 39 else 0.0, 0
         a_look = (lerp(0, 60, seg(t, 17.0, 17.3) * (1 - seg(t, 18.6, 18.9))), 0)
@@ -644,16 +679,19 @@ for f in range(F0, F1 + 1):
             a_look = (65, -10)
         if 39.0 <= t < 45.0:
             a_pos, a_look, a_face, a_arms = Vector((CX - 3.25, -2.5, 0)), (0, -30), 90, "rest"
+        a_walk = 0.0
         if 45.0 <= t < 51.0:
-            a_pos = Vector((CX + 2.7, 1.2, 0)) if t < 47.4 else desk_loc(t) + Vector((0.35, -0.75, 0))
-            a_look, a_face, a_arms = (0, 0), -45, ("push" if t > 47.4 else "rest")
+            a_pos = Vector((CX + 2.7, 1.2, 0)) if t < 47.4 else desk_loc(t) - 0.62 * PUSH_DIR + 0.38 * PUSH_PERP
+            a_look, a_face, a_arms = (0, 0), -42.6, ("push" if t > 47.4 else "rest")
+            a_walk = seg(t, 47.4, 47.6) * (1 - seg(t, 50.4, 50.6)) if t > 47.4 else 0.0
         if 51.0 <= t < 57.0:
             a_pos, a_look, a_face, a_arms = Vector((CX + 0.4, -2.4, 0)), (40, 0), 150, "rest"
         if 57.0 <= t < 63.0:
             a_pos, a_look, a_face = Vector((CX - 3.2, -2.3, 0)), (-90, 10), 90
             a_arms = "wave" if t > 60.2 else "rest"
         arian.animate(f, t, a_pos, a_face, sit=a_sit, arms=a_arms, look=a_look, worry=0.8 if t < 33 else 1.5,
-                      talking=talking("arian", t), smile=0.6 if 29 < t < 31.5 else 0.0)
+                      talking=talking("arian", t), smile=0.6 if 29 < t < 31.5 else 0.0,
+                      walk=a_walk, phase=2 * math.pi * 1.3 * t + 1.0, lean=22 if a_arms == "push" else 0)
         # Mahsa, Kian
         m_pos, m_face, m_sit = Vector((CX - 1.78, 1.28, 0)), 0, 1.0
         if 39.0 <= t < 51.0:
@@ -720,13 +758,16 @@ for f in range(F0, F1 + 1):
     else:  # stairs + roof
         y_me = lerp(0.2, 7.6, min(1, (t - 63.0) / 6.0))
         if t < 69.0:
-            for p, dy, dx in ((kazemi, 3.0, 0.25), (mahsa, 2.0, -0.2), (arian, 1.05, 0.35)):
+            for k, (p, dy, dx) in enumerate(((kazemi, 3.0, 0.25), (mahsa, 2.0, -0.2), (arian, 1.05, 0.35))):
                 yy = y_me + dy
-                p.animate(f, t, (RX + 0.55 + dx, yy, min(rz, 0.2 * (yy / 0.3))), 0, run=1, phase=2 * math.pi * 1.7 * t,
-                          arms="run", lean=8, worry=1.8, talking=talking(p.key, t))
+                zz = min(rz, 0.2 * (yy / 0.3) + 0.1)
+                on = 0.0 if yy > 7.5 else 1.0          # climbing on the steps, running on the landing
+                p.animate(f, t, (RX + 0.55 + dx, yy, zz), 0, climb=on, run=1 - on,
+                          phase=2 * math.pi * 2.05 * t + 1.7 * k, arms="run", lean=10, worry=1.8,
+                          talking=talking(p.key, t))
             yk = max(0.0, y_me - 0.9)
-            kian.animate(f, t, (RX + 0.6, yk, 0.2 * (yk / 0.3)), 0, run=1, phase=2 * math.pi * 2.0 * t, arms="hold",
-                         lean=15, look=(0, 15), worry=2.0, talking=talking("kian", t))
+            kian.animate(f, t, (RX + 0.6, yk, 0.2 * (yk / 0.3) + 0.1), 0, climb=1, phase=2 * math.pi * 2.05 * t + 0.6,
+                         arms="hold", lean=12, look=(0, 15), worry=2.0, talking=talking("kian", t))
         else:
             v = seg(t, 69.0, 72.0)
             for p, x0, y0 in ((kazemi, -1.5, 13.0), (mahsa, -0.6, 12.0), (arian, 0.6, 12.5), (kian, -0.45, 9.9)):
