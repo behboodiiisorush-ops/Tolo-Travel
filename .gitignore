@@ -48,3 +48,8 @@ blender/shelter2/test/
 blender/shelter2/textures/
 blender/shelter2/voices/fitted/
 blender/shelter2/*.log
+blender/sniper1/frames/
+blender/sniper1/post_tmp/
+blender/sniper1/test/
+blender/sniper1/voices/fitted/
+blender/sniper1/*.log
