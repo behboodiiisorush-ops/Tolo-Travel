@@ -36,3 +36,9 @@ blender/train_pov4/post_tmp/
 blender/train_pov4/test/
 blender/train_pov4/voices/fitted/
 blender/train_pov4/*.log
+blender/shelter1/frames/
+blender/shelter1/post_tmp/
+blender/shelter1/test/
+blender/shelter1/textures/
+blender/shelter1/voices/fitted/
+blender/shelter1/*.log
