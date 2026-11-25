@@ -614,7 +614,7 @@ sc.view_settings.exposure = float(os.environ.get("EXPOSURE", "0.4"))
 sc.world.color = (0.02, 0.025, 0.04)
 if os.environ.get("OUTLINES", "hull") == "freestyle":
     P.enable_outlines(sc, 1.1)
-else:
+elif os.environ.get("OUTLINES", "hull") == "hull":
     for ch in (arian, nina, i1, i2):
         C.hull_outlines(ch)
     C.hull_outlines(me, thickness=0.0011)      # my own hands are right in front of the lens
@@ -637,3 +637,14 @@ if "--render" in args:
     sc.render.use_overwrite = False
     sc.render.use_placeholder = True
     bpy.ops.render.render(animation=True)
+if "--frames" in args:
+    # frame-by-frame re-render (fresh frame_set each time) for repairing bad frames
+    a, b = [int(v) for v in args[args.index("--frames") + 1].split("-")]
+    os.makedirs(os.path.join(HERE, "frames", "rules"), exist_ok=True)
+    for f in range(a, b + 1):
+        out = os.path.join(HERE, "frames", "rules", f"f_{f:04d}.png")
+        if os.path.exists(out) and os.path.getsize(out) > 0:
+            continue
+        sc.frame_set(f)
+        sc.render.filepath = out
+        bpy.ops.render.render(write_still=True)
