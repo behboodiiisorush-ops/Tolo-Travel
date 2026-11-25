@@ -20,6 +20,7 @@ Check poses fast: `../cast/bpy.sh test_clips.py --clips a,b,c` -> `test/clips_<n
 | opening_door_inwards | 6.4 | grab handle, pull door, step through |
 | reloading | 3.7 | reload a rifle |
 | dismissing_gesture | 2.2 | "forget it" hand wave |
+| hands_forward_gesture | 3.1 | both hands forward, open palms ("wait, listen" / explaining) |
 | zombie_idle | 4.3 | swaying zombie stand |
 | zombie_walk | 4.0 | zombie walk |
 | zombie_run | 0.8 | zombie run (loop) |
