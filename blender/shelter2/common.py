@@ -111,6 +111,9 @@ def box(loc, size, m, name="Box", bevel=0.0):
     o = bpy.context.object
     o.scale = size
     bpy.ops.object.transform_apply(scale=True)
+    # keep the pivot in the middle of the box (in this Blender version it can end up at the world
+    # origin), so a later rotation turns the box in place instead of swinging it away
+    bpy.ops.object.origin_set(type="ORIGIN_GEOMETRY", center="BOUNDS")
     if bevel:
         b = o.modifiers.new("Bevel", "BEVEL")
         b.width = bevel

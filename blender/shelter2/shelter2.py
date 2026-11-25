@@ -298,6 +298,55 @@ def build_fog():
     return fog_col
 
 
+def build_cosy_inside():
+    """Three days of living in the bunker: painted walls, blankets, mats, bottles, a child's drawing."""
+    x0, x1, y0, y1 = BX - 1.78, BX + 1.78, DOOR_Y + 0.25, DOOR_Y + 13.8
+    cream = toon("Bunker paint", (0.93, 0.86, 0.7), 0.18)
+    teal = toon("Bunker band", (0.12, 0.55, 0.58), 0.18)
+    stripe = toon("Bunker stripe", (0.95, 0.72, 0.15), 0.25)
+    for x, s in ((x0, 1), (x1, -1)):
+        box((x, (y0 + y1) / 2, 1.85), (0.03, y1 - y0, 1.9), cream, "Wall paint")
+        box((x + s * 0.005, (y0 + y1) / 2, 0.5), (0.035, y1 - y0, 1.0), teal, "Wall band")
+        box((x + s * 0.01, (y0 + y1) / 2, 1.02), (0.04, y1 - y0, 0.06), stripe, "Wall stripe")
+    box((BX, y1, 1.4), (x1 - x0, 0.03, 2.8), cream, "Back paint")
+    box((BX, (y0 + y1) / 2, 2.77), (x1 - x0, y1 - y0, 0.03), toon("Bunker ceiling", (0.97, 0.93, 0.82), 0.2),
+        "Ceiling paint")
+    box((BX, (y0 + y1) / 2, 0.045), (1.2, y1 - y0 - 1, 0.01), toon("Runner", (0.75, 0.2, 0.22), 0.15), "Floor runner")
+    cols = [(0.85, 0.2, 0.25), (0.2, 0.45, 0.85), (0.95, 0.7, 0.12), (0.3, 0.65, 0.35), (0.6, 0.3, 0.75),
+            (0.95, 0.5, 0.15)]
+    for k in range(9):  # blankets folded on the benches and lying on mats
+        sx = -1 if k % 2 else 1
+        y = DOOR_Y + 3.6 + k * 1.05
+        c = cols[k % len(cols)]
+        box((BX + sx * 1.55, y, 0.53), (0.45, 0.55, 0.06), toon(f"Blanket {k}", c, 0.2), "Blanket", bevel=0.02)
+        if k % 3 == 0:
+            ball((BX + sx * 1.55, y + 0.3, 0.58), 0.12, toon("Pillow", (0.97, 0.95, 0.9), 0.25), "Pillow",
+                 scale=(1.4, 1, 0.6))
+    for k in range(6):  # water bottles and tins along the back wall
+        rod((BX - 1.2 + k * 0.45, y1 - 0.3, 0.05), (BX - 1.2 + k * 0.45, y1 - 0.3, 0.32), 0.05,
+            toon("Bottle", (0.45, 0.75, 0.95), 0.35), "Bottle")
+    for k in range(4):
+        box((BX + 1.2, DOOR_Y + 9 + k * 0.5, 0.15), (0.35, 0.35, 0.3), toon("Box", (0.75, 0.55, 0.3), 0.15),
+            "Supply box", bevel=0.02)
+    # a child's drawing taped on the wall: a house, a sun, three people
+    dx = x1 - 0.03
+    box((dx, DOOR_Y + 5.0, 1.55), (0.01, 0.55, 0.42), toon("Paper", (0.98, 0.97, 0.92), 0.4), "Drawing")
+    ball((dx - 0.01, DOOR_Y + 5.15, 1.68), 0.05, toon("Sun", (1.0, 0.8, 0.1), 0.5), "Drawn sun", scale=(0.2, 1, 1))
+    box((dx - 0.01, DOOR_Y + 4.9, 1.45), (0.005, 0.18, 0.14), toon("Drawn house", (0.9, 0.3, 0.25), 0.4), "Drawn house")
+    for k in range(3):
+        box((dx - 0.01, DOOR_Y + 5.05 + k * 0.06, 1.44), (0.005, 0.02, 0.09), toon("Drawn person", (0.2, 0.4, 0.9), 0.4),
+            "Drawn person")
+    # warm string of lamps along the ceiling
+    bulb = glow_mat("Warm bulb", (1.0, 0.75, 0.35), 4.0)
+    for k in range(10):
+        ball((BX + 0.6 * math.sin(k), DOOR_Y + 2.5 + k * 1.1, 2.6), 0.045, bulb, "Bulb string", seg=8)
+    for y in (DOOR_Y + 5, DOOR_Y + 9):
+        bpy.ops.object.light_add(type="POINT", location=(BX, y, 1.7))
+        lt = no_cam(bpy.context.object)
+        lt.data.energy = 55
+        lt.data.color = (1.0, 0.82, 0.6)
+
+
 def build_status_lights():
     """The lamp above the door (inside and outside): red, or green when it is safe to open."""
     red = glow_mat("Status red", (1.0, 0.08, 0.05), 6.0)
@@ -402,8 +451,9 @@ def build():
     motes = build_dust()
     reds, greens, status = build_status_lights()
     fog_col = build_fog()
+    build_cosy_inside()
     lena, mom, guard, zombie = make_lena(), make_mom(), make_guard(), make_zombie_jalal()
-    sitters = [make_extra(i + 1, 0.95) for i in range(5)]
+    sitters = [make_extra(i, 0.95) for i in (0, 1, 4, 6, 2)]
     cam = make_camera(scene)
     arms = POVArms(cam)
     arms.reach = 1.2
@@ -433,7 +483,7 @@ def build():
             show([o], f, green)
         status.data.color = (0.1, 1.0, 0.3) if green else (1.0, 0.1, 0.05)
         status.data.keyframe_insert("color", frame=f)
-        lamp.data.energy = 35
+        lamp.data.energy = 30
         lamp.data.keyframe_insert("energy", frame=f)
         led.scale = (0.001,) * 3
         led.keyframe_insert("scale", frame=f)
@@ -519,14 +569,14 @@ def build():
                       run_rate=2.2, lean=-6, look=(lerp(0, 35, seg(t, at("me1"), at("me1") + 0.3)), 5),
                       reach=(140, 20) if at("lena2") < t < at("lena2", 1) else None, worry=1.6 + 0.4 * back)
         else:
-            lena.pose(f, t, Vector((BX + 0.75, DOOR_Y + 2.2, 0)), facing=30, crouch=0.3, hug=0.6, look=(0, 25),
+            lena.pose(f, t, Vector((BX + 0.85, DOOR_Y + 2.35, 0)), facing=195, crouch=0.2, hug=0.6, look=(-10, 20),
                       worry=2.0, lean=0)
 
         # ---------------- Mum: on the bench, up at green, holding Lena at the end
         up = seg(t, at("mom1") - 0.6, at("mom1"))
         mpos = Vector((BX - 1.45, DOOR_Y + 3.4, 0)).lerp(Vector((BX - 0.6, DOOR_Y + 3.0, 0)), up)
         mpos = mpos.lerp(Vector((BX + 1.0, DOOR_Y + 2.7, 0)), seg(t, close1, close1 + 1.2))
-        mom.pose(f, t, mpos, facing=lerp_yaw(-90, 200, up) if t < close1 else 200, sit=1 - up, seat_h=0.5, lean=0,
+        mom.pose(f, t, mpos, facing=lerp_yaw(-90, 185, up) if t < close1 else 190, sit=1 - up, seat_h=0.5, lean=0,
                  reach=(lerp(30, 150, seg(t, at("mom1"), at("mom1") + 0.3) * (1 - seg(t, at("mom1", 1), at("mom1", 1) + 0.4))), 20),
                  hug=0.6 * seg(t, close1, close1 + 1.2), look=(0, 10), worry=1.5 + 0.5 * seg(t, lunge0, close1))
 
@@ -557,11 +607,20 @@ def build():
                     look=(lurch, -10 + 6 * math.sin(t * 1.7)), worry=0.0, talk=False)
 
         for i, s in enumerate(sitters):
-            sxp = BX + (-1.5 if i % 2 else 1.5)
-            stand_up = seg(t, at("mom1"), at("mom1") + 0.8) * (1 - seg(t, close1, close1 + 1.0))
-            s.pose(f, t, Vector((sxp, DOOR_Y + 4.5 + i * 1.3, 0)), facing=90 if i % 2 == 0 else -90,
-                   sit=1 - stand_up, seat_h=0.5, lean=0, look=(0, -15 + 15 * stand_up), worry=1.8,
-                   hug=0.4 * seg(t, close1, close1 + 1.0))
+            side = -1 if i % 2 else 1
+            seat_p = Vector((BX + side * 1.5, DOOR_Y + 4.5 + i * 1.3, 0))
+            stand_up = seg(t, at("mom1"), at("mom1") + 0.8)
+            # standing: step into the aisle a little, facing the door; at the end, drawn back, afraid
+            stand_p = Vector((BX + side * 0.9, DOOR_Y + 4.2 + i * 1.1, 0))
+            back_p = Vector((BX + side * (0.7 + 0.3 * (i % 3)), DOOR_Y + 5.2 + i * 1.0, 0))
+            sp = seat_p.lerp(stand_p, stand_up).lerp(back_p, seg(t, close1, close1 + 1.4))
+            to_door = yaw_to(Vector((BX, DOOR_Y, 0)) - sp)
+            fac = lerp_yaw(-90 * side, to_door, seg(t, at("mom1") - 0.2, at("mom1") + 0.6))
+            afraid = seg(t, close1, close1 + 1.0)
+            s.pose(f, t, sp, facing=fac, sit=1 - stand_up, seat_h=0.5, lean=0,
+                   look=(0, lerp(-15, 8, stand_up)), worry=1.8 + 0.4 * afraid,
+                   hug=0.45 * afraid if i % 2 else 0.0, crouch=0.15 * afraid,
+                   reach=(lerp(20, 70, afraid), 25) if i % 2 == 0 else None)
 
         # ---------------- our hands: on our knees, the door, Lena's shoulder
         bpy.context.view_layer.update()
@@ -582,7 +641,6 @@ def build():
     sun = bpy.context.object
     sun.data.energy = 1.0
     sun.data.color = (0.85, 0.86, 0.9)
-    darken_toon(0.6)
     setup_render(scene, sky=(0.66, 0.66, 0.67), sky_strength=1.0)
     ls = scene.view_layers[0].freestyle_settings.linesets[0]
     ls.select_by_collection = True
