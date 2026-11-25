@@ -53,3 +53,8 @@ blender/sniper1/post_tmp/
 blender/sniper1/test/
 blender/sniper1/voices/fitted/
 blender/sniper1/*.log
+blender/train_pov5/frames/
+blender/train_pov5/post_tmp/
+blender/train_pov5/test/
+blender/train_pov5/voices/fitted/
+blender/train_pov5/*.log
