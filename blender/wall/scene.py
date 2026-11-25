@@ -58,16 +58,16 @@ WT = 0.16
 UNITS = {"A": (0.0, 5.0), "B": (5.16, 10.16), "C": (10.32, 15.32)}
 D = 4.5
 M_ = dict(
-    wallA=P.mat("Wall A", (0.8, 0.76, 0.68), 0.9), wallB=P.mat("Wall B", (0.42, 0.52, 0.48), 0.9),
-    wallC=P.mat("Wall C", (0.4, 0.42, 0.52), 0.9), floor=P.mat("Floor", (0.55, 0.38, 0.24), 0.7),
+    wallA=P.mat("Wall A", (0.8, 0.76, 0.68), 0.9), wallB=P.mat("Wall B", (0.62, 0.64, 0.6), 0.9),
+    wallC=P.mat("Wall C", (0.58, 0.58, 0.6), 0.9), floor=P.mat("Floor", (0.46, 0.42, 0.38), 0.7),
     tileB=P.mat("Kitchen floor", (0.78, 0.78, 0.74), 0.5), ceil=P.mat("Ceiling", (0.7, 0.7, 0.68), 0.9),
     steel=P.mat("Steel", (0.42, 0.46, 0.5), 0.35, metal=0.6), rivet=P.mat("Rivet", (0.3, 0.33, 0.36), 0.3, metal=0.6),
-    door=P.mat("Door", (0.62, 0.42, 0.26), 0.6), frame=P.mat("Frame", (0.95, 0.95, 0.93), 0.5),
+    door=P.mat("Door", (0.5, 0.44, 0.38), 0.6), frame=P.mat("Frame", (0.95, 0.95, 0.93), 0.5),
     glass=P.mat("Window glass", (0.55, 0.62, 0.68), 0.1), curtain=P.mat("Curtain", (0.62, 0.18, 0.2), 0.9),
-    sofa=P.mat("Sofa", (0.25, 0.4, 0.55), 0.9), wood=P.mat("Wood", (0.45, 0.3, 0.18), 0.6),
-    counter=P.mat("Counter", (0.9, 0.9, 0.88), 0.4), cab=P.mat("Cabinet", (0.35, 0.5, 0.42), 0.6),
+    sofa=P.mat("Sofa", (0.4, 0.42, 0.45), 0.9), wood=P.mat("Wood", (0.42, 0.36, 0.3), 0.6),
+    counter=P.mat("Counter", (0.9, 0.9, 0.88), 0.4), cab=P.mat("Cabinet", (0.55, 0.56, 0.54), 0.6),
     metal=P.mat("Metal", (0.7, 0.72, 0.74), 0.3, metal=0.8), bed=P.mat("Bed sheet", (0.85, 0.85, 0.8), 0.9),
-    blanket=P.mat("Blanket", (0.4, 0.32, 0.5), 0.9), rubble=P.mat("Rubble", (0.8, 0.76, 0.68), 0.95),
+    blanket=P.mat("Blanket", (0.45, 0.42, 0.44), 0.9), rubble=P.mat("Rubble", (0.8, 0.76, 0.68), 0.95),
     brick=P.mat("Brick", (0.62, 0.36, 0.28), 0.9), dark=P.mat("Dark", (0.05, 0.05, 0.06), 0.9),
     handle=P.mat("Hammer handle", (0.55, 0.38, 0.2), 0.6), head=P.mat("Hammer head", (0.2, 0.2, 0.22), 0.4, metal=0.8),
     phone=P.mat("Phone body", (0.08, 0.08, 0.1), 0.3), fridge=P.mat("Fridge", (0.88, 0.9, 0.9), 0.3),
@@ -123,6 +123,8 @@ def wall_with_hole(x, hy, hw, hz0, hz1, m, name, plug_until=None, cracks=()):
             spin = Vector((r.uniform(-12, 12), r.uniform(-12, 12), r.uniform(-8, 8)))
             t0 = plug_until + r.uniform(0.0, 0.25)
             b = box(tuple(p0), sz, "rubble" if j % 3 else "brick", name + " debris")
+            b.data.transform(Matrix.Translation(-b.matrix_world.translation - p0))   # (P.box bakes the
+            b.location = p0                                                           # location: spin about its centre)
             key_vis(b, [(0, False), (t0, True)])
             rest_z = sz[2] / 2
             tf = (v.z + math.sqrt(v.z ** 2 + 2 * g * (p0.z - rest_z))) / g
@@ -397,7 +399,7 @@ act("kazemi", "nervously_look_around", 59.4, 75.5, (12.1, 2.3, 0), -60, src_from
 act("arian", "pushing", 24.5, 27.0, (7.3, 1.9, 0), 180, speed=0.05)
 act("arian", "pushing", 27.0, 29.5, (7.3, 1.75, 0), 180, src_from=0.2, speed=1.0)
 act("arian", "nervously_look_around", 29.5, 33.5, (7.3, 1.6, 0), 160)
-act("arian", "nervously_look_around", 33.5, 41.0, (8.4, 1.4, 0), -70, src_from=2.0)
+act("arian", "nervously_look_around", 33.5, 41.0, (8.9, 3.3, 0), -70, src_from=2.0)
 act("arian", "breathing_idle", 41.0, 51.0, (11.0, 2.1, 0), -70)
 act("arian", "breathing_idle", 51.0, 59.4, (11.3, 2.25, 0), 0, src_from=4.0)
 act("arian", "terrified", 59.4, 75.5, (11.3, 2.25, 0), -50, src_from=1.0)
@@ -560,7 +562,29 @@ def show(objs, spans):
         key_vis(o, pts)
 
 
-ham_k, ham_k_parts = holder("Hammer Kazemi", "kazemi", 19.05)
+def two_hand_hammer(name, who, spans):
+    """Sledgehammer held in both hands: every frame the handle runs from the right hand through the left."""
+    rig = CH[who].rig
+    o = hammer_mesh(name)
+    o.rotation_mode = "QUATERNION"
+    d_prev = Vector((1, 0, 0))
+    for a_, b_ in spans:
+        for f in range(fr(a_), fr(b_) + 1):
+            sc.frame_set(f)
+            hr = (rig.matrix_world @ rig.pose.bones["hand_r"].matrix).translation
+            hl = (rig.matrix_world @ rig.pose.bones["hand_l"].matrix).translation
+            d = hl - hr
+            if 0.04 < d.length < 0.4:
+                d.normalize()
+                d_prev = d_prev.lerp(d, 0.7).normalized()
+            o.location = hr - d_prev * 0.08
+            o.rotation_quaternion = d_prev.to_track_quat("Y", "Z")
+            o.keyframe_insert("location", frame=f)
+            o.keyframe_insert("rotation_quaternion", frame=f)
+    return o, [o]
+
+
+ham_k, ham_k_parts = two_hand_hammer("Hammer Kazemi", "kazemi", [(19.0, 24.5), (33.5, 41.0)])
 show(ham_k_parts, [(19.0, 24.5), (33.5, 41.0)])
 ham_m, ham_m_parts = holder("Hammer Mom", "mom", 17.6, both=False)
 show(ham_m_parts, [(16.4, 19.0)])
@@ -624,6 +648,7 @@ for owner in (cam, cam.data):
 
 # ------------------------------------------------------------------ look
 sc.frame_set(1)
+T.SAT = 0.6                                # fewer, quieter colours (the user asked)
 T.toonify(sc, samples=int(os.environ.get("SAMPLES", "8")))
 inked = [o for o in bpy.data.objects if o.type == "MESH" and not any(
     k in o.name.lower() for k in ("high-poly", "lash", "brow", "teeth", "tongue", "rivet", "crack", "screen", "glass", "dust",
