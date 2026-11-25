@@ -25,6 +25,18 @@ sys.path.insert(0, HERE)
 from captions import CAPTIONS, CARD_SECONDS, END, KEY_OF, NARRATION, NOTIFS, QUESTION  # noqa: E402
 
 TITLE_END = 2.4   # seconds of the black opening title
+LAST = int(END * FPS)
+
+SPEAKERS = {  # caption key -> (name shown, colour), the same as episode 1
+    "Me": ("من", (60, 160, 80)),
+    "Mom": ("مامان", (150, 40, 80)),
+    "Lena": ("لنا", (210, 50, 45)),
+    "Guard": ("نگهبان", (235, 130, 20)),
+    "Radio": ("رادیو", (70, 80, 70)),
+    "Grandma": ("مامان‌بزرگ", (190, 30, 40)),
+    "Jalal": ("آقا جلال", (130, 30, 40)),
+    "Rahim": ("عمو رحیم", (235, 120, 20)),
+}
 
 
 def font(size):
