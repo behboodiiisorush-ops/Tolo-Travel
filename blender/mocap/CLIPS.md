@@ -26,6 +26,9 @@ Check poses fast: `../cast/bpy.sh test_clips.py --clips a,b,c` -> `test/clips_<n
 | pushing_2 | 2.7 | half-kneeling, one hand held out, other by the face | kneeling, warding something off |
 | opening_a_filing_cabinet | 14.2 | squats right down, searches low on the floor, stands up | looking under a bed / searching the floor |
 | opening_door_inwards | 6.4 | hand to handle, pulls the door, leans and steps through | doors |
+| double_dagger_stab | 3.1 | fighter crouch, BOTH hands together raised above the head, then driven down hard (twice) | sledgehammer blows on a wall |
+| jump | 2.2 | crouch, leap forward with arms out, land, straighten | jumping over rubble / through a hole |
+| getting_smashed | 2.3 | hunched, hit in the chest, thrown back, lands on the back | being knocked down / attacked |
 | start_walking | 2.9 | standing -> walking | starting to walk |
 | walking | 1.0 | normal walk (in place) | walking |
 | walking_2 | 1.5 | slouched shuffle, arms dangling (not a normal walk) | exhausted / zombie-like walk |
