@@ -18,8 +18,9 @@ for nm in names:
     n = mocap.apply(ch, clip, start=start, facing=200)
     print("CLIP", nm, clip.fps, clip.seconds, n)
     tiles = []
-    for k in range(6):
-        f = start + int(k * (n - 1) / 5)
+    K = int(os.environ.get('K', '6'))
+    for k in range(K):
+        f = start + int(k * (n - 1) / max(1, K - 1))
         sc.frame_set(f)
         c = ch.rig.matrix_world @ ch.rig.pose.bones["spine_02"].head
         cam.location = (c.x + 0.6, c.y - 3.2, c.z + 0.3)
