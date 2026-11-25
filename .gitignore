@@ -42,3 +42,9 @@ blender/shelter1/test/
 blender/shelter1/textures/
 blender/shelter1/voices/fitted/
 blender/shelter1/*.log
+blender/shelter2/frames/
+blender/shelter2/post_tmp/
+blender/shelter2/test/
+blender/shelter2/textures/
+blender/shelter2/voices/fitted/
+blender/shelter2/*.log
