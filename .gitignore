@@ -33,3 +33,8 @@ blender/wall/test/
 blender/wall/post_tmp/
 blender/wall/*.blend
 blender/wall/out/*.wav
+blender/sleeve/frames/
+blender/sleeve/test/
+blender/sleeve/post_tmp/
+blender/sleeve/*.blend
+blender/sleeve/*.log
