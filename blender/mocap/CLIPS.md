@@ -13,6 +13,16 @@ Check poses fast: `../cast/bpy.sh test_clips.py --clips a,b,c` -> `test/clips_<n
 | breathing_idle | 9.9 | calm standing, breathing (loop) |
 | nervously_look_around | 6.3 | standing, glancing around nervously |
 | sitting_idle | 4.3 | seated idle (put a chair/bed under the hips) |
+| thinking | 4.2 | hand to chin, weight shift, thinking |
+| head_nod_yes | 2.6 | nodding yes |
+| shaking_head_no | 1.8 | shaking head no |
+| terrified | 20.0 | flinches, cowers, covers the head, looks around in fear (cut the part you need) |
+| talking_phone_pacing | 42.2 | phone at the ear, pacing and turning while talking (cut the part you need) |
+| goofy_running | 0.6 | silly loose-armed run (loop) |
+| opening_a_filing_cabinet | 14.2 | squats, searches a low drawer, stands up |
+| pushing | 4.0 | from a crouch, shoves something heavy and straightens up |
+| pushing_2 | 2.7 | leaning into a push, stepping forward (loop) |
+| male_action_pose | 1 frame | crouched ready pose (still) |
 | start_walking | 2.9 | from standing into a walk |
 | walking | 1.0 | walk cycle (loop) |
 | walking_2 | 1.5 | hunched / stumbling walk (loop) |
