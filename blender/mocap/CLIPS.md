@@ -29,6 +29,8 @@ Check poses fast: `../cast/bpy.sh test_clips.py --clips a,b,c` -> `test/clips_<n
 | double_dagger_stab | 3.1 | fighter crouch, BOTH hands together raised above the head, then driven down hard (twice) | sledgehammer blows on a wall |
 | jump | 2.2 | crouch, leap forward with arms out, land, straighten | jumping over rubble / through a hole |
 | getting_smashed | 2.3 | hunched, hit in the chest, thrown back, lands on the back | being knocked down / attacked |
+| cross_punch | 2.0 | boxer guard, one big straight punch forward with a step, back to guard | one hard punch on the steel door |
+| punching_bag | 3.2 | upright guard, a run of quick short punches | hammering the door with fists |
 | start_walking | 2.9 | standing -> walking | starting to walk |
 | walking | 1.0 | normal walk (in place) | walking |
 | walking_2 | 1.5 | slouched shuffle, arms dangling (not a normal walk) | exhausted / zombie-like walk |
