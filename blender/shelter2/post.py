@@ -24,6 +24,9 @@ W, H = 1080, 1920
 sys.path.insert(0, HERE)
 from captions import CAPTIONS, CARD_SECONDS, END, KEY_OF, NARRATION, NOTIFS, QUESTION  # noqa: E402
 
+TITLE_END = 2.4   # seconds of the black opening title
+
+
 def font(size):
     return ImageFont.truetype(FONT, size, layout_engine=ImageFont.Layout.RAQM)
 
@@ -87,9 +90,6 @@ def notification(img, t, start, end, app, icon_col, title, body):
 def overlay(img, t):
     d = ImageDraw.Draw(img)
     pill(d, W - 170, 150, "پناهگاه ۲", (60, 60, 70), 46)
-    if 0.3 <= t <= 2.3:  # "three days later"
-        k = min(1.0, (t - 0.3) / 0.3, (2.3 - t) / 0.3)
-        draw_text(d, (W // 2, 360), "سه روز بعد...", int(80 * (0.9 + 0.1 * k)), fill=(255, 235, 150), stroke=10)
     current = [c for c in CAPTIONS if c[0] <= t <= c[1]]
     for start, end, who, text in current[-1:]:  # when two lines overlap, the newer one wins
         if True:
@@ -103,8 +103,16 @@ def overlay(img, t):
                 draw_text(d, (W // 2, y), text, int(80 * (0.85 + 0.15 * k)))
     for n in NOTIFS:
         notification(img, t, *n)
-    if t < 0.5:
-        img = Image.blend(Image.new("RGB", img.size, (0, 0, 0)), img, t / 0.5)
+    if t < TITLE_END:  # the opening title on black: "three days later", then the bunker fades in
+        black = Image.new("RGB", img.size, (0, 0, 0))
+        k = min(1.0, max(0.0, (t - (TITLE_END - 0.7)) / 0.7))
+        img = Image.blend(black, img, k)
+        d2 = ImageDraw.Draw(img)
+        a = min(1.0, t / 0.35) * (1 - k)
+        if a > 0.02:
+            col = tuple(int(c * a) for c in (255, 235, 150))
+            draw_text(d2, (W // 2, H // 2 - 60), "سه روز بعد...", int(120 * (0.92 + 0.08 * a)), fill=col,
+                      stroke=0)
 
     return img
 
