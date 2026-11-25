@@ -10,6 +10,9 @@ Check poses fast: `../cast/bpy.sh test_clips.py --clips a,b,c` -> `test/clips_<n
 
 | file | seconds | what |
 |---|---|---|
+| breathing_idle | 9.9 | calm standing, breathing (loop) |
+| nervously_look_around | 6.3 | standing, glancing around nervously |
+| sitting_idle | 4.3 | seated idle (put a chair/bed under the hips) |
 | start_walking | 2.9 | from standing into a walk |
 | walking | 1.0 | walk cycle (loop) |
 | walking_2 | 1.5 | hunched / stumbling walk (loop) |
