@@ -51,6 +51,9 @@ Speed: ~12–20 s per frame on 4 CPUs (an 80 s film ≈ 7–9 h).
 ## 5. Post, voices, delivery
 - `post.py`: upscale, phone-screen overlays, Persian captions (Vazirmatn, Pillow + raqm), question card;
   outputs with captions, clean, with synthesised effects, and with the user's voices.
+- Voice script format (user rule, always): one copyable code block per line, grouped by speaker; the delivery
+  goes inside the text as English ElevenLabs v3 audio tags in square brackets (`[whispers]`, `[shouting]`,
+  `[nervous]`, `[short pause]`) so ElevenLabs acts them and doesn't read them out.
 - Voice script: generate a per-speaker list from the captions (see `voice_script.md`) and give it in
   copyable code blocks.
 - When the user sends ElevenLabs audio: transcribe with faster-whisper (word timestamps), cut each line,

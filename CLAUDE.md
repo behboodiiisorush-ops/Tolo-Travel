@@ -14,4 +14,8 @@
 - The story never depends on the audience; a film may end with one question to the viewer.
 - The user records the voices (ElevenLabs); deliver a version without sound, and keep `talking=True`
   lip movement on the lines in `captions.py` so their voices fit.
+- Voice scripts: give each line in its own copyable block, per speaker. Put the delivery (how to say it)
+  inside the line as ElevenLabs v3 audio tags in square brackets, in English, e.g. `[whispers]`, `[shouting]`,
+  `[scared]`, `[sighs]` — ElevenLabs performs these and does not read them aloud. Never write the delivery
+  as plain text, and never put Persian words in brackets.
 - Persian captions: Vazirmatn font in `blender/fonts/`, Pillow with raqm.
