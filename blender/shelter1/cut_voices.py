@@ -1,4 +1,4 @@
-"""Cut the lines of «واگن آخر ۴» out of the user's ElevenLabs export(s) into per-line clips.
+"""Cut the lines of «پناهگاه ۱» out of the user's ElevenLabs export(s) into per-line clips.
 
     python3 cut_voices.py recording1.mp3 [recording2.mp3 ...]
 
