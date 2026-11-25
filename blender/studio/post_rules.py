@@ -40,7 +40,7 @@ def caption(img, who, text, alpha=1.0):
     lines = wrap(d, text, f, W - 140)
     y = 1330 - 45 * (len(lines) - 1)
     if who == "rule":
-        box = (60, y - 115, W - 60, y + 95 * len(lines) - 20)
+        box = (60, y - 135, W - 60, y + 95 * len(lines) - 20)
         ov = Image.new("RGBA", img.size, (0, 0, 0, 0))
         ImageDraw.Draw(ov).rounded_rectangle(box, 30, fill=(10, 10, 14, 170), outline=(230, 40, 50, 255), width=5)
         img.paste(Image.alpha_composite(img.convert("RGBA"), ov).convert("RGB"))

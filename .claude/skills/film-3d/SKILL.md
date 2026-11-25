@@ -58,3 +58,16 @@ Speed: ~12–20 s per frame on 4 CPUs (an 80 s film ≈ 7–9 h).
   place lines on their caption times without overlaps (`voice.py`), duck the effects under the dialogue.
   Tell the user which lines were missing from their recording.
 - Send the mp4s with SendUserFile and commit + push everything except frames/vendor.
+
+## 6. Stylized studio films (cartoon heads on MakeHuman bodies) — `blender/studio/`
+The user's 5-character sheet style (نینا، آرین، مامان، کیان، کاظمی + «من» and the masked `intruder`) lives in
+`blender/studio/characters.py` (face rig: eyes track `look_at`, lids, brows, mouth keys, finger poses) on the modular
+house `blender/studio/house.py` (doors / drawers / switches / vents). Full example: `film_rules.py` («قانون‌ها»):
+- POV: `pov.POV("me")` + `pov.drive_camera(me, keys)` (analytic camera on the head bone — exact framing, no roll);
+  phone parented to the camera, right hand IK to a grip empty under it; screens = PIL textures (`make_film_textures.py`).
+- Poses: `crawl=1, arms="crawl"` (hands and knees), `arms="boost"`, `climb`, `sit`, `crouch`.
+- Outlines: use `C.hull_outlines(ch)` (inverted hull, ~9 s/frame) — NOT Freestyle (~40 s/frame on 4 CPUs).
+  Thin them on the POV body (`thickness=0.0011`) — its hands are right at the lens.
+- Lines + phone messages in `captions.py`; `post_rules.py` makes `_captions` / `_clean` / `_sfx` mp4 + question card;
+  `sfx_rules.py` synthesises the effects; `voice_script_rules.md` is the ElevenLabs script.
+- Render: `SAMPLES=6 setsid nohup ../cast/bpy.sh film_rules.py --render &` (skips frames already on disk) + keep-alive waiter.

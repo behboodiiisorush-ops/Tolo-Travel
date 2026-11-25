@@ -615,8 +615,9 @@ sc.world.color = (0.02, 0.025, 0.04)
 if os.environ.get("OUTLINES", "hull") == "freestyle":
     P.enable_outlines(sc, 1.1)
 else:
-    for ch in (me, arian, nina, i1, i2):
+    for ch in (arian, nina, i1, i2):
         C.hull_outlines(ch)
+    C.hull_outlines(me, thickness=0.0011)      # my own hands are right in front of the lens
 args = sys.argv
 if "--still" in args:
     os.makedirs(os.path.join(HERE, "test"), exist_ok=True)
