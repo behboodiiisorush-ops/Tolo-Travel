@@ -21,6 +21,21 @@ For realistic films with the permanent human cast use `/film-3d` instead.
   `sfx.py` (numpy-synthesised effects), `post.py` (fisheye, upscale, captions, card),
   `cut_voices.py` + `voice_fx.py` + `mix_voices.py` (the user's voices), `run_all.sh`.
 - `blender/school_pov/` — the cartoon «زنگ آخر» (75 s + 5 s card), one `scene.py` with all sets side by side.
+- Newest pipeline (copy this one): `blender/train_pov2..4/` (episodes 2-4) and `blender/shelter1/` («پناهگاه»):
+  `captions.py` has LINES with keys; `layout.py` times them from the recorded clips (or estimates);
+  scene beats are keyed to line times (`at("key")`); rendered on twos (`frame_step=2`), `post.py` doubles.
+  `cut_voices.py` matches Whisper words to lines in any recording order (check short lines by pitch /
+  silencedetect; cut by hand when a word is matched in the wrong place). Speed: split the frame range
+  between this machine and 2-3 helper cloud sessions that push frames to temporary branches.
+
+## Look the user asked for
+- Phone messages appear as a notification banner sliding down at the top (`post.notification`, `NOTIFS`
+  in captions.py: app name + icon colour, sender title, message) — like an iPhone banner, in Persian RTL.
+- The phone is held upright in ONE hand on the right, fingers round its edge (`common.phone_in_hand`,
+  POV right hand at `phone_palm()`), the other hand out of view; the camera looks past it into the room.
+- Characters keep the episode-1 look (Lena's red beanie, bunny...); mum has no headscarf (user rule).
+- Voice scripts for ElevenLabs v4: one copyable block per line, emotions as English tags in brackets
+  (`[crying]`, `[whispering, scared]`), no numbers or notes inside the blocks.
 
 ## Steps
 1. Python with bpy: `blender/cast/vendor/venv/bin/python` (run `blender/cast/setup.sh` on a fresh machine,
