@@ -712,7 +712,7 @@ _ua = (_r.matrix_world @ _r.pose.bones["upperarm_r"].head).lerp(_r.matrix_world 
 HANDS = "hands"
 # (t, where I look, seconds to turn there)
 LOOK = [
-    (0.0, (1.85, 1.0, 0.0), 0.0),            # waking up: my feet
+    (0.0, (1.7, 0.7, 0.0), 0.0),            # waking up: my feet
     (1.1, (1.2, 0.0, 1.1), 0.9),             # mom at the front door
     (5.0, (3.6, 0.0, 1.4), 0.6),             # Kazemi at the window
     (7.4, (1.55, 1.25, 1.05), 0.6),          # mom's phone: no signal
@@ -721,11 +721,11 @@ LOOK = [
     (16.4, (1.2, 3.45, 1.0), 0.6),           # mom with the sledgehammer
     (19.0, (5.0, 2.2, 1.1), 0.6),            # the wall breaks
     (25.3, (4.7, 2.2, 0.8), 0.5),
-    (26.1, (5.4, 2.2, 0.0), 0.5),            # my feet over the rubble
+    (26.1, (5.9, 2.2, 0.0), 0.5),            # my feet over the rubble
     (27.6, (7.5, 2.1, 0.45), 0.8),           # Arian and Mahsa under the table
     (33.5, (10.1, 2.0, 1.1), 0.6),           # the next wall
     (42.0, (10.0, 2.0, 0.9), 0.5),
-    (43.0, (10.5, 2.0, 0.0), 0.5),           # stepping through
+    (43.0, (11.0, 2.0, 0.0), 0.5),           # stepping through
     (44.8, (13.0, 3.0, 1.0), 0.8),           # Rezaei on the bed
     (47.0, tuple(_ua), 0.8),                 # the bite on his arm
     (51.0, (11.2, 4.3, 1.12), 0.7),          # the TV
@@ -778,7 +778,9 @@ for f in range(1, N + 1):
     else:
         d = d1
     d_prev = d if d_prev is None else d_prev.lerp(d, 0.5).normalized()
-    q = d_prev.to_track_quat("-Z", "Y")
+    dz = max(d_prev.z, -0.72)                # never steeper than ~46 degrees down (the shrunk neck would show)
+    hz = Vector((d_prev.x, d_prev.y, 0)).normalized() * math.sqrt(1 - dz * dz)
+    q = Vector((hz.x, hz.y, dz)).to_track_quat("-Z", "Y")
     amp = 0.004
     q.rotate(Matrix.Rotation(amp * _rnd.uniform(-1, 1), 4, "X"))
     cam.location = eye_s
