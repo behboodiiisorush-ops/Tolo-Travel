@@ -26,6 +26,9 @@ for s, S in (("l", "Left"), ("r", "Right")):
             MAP[f"{f}_0{i}_{s}"] = f"{S}Hand{F}{i}"
 
 
+LAST = {}        # rig name -> (last keyed frame, {bone: quaternion}, hips height) for blending segments
+
+
 class Clip:
     def __init__(self, arm, fps, first, last):
         self.arm, self.fps, self.first, self.last = arm, fps, first, last
@@ -60,15 +63,20 @@ def _src_name(arm, short):
 
 
 def apply(ch, clip, start=1, length=None, speed=1.0, offset=(0, 0, 0), facing=0.0, in_place=False,
-          fps=24, put=None, src_from=0.0, loop=False, place=None):
+          fps=24, put=None, src_from=0.0, loop=False, place=None, blend=0):
     """Key ch.rig for `length` frames from `start` (default: the rest of the clip). facing in degrees (0 = +Y).
     src_from: seconds into the clip to start from; loop: wrap around (for walk cycles);
-    place: optional fn(j) -> (offset, facing) per frame j (moving along a path; use in_place=True)."""
+    place: optional fn(j) -> (offset, facing) per frame j (moving along a path; use in_place=True).
+    speed < 0 plays the clip backwards from src_from. blend: frames over which the body eases out of the pose
+    the previous segment ended on (only when that segment ended on frame start-1)."""
     sc = bpy.context.scene
     src, tgt = clip.arm, ch.rig
     names = {t: _src_name(src, s) for t, s in MAP.items()}
     names = {t: s for t, s in names.items() if s and t in tgt.pose.bones}
-    n = length or int(max(0.0, clip.seconds - src_from) * fps / speed) + 1
+    n = length or int(max(0.0, clip.seconds - src_from) * fps / abs(speed)) + 1
+    prev = LAST.get(tgt.name)
+    if not blend or prev is None or prev[0] != start - 1:
+        prev = None
     # target placement: rig object at offset, rotated to `facing`
     rz = math.radians(facing) + math.pi
     tgt.location = offset
@@ -104,7 +112,7 @@ def apply(ch, clip, start=1, length=None, speed=1.0, offset=(0, 0, 0), facing=0.
         if loop:
             span = clip.last - clip.first
             sf = clip.first + (sf - clip.first) % span
-        sf = min(sf, clip.last)
+        sf = min(max(sf, clip.first), clip.last)
         if place is not None:
             off_j, fac_j = place(j)
             Tm = Matrix.Translation(Vector(off_j)) @ Matrix.Rotation(math.radians(fac_j) + math.pi, 4, "Z")
@@ -140,6 +148,9 @@ def apply(ch, clip, start=1, length=None, speed=1.0, offset=(0, 0, 0), facing=0.
             p0 = prevq.get(pb.name)
             if p0 is not None and p0.dot(q) < 0:
                 q.negate()
+            if prev is not None and j < blend and pb.name in prev[1]:
+                u = (j + 1) / (blend + 1)
+                q = prev[1][pb.name].slerp(q, u * u * (3 - 2 * u))
             prevq[pb.name] = q
             keys.append((pb.name, "rotation_quaternion", f, tuple(q)))
         # hips: root motion
@@ -147,11 +158,16 @@ def apply(ch, clip, start=1, length=None, speed=1.0, offset=(0, 0, 0), facing=0.
         d = (hw - hips_src_rest) * k
         if in_place:
             d.x = d.y = 0.0
+        if prev is not None and j < blend:
+            u = (j + 1) / (blend + 1)
+            d.z = prev[2] + (d.z - prev[2]) * u * u * (3 - 2 * u)
+        last_z = d.z
         d_arm = d                                   # source world == target armature space
         rest = trest_arm["pelvis"]
         par = trest_arm["Root"] if "Root" in trest_arm else Matrix()
         loc = rest.to_quaternion().inverted() @ d_arm
         keys.append(("pelvis", "location", f, tuple(loc)))
+    LAST[tgt.name] = (start + n - 1, dict(prevq), last_z)
     # write all keys
     for name, path, f, val in keys:
         pb = tgt.pose.bones[name]

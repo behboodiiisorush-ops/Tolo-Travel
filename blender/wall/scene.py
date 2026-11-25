@@ -200,7 +200,7 @@ for u, wm, fm in (("A", "wallA", "floor"), ("B", "wallB", "tileB"), ("C", "wallC
 box((0.375, -WT / 2, H / 2), (0.75, WT, H), "wallA", "A front")
 box((1.2, -WT / 2, 2.4), (0.9, WT, 0.6), "wallA", "A front")
 box((2.275, -WT / 2, H / 2), (1.25, WT, H), "wallA", "A front")
-box((3.6, -WT / 2, 0.45), (1.4, WT, 0.9), "wallA", "A front")
+box((3.6, -WT / 2, 0.375), (1.4, WT, 0.75), "wallA", "A front")
 box((3.6, -WT / 2, 2.4), (1.4, WT, 0.6), "wallA", "A front")
 box((4.65, -WT / 2, H / 2), (0.7, WT, H), "wallA", "A front")
 for x0, x1 in ((0.75, 1.65),):
@@ -208,18 +208,16 @@ for x0, x1 in ((0.75, 1.65),):
         box((s, -0.01, 1.05), (0.08, WT + 0.04, 2.1), "frame", "Door frame")
     box(((x0 + x1) / 2, -0.01, 2.13), (x1 - x0 + 0.16, WT + 0.04, 0.08), "frame", "Door frame")
 steel_plate((1.2, -0.12, 1.05), (0.9, 2.1), "y", "Door steel")
-box((3.6, 0.03, 1.5), (0.04, 0.04, 1.2), "frame", "Window bar")
-steel_plate((3.6, -0.12, 1.5), (1.4, 1.2), "y", "Window steel")
+box((3.6, 0.03, 1.425), (0.04, 0.04, 1.35), "frame", "Window bar")
+steel_plate((3.6, -0.12, 1.425), (1.4, 1.35), "y", "Window steel")
 # door leaf (hinge at x=0.75, swings into the room)
+KNOB_Z = 0.86
 hinge = P.empty("A door hinge", (0.75, 0.0, 0))
 leaf = box((1.2, 0.0, 1.03), (0.88, 0.05, 2.05), "door", "A door")
-knob = put(P.sphere((1.55, 0.06, 1.0), 0.035, M_["metal"], "A door knob"))
+knob = put(P.sphere((1.55, 0.06, KNOB_Z), 0.035, M_["metal"], "A door knob"))
 for o in (leaf, knob):
     o.parent = hinge
     o.matrix_parent_inverse = hinge.matrix_world.inverted()
-for t, a in ((0.0, 0), (1.6, 0), (2.9, 78), (END, 78)):
-    hinge.rotation_euler = (0, 0, math.radians(a))
-    hinge.keyframe_insert("rotation_euler", index=2, frame=fr(t))
 # other walls of A: left (x=0) solid with a steel-covered balcony door
 box((-WT / 2, D / 2, H / 2), (WT, D, H), "wallA", "A left")
 steel_plate((0.12, 2.6, 1.05), (0.85, 2.1), "x", "Balcony steel")
@@ -312,15 +310,44 @@ def clip(name):
     return CLIP[name]
 
 
-def act(who, name, t0, t1, pos, facing, **kw):
-    """Character `who` plays clip `name` from t0 to t1 (seconds) at pos/facing."""
+CUTS = {0.0, 5.0, 7.4, 12.4, 16.4, 19.0, 24.5, 27.0, 33.5, 41.0, 47.0, 51.0, 58.8, 62.0, 66.0, 72.0}
+LASTSEG = {}
+
+
+def act(who, name, t0, t1, pos, facing, follow=None, turn=0.0, **kw):
+    """Character `who` plays clip `name` from t0 to t1 (seconds) at pos/facing.
+    Inside a shot (t0 is not a cut) the body eases out of the previous pose, and with follow=True the hips
+    continue from where the previous segment left them (no jump); turn: seconds to turn from the old facing."""
+    rig = CH[who].rig
     n = fr(t1) - fr(t0)
-    mocap.apply(CH[who], clip(name), start=fr(t0), length=n, offset=pos, facing=facing, **kw)
-    rig = CH[who].rig                       # hold the place until the last frame (then jump at the cut)
-    rig.location = pos
+    in_shot = t0 not in CUTS and LASTSEG.get(who) == t0
+    if follow is None:
+        follow = in_shot
+    if in_shot and not turn:
+        turn = 0.5
+    hips_prev = None
+    if follow and in_shot:
+        sc.frame_set(fr(t0) - 1)
+        hips_prev = (rig.matrix_world @ rig.pose.bones["pelvis"].matrix).translation.copy()
+        old_rz = rig.rotation_euler[2]
+    mocap.apply(CH[who], clip(name), start=fr(t0), length=n, offset=pos, facing=facing,
+                blend=8 if in_shot else 0, **kw)
+    if hips_prev is not None:
+        sc.frame_set(fr(t0))
+        now = (rig.matrix_world @ rig.pose.bones["pelvis"].matrix).translation
+        pos = (pos[0] + hips_prev.x - now.x, pos[1] + hips_prev.y - now.y, pos[2])
+        rig.location = pos
+        rig.keyframe_insert("location", frame=fr(t0))
+    rig.location = pos                       # hold the place until the last frame (then jump at the cut)
     rig.rotation_euler = (0, 0, math.radians(facing) + math.pi)
     rig.keyframe_insert("location", frame=fr(t1) - 1)
     rig.keyframe_insert("rotation_euler", index=2, frame=fr(t1) - 1)
+    if turn and hips_prev is not None:
+        rig.rotation_euler = (0, 0, old_rz)
+        rig.keyframe_insert("rotation_euler", index=2, frame=fr(t0))
+        rig.rotation_euler = (0, 0, math.radians(facing) + math.pi)
+        rig.keyframe_insert("rotation_euler", index=2, frame=fr(t0 + turn))
+    LASTSEG[who] = t1
 
 
 # a character holds his place for the whole segment and jumps (at the cut) to the next one
@@ -337,8 +364,10 @@ PRESENT = {
     "rezaei": [(41.0, 75.5)], "kian": [(62.0, 75.5)],
 }
 # ---- mom
-act("mom", "opening_door_inwards", 0.0, 3.4, (1.25, 1.35, 0), 180)
-act("mom", "nervously_look_around", 3.4, 7.4, (1.35, 1.25, 0), 160)
+GRAB, PULL = 2.0, 2.9                    # hand on the knob / door let go
+act("mom", "opening_door_inwards", 0.0, GRAB, (1.80, 1.05, 0), 180, src_from=0.8, speed=1.15)
+act("mom", "opening_door_inwards", GRAB, PULL, (1.80, 1.05, 0), 180, src_from=3.1, speed=-1.1, follow=False)
+act("mom", "nervously_look_around", PULL, 7.4, (1.8, 1.3, 0), 180)
 act("mom", "breathing_idle", 7.4, 10.0, (1.6, 1.45, 0), 200, src_from=1.0)
 act("mom", "punching_bag", 10.0, 12.4, (1.2, 0.62, 0), 180)
 act("mom", "opening_a_filing_cabinet", 12.4, 16.4, (1.2, 3.45, 0), 0, src_from=1.4, speed=0.7)
@@ -350,7 +379,7 @@ act("mom", "breathing_idle", 51.0, 59.4, (11.7, 2.6, 0), 10)
 act("mom", "nervously_look_around", 59.4, 75.5, (11.7, 2.6, 0), -55, loop=True)
 # ---- Kazemi
 act("kazemi", "breathing_idle", 0.0, 5.0, (3.9, 1.6, 0), 200)
-act("kazemi", "opening_door_inwards", 5.0, 7.4, (3.55, 0.75, 0), 180)
+act("kazemi", "nervously_look_around", 5.0, 7.4, (3.75, 0.8, 0), 180, src_from=0.5)
 act("kazemi", "cross_punch", 7.4, 9.6, (3.6, 0.72, 0), 180)
 act("kazemi", "nervously_look_around", 9.6, 12.4, (3.6, 0.95, 0), 190)
 act("kazemi", "punching_bag", 12.4, 13.4, (4.45, 2.2, 0), -90)
@@ -381,6 +410,34 @@ act("mahsa", "nervously_look_around", 59.4, 75.5, (12.3, 2.85, 0), -50, loop=Tru
 act("rezaei", "sitting_idle", 41.0, 75.5, (13.0, 3.0, 0.02), 180, loop=True)
 # ---- Kian behind the far wall (only his face shows through the hole)
 act("kian", "breathing_idle", 62.0, 75.5, (15.75, 1.5, 0), 90, loop=True)
+
+# the front door follows mom's hand while she pulls it, then swings on by itself
+_rig = CH["mom"].rig
+HX, HY = 0.75, 0.0
+
+
+def _hand_angle(f):
+    sc.frame_set(f)
+    w = (_rig.matrix_world @ _rig.pose.bones["hand_r"].matrix).translation
+    return math.atan2(w.y - HY, w.x - HX)
+
+
+_a0 = _hand_angle(fr(GRAB))
+_a = 0.0
+for f in range(1, fr(GRAB) + 1):
+    hinge.rotation_euler = (0, 0, 0.0)
+    hinge.keyframe_insert("rotation_euler", index=2, frame=f) if f in (1, fr(GRAB)) else None
+for f in range(fr(GRAB) + 1, fr(PULL) + 1):
+    _a = max(_a, _hand_angle(f) - _a0)
+    hinge.rotation_euler = (0, 0, _a)
+    hinge.keyframe_insert("rotation_euler", index=2, frame=f)
+print("DOOR PULLED TO", round(math.degrees(_a), 1))
+_rate = _a / (PULL - GRAB)                  # rad/s when she lets go; the swing slows down to 80 degrees
+_tf = 2 * (math.radians(80) - _a) / max(_rate, 0.3)
+for f in range(fr(PULL) + 1, fr(PULL + _tf) + 2):
+    u = min(1.0, ((f - 1) / FPS - PULL) / _tf)
+    hinge.rotation_euler = (0, 0, _a + (math.radians(80) - _a) * (1 - (1 - u) ** 2))
+    hinge.keyframe_insert("rotation_euler", index=2, frame=f)
 
 
 def strikes(who, t0, t1, toward_x=True):
@@ -523,7 +580,7 @@ show([ph], [(7.4, 10.0)])
 
 # ------------------------------------------------------------------ camera: shots (t0, t1, cam0, cam1, aim0, aim1, lens)
 SHOTS = [
-    (0.0, 5.0, (2.0, 3.3, 1.6), (1.8, 2.7, 1.55), (1.15, 0.2, 1.15), (1.15, 0.0, 1.2), 22),
+    (0.0, 5.0, (3.5, 1.75, 1.55), (3.4, 1.65, 1.5), (1.15, 0.0, 1.1), (1.15, 0.0, 1.1), 22),
     (5.0, 7.4, (4.7, 2.6, 1.5), (4.6, 2.3, 1.5), (3.5, 0.2, 1.45), (3.55, 0.1, 1.5), 22),
     (7.4, 12.4, (3.4, 3.4, 1.75), (3.3, 3.2, 1.7), (2.3, 0.6, 1.15), (2.2, 0.6, 1.15), 18),
     (12.4, 16.4, (2.6, 0.6, 1.5), (2.7, 0.7, 1.5), (4.6, 2.4, 1.3), (4.5, 2.5, 1.3), 20),

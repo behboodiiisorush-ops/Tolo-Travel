@@ -55,7 +55,7 @@ def build():
     S.R += room
     S.put(S.knock(0.35), 0.6, 0.4)                       # key turns
     S.put(S.knock(0.25), 0.75, 0.3)
-    S.put(creak(1.3), 1.6, 0.35, -0.2)                   # door swings in
+    S.put(creak(1.3), 2.0, 0.35, -0.2)                   # door swings in
     S.put(steel(1.0, 0.4), 2.95, 0.55)                   # ...steel: a deep dead hum
     S.put(S.tone(48, 2.5, 0.35) * S.env(int(2.5 * S.SR), 0.05, 1.5), 2.95, 0.6)
     S.heartbeat(3.4, 19.0, 92, 0.3)
