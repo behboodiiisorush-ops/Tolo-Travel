@@ -1,5 +1,5 @@
 """
-Sound effects + ambience for «واگن آخر ۴ — چراغای روشن» (no voices — those are recorded by hand).
+Sound effects + ambience for «پناهگاه ۱ — نُه دقیقه» (no voices — those are recorded by hand).
 
 Everything is synthesised with numpy, so there are no third-party sound files.
 Writes out/sfx.wav (the film + the card, 48 kHz stereo); post.py / mix_voices.py put it under the video.
@@ -14,7 +14,7 @@ import sys
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from captions import END, KEY_OF  # noqa: E402
+from captions import END, FLASH_AFTER, KEY_OF  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SR = 48000
@@ -151,78 +151,86 @@ def tone(freq, length, gain=1.0):
 def build():
     t = tt(N)
     T = KEY_OF
-    walk0, walk1 = T["n2"][0] - 0.3, T["me2"][0] - 1.6
-    climb1 = T["me2"][0] - 0.2
-    border0, border1 = T["mom1"][0] - 1.6, T["lena4"][0] - 1.0
-    torch_on = T["me1"][0] + 0.4
-    third = ((t >= border0) & (t < border1)).astype(float)
-    outside = ((t < climb1) | (t >= T["n5"][0] + 2.5)).astype(float) * (1 - third)
-    inside = (1 - outside) * (1 - third)
+    street0 = T["mom2"][0] - 1.4
+    arrive = T["guard1"][0] - 0.4
+    enter1 = T["jalal1"][0] - 0.1
+    close0, close1 = T["guard2"][0], T["guard2"][1] + 0.2
+    flash = T["n2"][1] + FLASH_AFTER
+    knock0 = T["n3"][0] - 2.4
+    house = (t < street0).astype(float)
+    street = ((t >= street0) & (t < enter1)).astype(float)
+    inside_before = ((t >= enter1) & (t < flash)).astype(float)
 
-    # night: crickets and a low wind outside, a creaking quiet inside the wagon
-    chirp = np.zeros(N)
-    ct = 0.2
-    while ct < END:
-        n = int(0.05 * SR)
-        f0 = rng.uniform(4200, 4800)
-        c = np.sin(2 * np.pi * f0 * tt(n)) * env(n, 0.005, 0.03)
-        for k in range(3):
-            i0 = int((ct + k * 0.07) * SR)
-            if i0 + n < N:
-                chirp[i0:i0 + n] += c
-        ct += rng.uniform(0.35, 0.9)
-    put(chirp * (outside * 0.05 + inside * 0.015), 0, 1.0, 0.3)
-    wind = norm(band(noise(N), 120, 1200)) * (0.7 + 0.3 * np.sin(2 * np.pi * 0.09 * t))
-    put(wind * (outside * 0.09 + inside * 0.03), 0, 1.0, -0.2)
-    creak = band(noise(N), 300, 1200) * (0.5 + 0.5 * np.sin(2 * np.pi * 0.23 * t)) ** 6
-    put(norm(creak) * inside * 0.05, 0, 1.0, -0.4)
+    # the emergency alert: the two-tone phone alarm in the dark, then under the house scene
+    n = int(0.5 * SR)
+    beep = (np.sin(2 * np.pi * 853 * tt(n)) + np.sin(2 * np.pi * 960 * tt(n))) * env(n, 0.01, 0.02)
+    k = 0.0
+    while k < street0 - 0.5:
+        g = 0.35 if k < 3.0 else 0.08
+        put(beep, k, g)
+        k += 0.62
+    # TV snow in the house
+    put(norm(band(noise(N), 1500, 9000)) * house * 0.03, 0, 1.0, -0.5)
+    heartbeat(0.2, street0, 100, 0.35)
 
-    # our train idling behind us at the start
-    idle = sum(np.sin(2 * np.pi * f * t) for f in (48, 96)) * 0.3 + band(noise(N), 40, 160)
-    put(norm(idle) * curve([(0, 0.05), (walk0, 0.04), (walk0 + 6, 0.0), (END + 10, 0)]), 0, 1.0, 0.4)
+    # the city: air-raid sirens, screaming crowd, car alarms, running feet
+    sir = siren(min(flash, END) - 0.5)
+    put(sir * 0.6, 0.5, 0.06, -0.6)
+    put(siren(max(1.0, flash - street0)), street0, 0.2, 0.5)
+    crowd = norm(band(noise(N), 300, 2500)) * (0.5 + 0.5 * np.abs(np.sin(2 * np.pi * 0.8 * t)))
+    put(crowd * (street * 0.12 + house * 0.03 + inside_before * 0.05), 0, 1.0, 0.2)
+    for k in range(6):  # screams
+        nn = int(0.7 * SR)
+        f = np.linspace(rng.uniform(900, 1300), rng.uniform(600, 800), nn)
+        sc = np.sin(2 * np.pi * np.cumsum(f) / SR) * band(noise(nn), 600, 3000) * env(nn, 0.05, 0.3)
+        put(norm(sc), street0 + 1.0 + k * 2.3 + rng.uniform(0, 1), 0.06, rng.uniform(-0.8, 0.8))
+    nn = int(1.6 * SR)
+    car_alarm = np.sin(2 * np.pi * (1200 + 400 * np.sign(np.sin(2 * np.pi * 3 * tt(nn)))) * tt(nn)) * env(nn, 0.02, 0.1)
+    for k in range(4):
+        put(car_alarm, street0 + 3 + k * 1.7, 0.05, 0.6)
+    footsteps(street0, arrive, 4.2, 0.25)
+    footsteps(street0 + 0.1, arrive, 3.6, 0.13, -0.4)
 
-    # the torch clicks on
+    # the bunker door: dragged shut, a deep clang, the bolt
+    nn = int((close1 - close0) * SR)
+    drag = band(noise(nn), 100, 900) * env(nn, 0.1, 0.1)
+    put(norm(drag), close0, 0.25)
+    nn = int(1.5 * SR)
+    clang = sum(np.sin(2 * np.pi * f * tt(nn)) for f in (92, 147, 233, 411)) * np.exp(-tt(nn) * 3)
+    put(norm(clang + band(noise(nn), 40, 600) * np.exp(-tt(nn) * 8)), close1 - 0.05, 0.8)
+    put(norm(band(noise(int(0.15 * SR)), 800, 5000)) * env(int(0.15 * SR), 0.002, 0.1), close1 + 0.5, 0.4)
+    # outside goes muffled once the door is shut
+    # the bomb: a white silence, then the shockwave arrives and the ground shakes
+    put(explosion(6.0, 3.0), flash + 0.35, 1.0)
+    put(norm(band(noise(int(4 * SR)), 20, 120)) * np.exp(-tt(int(4 * SR)) * 0.9), flash + 0.3, 0.8)
+    for k in range(10):  # dust and debris on the ceiling
+        put(band(noise(int(0.2 * SR)), 1000, 6000) * env(int(0.2 * SR), 0.005, 0.15), flash + 1.0 + k * 0.25, 0.08,
+            rng.uniform(-0.7, 0.7))
+    put(norm(band(noise(int(0.3 * SR)), 2000, 8000)) * env(int(0.3 * SR), 0.005, 0.2), flash + 0.5, 0.3)  # bulb pops
+    # ringing ears, then silence
+    nn = int(5 * SR)
+    put(np.sin(2 * np.pi * 4100 * tt(nn)) * np.exp(-tt(nn) * 0.7), flash + 1.2, 0.05)
+    # in the dark: breathing, the torch click, the radio, three knocks on the steel door
+    for k in range(int((END - flash - 3) / 1.3)):
+        nn = int(0.4 * SR)
+        put(band(noise(nn), 400, 3500) * env(nn, 0.1, 0.2), flash + 3 + k * 1.3, 0.06, 0.3)
     click = band(noise(int(0.03 * SR)), 2000, 8000) * env(int(0.03 * SR), 0.001, 0.02)
-    put(norm(click), torch_on - 0.05, 0.5, 0.3)
-    put(norm(click) * 0.6, torch_on + 0.03, 0.5, 0.3)
+    put(norm(click), T["lena3"][0] - 0.95, 0.5, 0.3)
+    nn = int((T["radio1"][1] - T["radio1"][0] + 2.0) * SR)
+    static = band(noise(nn), 800, 6000) * (0.5 + 0.5 * (rng.random(nn) > 0.6)) * env(nn, 0.3, 0.6)
+    put(static, T["radio1"][0] - 1.0, 0.08, -0.4)
+    nn = int(0.35 * SR)
+    knock = band(noise(nn), 50, 700) * np.exp(-tt(nn) * 18) + sum(np.sin(2 * np.pi * f * tt(nn)) for f in (180, 290)) * np.exp(-tt(nn) * 15) * 0.3
+    for k in range(3):
+        put(norm(knock), knock0 + k * 0.7, 0.55)
 
-    # footsteps on gravel (us and Lena), climbing in, boards inside
-    def gravel(t0, t1, rate, gain, pan):
-        n = int(0.11 * SR)
-        x = t0
-        while x < t1:
-            cr = band(noise(n), 900, 7000) * np.exp(-tt(n) * 30) + band(noise(n), 80, 600) * np.exp(-tt(n) * 50)
-            put(cr, x, gain * rng.uniform(0.7, 1.0), pan)
-            x += 1.0 / rate * rng.uniform(0.9, 1.1)
-    gravel(walk0, walk1, 2.0, 0.22, 0.0)
-    gravel(walk0 + 0.2, walk1, 2.6, 0.14, -0.4)
-    clunk = band(noise(int(0.6 * SR)), 30, 500) * np.exp(-tt(int(0.6 * SR)) * 9)
-    put(norm(clunk) * 0.6, walk1 + 0.3, 0.5)
-    put(norm(clunk) * 0.5, climb1, 0.45)
-    put(norm(clunk) * 0.4, climb1 + 0.7, 0.35, -0.3)
-    footsteps(T["n5"][0] + 2.5, T["n5"][0] + 3.5, 2.0, 0.15)
-
-    # the border camp: murmur, the floodlight hum, a far siren
-    crowd = norm(band(noise(N), 250, 1800)) * (0.6 + 0.4 * np.abs(np.sin(2 * np.pi * 0.5 * t)))
-    put(crowd * third * 0.07, 0, 1.0, -0.3)
-    hum = np.sin(2 * np.pi * 100 * t) * 0.5 + np.sin(2 * np.pi * 200 * t) * 0.2
-    put(hum * third * 0.02, 0, 1.0)
-    put(siren(border1 - border0) * 0.4, border0, 0.08, 0.7)
-    footsteps(border0 + 0.2, T["gm1"][0] - 0.2, 1.8, 0.12, -0.5)       # grandma's slow steps
-    for b in (border0, border1):
-        put(tone(200, 0.1, 0.25) * np.exp(-tt(int(0.1 * SR)) * 25), b, 1.0)
-    # a soft warm chord when they find each other
-    warm = sum(np.sin(2 * np.pi * f * t) for f in (261.6, 329.6, 392.0)) * curve(
-        [(0, 0), (T["gm1"][0], 0), (T["mom2"][0], 0.03), (border1, 0.02), (border1 + 0.3, 0), (END + 10, 0)])
-    put(warm, 0, 1.0)
-
-    # heartbeat under the last line; the card: only wind
-    heartbeat(T["n5"][0], END, 80, 0.3)
+    # drone: rising through the run, cut by the flash; back, low, in the dark
     pad = sum(np.sin(2 * np.pi * f * t + k) for k, f in enumerate((55, 65.4, 82.4, 110)))
     pad *= 0.5 + 0.5 * np.sin(2 * np.pi * 0.07 * t)
-    put(norm(pad) * curve([(0, 0.0), (2, 0.035), (walk1, 0.05), (T["jalal1"][0], 0.03), (border0, 0.04),
-                           (border1, 0.05), (END - 0.3, 0.09), (END, 0), (END + 10, 0)]), 0, 1.0)
-    put(wind * curve([(0, 0), (END - 0.2, 0), (END, 0.1), (END + 7.4, 0.1), (END + 8, 0)]), 0, 1.0)
+    put(norm(pad) * curve([(0, 0), (1, 0.04), (street0, 0.05), (arrive, 0.08), (flash - 0.05, 0.1), (flash, 0),
+                           (flash + 4, 0), (flash + 6, 0.05), (END - 0.3, 0.08), (END, 0), (END + 10, 0)]), 0, 1.0)
+    wind = norm(band(noise(N), 120, 1200))
+    put(wind * curve([(0, 0), (END - 0.2, 0), (END, 0.05), (END + 7.4, 0.05), (END + 8, 0)]), 0, 1.0)
 
     fade = curve([(0, 1), (END + 7.6, 1), (END + 7.9, 0), (END + 10, 0)])
     out = np.stack([L * fade, R * fade], axis=1)

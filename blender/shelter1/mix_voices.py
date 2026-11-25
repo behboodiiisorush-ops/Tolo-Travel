@@ -1,8 +1,8 @@
 """
 Place every voice clip at its line's start time and mix it over the sound effects.
 
-    python3 mix_voices.py   # voices/clips/*.wav + out/sfx.wav + out/last_wagon4_full.mp4
-                            #   -> out/voices.wav, out/last_wagon4_voiced.mp4
+    python3 mix_voices.py   # voices/clips/*.wav + out/sfx.wav + out/shelter1_full.mp4
+                            #   -> out/voices.wav, out/shelter1_voiced.mp4
 
 Clips are listed in voices/clips.txt (start, end, speaker, file).  A clip never
 starts before the previous one has finished, so lines don't talk over each other.
@@ -22,7 +22,7 @@ from captions import CARD_SECONDS, END  # noqa: E402
 # where a voice comes from (every character has their own recorded voice; no pitch changes)
 # lines that may sound over the end of the previous one (mum's scream cuts into the narration)
 OVERLAP_OK = set()
-FX = {"Jalal": "room", "Rahim": "room"}
+FX = {"Jalal": "far", "Radio": "radio", "Guard": "room"}
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SR = 48000
@@ -74,14 +74,14 @@ def main():
         w.writeframes((np.clip(track, -1, 1) * 32767).astype(np.int16).tobytes())
     # voices up front, effects ducked a little underneath
     subprocess.run([
-        "ffmpeg", "-loglevel", "error", "-y", "-i", os.path.join(HERE, "out", "last_wagon4_full.mp4"),
+        "ffmpeg", "-loglevel", "error", "-y", "-i", os.path.join(HERE, "out", "shelter1_full.mp4"),
         "-i", os.path.join(HERE, "out", "sfx.wav"), "-i", out_voice,
         "-filter_complex",
         "[1:a]volume=0.55[fx];[2:a]aformat=channel_layouts=stereo,volume=1.0[vo];"
         "[fx][vo]amix=inputs=2:normalize=0,loudnorm=I=-15:TP=-1.5:LRA=11[a]",
         "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest",
-        os.path.join(HERE, "out", "last_wagon4_voiced.mp4")], check=True)
-    print(os.path.join(HERE, "out", "last_wagon4_voiced.mp4"))
+        os.path.join(HERE, "out", "shelter1_voiced.mp4")], check=True)
+    print(os.path.join(HERE, "out", "shelter1_voiced.mp4"))
 
 
 if __name__ == "__main__":
