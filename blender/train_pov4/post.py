@@ -1,8 +1,8 @@
 """
-Post-processing for «واگن آخر ۳ — در بسته شد»: frames rendered on twos -> 24 fps, fisheye look, upscale to
+Post-processing for «واگن آخر ۴ — چراغای روشن»: frames rendered on twos -> 24 fps, fisheye look, upscale to
 1080x1920, narration captions, the viewer question (start, middle, final card), episode badge.
 
-    python3 post.py     # frames/ -> out/last_wagon3_full.mp4 (+ out/last_wagon3_sfx.mp4 with effects)
+    python3 post.py     # frames/ -> out/last_wagon4_full.mp4 (+ out/last_wagon4_sfx.mp4 with effects)
 Needs ffmpeg and Pillow with raqm (right-to-left Persian shaping).
 """
 
@@ -24,15 +24,15 @@ W, H = 1080, 1920
 sys.path.insert(0, HERE)
 from captions import CAPTIONS, CARD_SECONDS, END, KEY_OF, NARRATION, QUESTION  # noqa: E402
 
-MEANWHILE = (KEY_OF["sol1"][0] - 1.3, KEY_OF["sol1"][0] + 1.4)  # "همون لحظه، کنار مرز..." over the cut
+MEANWHILE = (KEY_OF["mom1"][0] - 1.6, KEY_OF["mom1"][0] + 1.2)  # "همون لحظه، اون طرف مرز..." over the cut
 
 SPEAKERS = {  # caption key -> (name shown, colour), the same as episode 1
     "Me": ("من", (60, 160, 80)),
     "Mom": ("مامان", (150, 40, 80)),
     "Lena": ("لنا", (210, 50, 45)),
     "Grandma far": ("مامان‌بزرگ (از دور)", (190, 30, 40)),
-    "Soldier1": ("سرباز", (80, 100, 55)),
-    "Soldier2": ("سرباز", (80, 100, 55)),
+    "Grandma": ("مامان‌بزرگ", (190, 30, 40)),
+    "Jalal": ("آقا جلال", (130, 30, 40)),
     "Rahim": ("عمو رحیم", (235, 120, 20)),
 }
 
@@ -76,11 +76,11 @@ def question_banner(d, k):
 
 def overlay(img, t):
     d = ImageDraw.Draw(img)
-    pill(d, W - 180, 150, "واگن آخر ۳", (200, 40, 40), 46)
+    pill(d, W - 180, 150, "واگن آخر ۴", (200, 40, 40), 46)
     a, b = MEANWHILE
     if a <= t <= b:
         k = min(1.0, (t - a) / 0.3, (b - t) / 0.3)
-        draw_text(d, (W // 2, 360), "همون لحظه، کنار مرز...", int(70 * (0.9 + 0.1 * k)),
+        draw_text(d, (W // 2, 360), "همون لحظه، اون طرف مرز...", int(70 * (0.9 + 0.1 * k)),
                   fill=(255, 235, 150), stroke=9)
     current = [c for c in CAPTIONS if c[0] <= t <= c[1]]
     for start, end, who, text in current[-1:]:  # when two lines overlap, the newer one wins
@@ -103,10 +103,10 @@ def final_card(img, k):
     if k < 0.05:
         return img
     d = ImageDraw.Draw(img)
-    draw_text(d, (W // 2, 500), "اگه تو بودی،\nدنبال مامان‌بزرگ می‌گشتی...\nیا لنا رو برمی‌گردوندی\nپیش مامان؟",
+    draw_text(d, (W // 2, 500), "اگه تو بودی،\nبرمی‌گشتی سمت مرز...\nیا با واگن آخر\nجلوتر می‌رفتی؟",
               int(84 * (0.8 + 0.2 * k)), stroke=12)
-    for i, (label, col) in enumerate((("دنبال مامان‌بزرگ می‌گشتم", (30, 110, 200)),
-                                      ("لنا رو می‌بردم پیش مامان", (200, 40, 45)))):
+    for i, (label, col) in enumerate((("برمی‌گشتم سمت مرز", (30, 110, 200)),
+                                      ("با واگن آخر جلوتر می‌رفتم", (200, 40, 45)))):
         y = 950 + i * 220
         d.rounded_rectangle((140, y - 80, W - 140, y + 80), radius=60, fill=col, outline=(255, 255, 255), width=8)
         d.text((W // 2 + 30, y), label, font=font(54), fill=(255, 255, 255), anchor="mm", direction="rtl", language="fa")
@@ -141,14 +141,14 @@ def main():
     for j in range(CARD_SECONDS * FPS):
         final_card(last.copy(), min(1.0, j / 12)).save(os.path.join(TMP, f"c_{i:04d}.png"))
         i += 1
-    out = os.path.join(OUT, "last_wagon3_full.mp4")
+    out = os.path.join(OUT, "last_wagon4_full.mp4")
     subprocess.run([
         "ffmpeg", "-loglevel", "error", "-y", "-framerate", str(FPS), "-i", os.path.join(TMP, "c_%04d.png"),
         "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "20", "-movflags", "+faststart", out], check=True)
     print(out)
     sfx = os.path.join(OUT, "sfx.wav")
     if os.path.exists(sfx):
-        out_fx = os.path.join(OUT, "last_wagon3_sfx.mp4")
+        out_fx = os.path.join(OUT, "last_wagon4_sfx.mp4")
         subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", out, "-i", sfx, "-map", "0:v", "-map", "1:a",
                         "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest", out_fx], check=True)
         print(out_fx)
