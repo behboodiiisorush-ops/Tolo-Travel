@@ -24,7 +24,7 @@ CUTS = {
     11: [(5.36, 8.80)], 12: [(8.80, 11.60)], 13: [(40.64, 44.64)], 14: [(22.34, 25.30), "gap0.25", (25.62, 27.48)],
     15: [(27.48, 30.02)], 16: [(44.64, 47.92)], 0: [(47.92, 51.40)],
 }
-PITCH = {"arian": 0.0, "me": 1.5, "intruder": -3.0, "nina": 5.0, "police": -2.0, "rule": -1.0, "card": -1.0}
+PITCH = {}   # every character already has his/her own ElevenLabs voice (the masked man is Omid, Kabuli) - no pitch shift
 DEVICE = {"police": "speaker"}
 GAIN = {"police": 0.9, "rule": 0.7, "card": 0.8}
 
