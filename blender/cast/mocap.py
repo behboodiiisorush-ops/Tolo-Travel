@@ -86,6 +86,13 @@ def apply(ch, clip, start=1, length=None, speed=1.0, offset=(0, 0, 0), facing=0.
     src_leg = (srest[names["thigh_l"]].translation - srest[names["foot_l"]].translation).length
     tgt_leg = (trest_arm["thigh_l"].translation - trest_arm["foot_l"].translation).length
     k = tgt_leg / max(1e-6, src_leg)
+    # rest-pose difference (Mixamo T-pose vs MakeHuman A-pose): rotate each target bone's rest direction
+    # onto the source bone's rest direction, in world space
+    off = {}
+    for t, sn in names.items():
+        tdir = (Tq @ trest_arm[t].to_quaternion()) @ Vector((0, 1, 0))
+        sdir = srest[sn].to_quaternion() @ Vector((0, 1, 0))
+        off[t] = tdir.rotation_difference(sdir)
     order = [b for b in tgt.pose.bones]          # data order is parent-before-child
     keys = []
     prevq = {}
@@ -101,7 +108,7 @@ def apply(ch, clip, start=1, length=None, speed=1.0, offset=(0, 0, 0), facing=0.
                 sn = names[pb.name]
                 sw = (S0 @ src.pose.bones[sn].matrix).to_quaternion()
                 delta = sw @ srest[sn].to_quaternion().inverted()          # world-space change from rest
-                want = Tq.inverted() @ delta @ Tq @ rest.to_quaternion()
+                want = Tq.inverted() @ delta @ off[pb.name] @ Tq @ rest.to_quaternion()
             else:
                 pr = Rdes.get(b.parent.name) if b.parent else None
                 if pr is None:
