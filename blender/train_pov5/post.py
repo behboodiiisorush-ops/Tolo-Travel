@@ -134,10 +134,10 @@ def final_card(img, k):
     if k < 0.05:
         return img
     d = ImageDraw.Draw(img)
-    draw_text(d, (W // 2, 500), "اگه تو بودی...\nپیاده می‌شدی ریل رو باز کنی\nیا توی قطار می‌موندی؟",
+    draw_text(d, (W // 2, 500), "اگه تو بودی...\nبه اون بالگرد\nعلامت می‌دادی یا قایم می‌شدی؟",
               int(84 * (0.8 + 0.2 * k)), stroke=12)
-    for i, (label, col) in enumerate((("پیاده می‌شدم", (200, 40, 45)),
-                                      ("توی قطار می‌موندم", (30, 110, 200)))):
+    for i, (label, col) in enumerate((("علامت می‌دادم", (30, 140, 90)),
+                                      ("قایم می‌شدم", (60, 60, 70)))):
         y = 950 + i * 220
         d.rounded_rectangle((140, y - 80, W - 140, y + 80), radius=60, fill=col, outline=(255, 255, 255), width=8)
         d.text((W // 2 + 30, y), label, font=font(54), fill=(255, 255, 255), anchor="mm", direction="rtl", language="fa")

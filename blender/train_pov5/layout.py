@@ -17,8 +17,15 @@ EXTRA = {"n1": 1.2,       # the window, the grey city sliding past
          "rahim2": 1.4,   # brakes
          "rahim3": 1.6,   # the bus on the track
          "me1": 1.4,      # they turn, they start walking towards the train
-         "jalal2": 0.6, "lena3": 0.6,
-         "n3": 1.0}       # three knocks on the door
+         "lena3": 0.4,
+         "jalal2": 0.6,
+         "jalal3": 7.0,   # Jalal climbs down, runs to the tractor, it pushes the bus off the track
+         "lena4": 0.6,    # they swarm him
+         "rahim4": 0.6,
+         "me2": 2.0,      # the train moves; the crowd runs after it
+         "n4": 1.0,
+         "lena5": 1.6,    # rotor noise: the helicopter over the city
+         "n3": 0.8}       # three knocks on the door
 
 
 def dur(name, text=""):
