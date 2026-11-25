@@ -423,6 +423,11 @@ for t_, L_ in ((0, 17), (73.3, 17), (75.4, 23)):
     me.cam.data.lens = L_
     me.cam.data.keyframe_insert("lens", frame=fr(t_))
 H.put(me.cam, h.C["CAMERAS"])
+_leg = bpy.data.objects.get("Table leg.002")      # crawling out past it my head passes right through this leg
+if _leg:
+    for f_, v_ in ((776, True), (777, False), (787, False), (788, True)):
+        _leg.visible_camera = v_
+        _leg.keyframe_insert("visible_camera", frame=f_)
 
 # ---------------------------------------------------------------- flashlights (hand-held, aimed at keyed targets)
 torch_m = P.mat("Torch", (0.05, 0.05, 0.06), 0.4, 0.6)
