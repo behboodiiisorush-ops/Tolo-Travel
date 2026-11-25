@@ -110,16 +110,61 @@ def wall_with_hole(x, hy, hw, hz0, hz1, m, name, plug_until=None, cracks=()):
                             (0.006, 0.02, 0.32 * s), "dark", name + " crack")
                     c.rotation_euler = (math.radians(ang), 0, 0)
                     key_vis(c, [(0, False), (tc, True), (plug_until, False)])
-        # rubble on the floor (both sides) after the break
+        # the wall bursts: bricks and plaster chunks fly out of the hole and land on the floor (most of them on
+        # the far side, away from the hammer), bounce once and come to rest
         import random
         r = random.Random(int(x * 10))
-        for j in range(16):
-            side = -1 if j % 2 else 1
-            b = box((x + side * r.uniform(0.15, 0.9), hy + r.uniform(-0.6, 0.6), 0.05),
-                    (r.uniform(0.08, 0.22),) * 2 + (r.uniform(0.05, 0.12),), "rubble" if j % 3 else "brick", name + " rubble")
-            b.rotation_euler = (0, 0, r.uniform(0, 3))
-            key_vis(b, [(0, False), (plug_until, True)])
+        g = 9.8
+        for j in range(34):
+            side = 1 if j % 4 else -1
+            sz = (r.uniform(0.07, 0.2), r.uniform(0.06, 0.12), r.uniform(0.05, 0.1))
+            p0 = Vector((x + side * 0.02, hy + r.uniform(-hw / 2 + 0.05, hw / 2 - 0.05), r.uniform(hz0 + 0.1, hz1 - 0.05)))
+            v = Vector((side * r.uniform(0.8, 2.6), r.uniform(-0.6, 0.6), r.uniform(-0.2, 1.4)))
+            spin = Vector((r.uniform(-12, 12), r.uniform(-12, 12), r.uniform(-8, 8)))
+            t0 = plug_until + r.uniform(0.0, 0.25)
+            b = box(tuple(p0), sz, "rubble" if j % 3 else "brick", name + " debris")
+            key_vis(b, [(0, False), (t0, True)])
+            rest_z = sz[2] / 2
+            tf = (v.z + math.sqrt(v.z ** 2 + 2 * g * (p0.z - rest_z))) / g
+            pts = []
+            k = 0.0
+            while k < tf:
+                pts.append((k, p0 + v * k + Vector((0, 0, -0.5 * g * k * k)), spin * k))
+                k += 1.0 / FPS
+            land = p0 + v * tf + Vector((0, 0, -0.5 * g * tf * tf))
+            land.z = rest_z
+            bounce = land + Vector((v.x * 0.12, v.y * 0.12, 0))
+            pts += [(tf, land, spin * tf), (tf + 0.12, (land + bounce) / 2 + Vector((0, 0, 0.05)), spin * (tf + 0.06)),
+                    (tf + 0.24, bounce, spin * tf * 1.05), (tf + 0.5, bounce + Vector((v.x * 0.03, 0, 0)), spin * tf * 1.05)]
+            for dt, pos, rot in pts:
+                b.location = pos
+                b.rotation_euler = tuple(rot)
+                b.keyframe_insert("location", frame=fr(t0 + dt))
+                b.keyframe_insert("rotation_euler", frame=fr(t0 + dt))
+        # plaster dust puff: pale spheres that grow and shrink away
+        for j in range(8):
+            d = put(P.sphere((x + r.uniform(0.1, 0.5), hy + r.uniform(-0.4, 0.4), r.uniform(hz0, hz1)), 0.2,
+                             M_["rubble"], name + " dust"))
+            key_vis(d, [(0, False), (plug_until, True), (plug_until + 1.6, False)])
+            for dt, sc_ in ((0.0, 0.1), (0.4, 0.75), (1.2, 0.0)):
+                d.scale = (sc_,) * 3
+                d.keyframe_insert("scale", frame=fr(plug_until + dt))
     return parts
+
+
+def fcurves_of(owner):
+    ad = owner.animation_data
+    if not ad or not ad.action:
+        return []
+    act = ad.action
+    if hasattr(act, "fcurves") and len(act.fcurves):
+        return list(act.fcurves)
+    out = []
+    for layer in getattr(act, "layers", []):
+        for strip in layer.strips:
+            for cb in getattr(strip, "channelbags", []):
+                out += list(cb.fcurves)
+    return out
 
 
 def key_vis(o, pts):
@@ -129,9 +174,8 @@ def key_vis(o, pts):
         o.hide_render = not v
         o.hide_viewport = False
         o.keyframe_insert("hide_render", frame=f)
-    ad = o.animation_data
-    if ad and ad.action and hasattr(ad.action, "fcurves"):
-        for fc in ad.action.fcurves:
+    for fc in fcurves_of(o):
+        if fc.data_path == "hide_render":
             for k in fc.keyframe_points:
                 k.interpolation = "CONSTANT"
 
@@ -180,14 +224,6 @@ for t, a in ((0.0, 0), (1.6, 0), (2.9, 78), (END, 78)):
 box((-WT / 2, D / 2, H / 2), (WT, D, H), "wallA", "A left")
 steel_plate((0.12, 2.6, 1.05), (0.85, 2.1), "x", "Balcony steel")
 box((0.04, 2.6, 2.13), (0.06, 1.0, 0.08), "frame", "Balcony frame")
-# A|B wall (x = 5.08) with the hole at y 2.2, plugged until 23.3
-WALL_AB_T = 23.3
-wall_with_hole(5.08, 2.2, 1.0, 0.25, 1.75, M_["wallA"], "AB wall", plug_until=WALL_AB_T,
-               cracks=((20.6, 0.6), (21.9, 1.0)))
-# B|C wall (x = 10.24) hole at y 2.0, plugged until 39.6
-WALL_BC_T = 39.6
-wall_with_hole(10.24, 2.0, 1.0, 0.25, 1.75, M_["wallB"], "BC wall", plug_until=WALL_BC_T,
-               cracks=((35.5, 0.6), (37.0, 1.0)))
 # far wall of C (x=15.4) with a small dark hole at y 1.5 where Kian looks through
 wall_with_hole(15.4, 1.5, 0.42, 1.12, 1.6, M_["wallC"], "C far wall")
 box((15.9, 1.5, 1.35), (0.6, 1.4, 1.4), "dark", "Behind hole")
@@ -278,9 +314,22 @@ def clip(name):
 
 def act(who, name, t0, t1, pos, facing, **kw):
     """Character `who` plays clip `name` from t0 to t1 (seconds) at pos/facing."""
-    n = fr(t1) - fr(t0) + 1
+    n = fr(t1) - fr(t0)
     mocap.apply(CH[who], clip(name), start=fr(t0), length=n, offset=pos, facing=facing, **kw)
+    rig = CH[who].rig                       # hold the place until the last frame (then jump at the cut)
+    rig.location = pos
+    rig.rotation_euler = (0, 0, math.radians(facing) + math.pi)
+    rig.keyframe_insert("location", frame=fr(t1) - 1)
+    rig.keyframe_insert("rotation_euler", index=2, frame=fr(t1) - 1)
 
+
+# a character holds his place for the whole segment and jumps (at the cut) to the next one
+for _ch in CH.values():
+    fcs = [fc for fc in fcurves_of(_ch.rig) if fc.data_path in ("location", "rotation_euler")]
+    print("PLACE KEYS", _ch.name, len(fcs))
+    for fc in fcs:
+        for kp in fc.keyframe_points:
+            kp.interpolation = "CONSTANT"
 
 # who is in which set (hidden otherwise, saves render time)
 PRESENT = {
@@ -332,6 +381,40 @@ act("mahsa", "nervously_look_around", 59.4, 75.5, (12.3, 2.85, 0), -50, loop=Tru
 act("rezaei", "sitting_idle", 41.0, 75.5, (13.0, 3.0, 0.02), 180, loop=True)
 # ---- Kian behind the far wall (only his face shows through the hole)
 act("kian", "breathing_idle", 62.0, 75.5, (15.75, 1.5, 0), 90, loop=True)
+
+
+def strikes(who, t0, t1, toward_x=True):
+    """Moments the sledgehammer hits: local maxima of the right hand's reach towards +X."""
+    rig = CH[who].rig
+    xs = []
+    for f in range(fr(t0), fr(t1)):
+        sc.frame_set(f)
+        xs.append(((rig.matrix_world @ rig.pose.bones["hand_r"].matrix).translation.x, f))
+    hits = []
+    lo = min(v for v, _ in xs)
+    hi = max(v for v, _ in xs)
+    for i in range(2, len(xs) - 2):
+        v, f = xs[i]
+        if v >= max(x for x, _ in xs[i - 2:i + 3]) and v > lo + 0.6 * (hi - lo):
+            if not hits or f - hits[-1] > 8:
+                hits.append(f)
+    return [(f - 1) / FPS for f in hits]
+
+
+for _k, _c in (("rubble", (0.8, 0.76, 0.68)), ("brick", (0.62, 0.36, 0.28)), ("dark", (0.05, 0.05, 0.06))):
+    M_[_k] = P.mat(_k.capitalize() + " 2", _c, 0.9)       # re-create: building the cast purged unused materials
+HITS_AB = strikes("kazemi", 19.0, 24.5)
+HITS_BC = strikes("kazemi", 33.5, 41.0)
+print("HITS", [round(v, 2) for v in HITS_AB], [round(v, 2) for v in HITS_BC])
+import json
+os.makedirs(os.path.join(HERE, "out"), exist_ok=True)
+json.dump({"ab": HITS_AB, "bc": HITS_BC}, open(os.path.join(HERE, "out", "hits.json"), "w"))
+WALL_AB_T = HITS_AB[-1] if HITS_AB else 23.3
+WALL_BC_T = HITS_BC[-1] if HITS_BC else 39.6
+wall_with_hole(5.08, 2.2, 1.0, 0.25, 1.75, M_["wallA"], "AB wall", plug_until=WALL_AB_T,
+               cracks=[(h, 0.5 + 0.5 * i / max(1, len(HITS_AB) - 1)) for i, h in enumerate(HITS_AB[:-1])])
+wall_with_hole(10.24, 2.0, 1.0, 0.25, 1.75, M_["wallB"], "BC wall", plug_until=WALL_BC_T,
+               cracks=[(h, 0.5 + 0.5 * i / max(1, len(HITS_BC) - 1)) for i, h in enumerate(HITS_BC[:-1])])
 
 # ---- faces (shape keys) and visibility
 WORRY = {"mom": [(0, 0.2), (2.6, 1.8), (19, 1.2), (52, 1.6), (59, 2.0)],
@@ -476,11 +559,9 @@ for t0, t1, c0, c1, a0, a1, lens in SHOTS:
         cam.data.lens = lens
         cam.data.keyframe_insert("lens", frame=f)
 for owner in (cam, cam.data):
-    ad = owner.animation_data
-    if ad and ad.action and hasattr(ad.action, "fcurves"):
-        for fc in ad.action.fcurves:
-            for k in fc.keyframe_points:
-                k.interpolation = "LINEAR"
+    for fc in fcurves_of(owner):
+        for k in fc.keyframe_points:
+            k.interpolation = "LINEAR"
 # camera shake on the hammer blows / door reveal
 # (small, keyed on top: handled in post with a short shake filter)
 
@@ -488,7 +569,7 @@ for owner in (cam, cam.data):
 sc.frame_set(1)
 T.toonify(sc, samples=int(os.environ.get("SAMPLES", "8")))
 inked = [o for o in bpy.data.objects if o.type == "MESH" and not any(
-    k in o.name.lower() for k in ("high-poly", "lash", "brow", "teeth", "tongue", "rivet", "crack", "screen", "glass",
+    k in o.name.lower() for k in ("high-poly", "lash", "brow", "teeth", "tongue", "rivet", "crack", "screen", "glass", "dust",
                                   "floor", "ceiling"))]
 T.ink(inked, 0.005)
 sc.render.resolution_x, sc.render.resolution_y = 540, 960

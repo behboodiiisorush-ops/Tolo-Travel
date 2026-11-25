@@ -69,15 +69,17 @@ def build():
         S.put(S.knock(0.9), k, 0.7, 0.2)
     S.put(S.scrape(0.6), 14.6, 0.25)                     # cabinet door
     S.put(S.knock(0.5), 16.2, 0.4)
-    for k, s in ((20.4, 0.8), (21.7, 0.9), (22.9, 1.0)):  # sledgehammer on the wall
-        S.put(wall_hit(s), k, 0.9, 0.2)
+    import json
+    hits = json.load(open(os.path.join(HERE, "out", "hits.json")))
+    for k in hits["ab"]:                                 # sledgehammer on the wall (times from the animation)
+        S.put(wall_hit(0.9), k, 0.9, 0.2)
         S.put(S.scrape(0.3), k + 0.05, 0.25)
-    S.put(crumble(1.8), 23.25, 0.9)
+    S.put(crumble(1.8), hits["ab"][-1], 0.9)
     S.put(S.knock(1.4), 25.9, 0.7)                       # landing next door
     S.heartbeat(26.0, 41.0, 108, 0.33)
-    for k, s in ((34.9, 0.8), (36.3, 0.9), (37.8, 1.0), (39.0, 1.0)):
-        S.put(wall_hit(s), k, 0.9, -0.2)
-    S.put(crumble(1.8), 39.55, 0.9)
+    for k in hits["bc"]:
+        S.put(wall_hit(0.9), k, 0.9, -0.2)
+    S.put(crumble(1.8), hits["bc"][-1], 0.9)
     tv = S.band(S.noise(int(11 * S.SR)), 2000, 6000) * 0.05
     S.put(tv, 51.0, 1.0, -0.4)
     for k in (59.6, 60.0, 60.5, 61.2):                   # lights flicker
