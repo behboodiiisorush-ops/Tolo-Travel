@@ -82,8 +82,8 @@ def main():
     n_pic = int(END * FPS)
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-framerate", str(FPS), "-i", os.path.join(SRC, "f_%04d.png"),
                     "-frames:v", str(n_pic),
-                    "-vf", f"scale={W}:{H}:flags=lanczos,"
-                           "vignette=PI/6",
+                    "-vf", f"scale={W}:{H}:flags=lanczos,lenscorrection=k1=0.22:k2=0.05:i=bilinear,"     # fisheye (my eyes)
+                           f"scale={int(W * 1.2)}:{int(H * 1.2)}:flags=lanczos,crop={W}:{H},vignette=PI/5",
                     "-q:v", "2", os.path.join(TMP, "u_%04d.jpg")], check=True)
     names = sorted(n for n in os.listdir(TMP) if n.startswith("u_"))
     total = len(names) + int(CARD * FPS)

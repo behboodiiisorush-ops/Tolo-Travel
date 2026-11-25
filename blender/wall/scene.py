@@ -287,7 +287,9 @@ sc.world = w
 w.color = (0.08, 0.08, 0.1)
 
 # ------------------------------------------------------------------ cast
-KEYS = ["mom", "kazemi", "arian", "mahsa", "rezaei", "kian"]
+# my hoodie hangs open: a dark t-shirt under it (seen when I look down)
+cast.CAST["me"] = dict(cast.CAST["me"], clothes=dict(cast.CAST["me"]["clothes"], **{"toigo_basic_tucked_t-shirt": (0.22, 0.22, 0.25)}))
+KEYS = ["mom", "kazemi", "arian", "mahsa", "rezaei", "kian", "me"]
 CH = {}
 for k in KEYS:
     if k == "rezaei":
@@ -303,6 +305,12 @@ for kk in list(clothes):
     if "sweater" in kk:
         clothes[kk] = (0.55, 0.16, 0.22)
 T.SKIN[CH["mom"].name] = (skin, clothes)
+skin, clothes = T.SKIN[CH["kazemi"].name]
+clothes = dict(clothes)
+for kk in list(clothes):
+    if "casualsuit" in kk:
+        clothes[kk] = (0.24, 0.26, 0.3)
+T.SKIN[CH["kazemi"].name] = (skin, clothes)
 CLIP = {}
 
 
@@ -312,16 +320,80 @@ def clip(name):
     return CLIP[name]
 
 
-CUTS = {0.0, 5.0, 7.4, 12.4, 16.4, 19.0, 24.5, 27.0, 33.5, 41.0, 47.0, 51.0, 58.8, 62.0, 66.0, 72.0}
+CUTS = {0.0}                  # POV film: one continuous look through my eyes, nobody jumps
 LASTSEG = {}
+HOLES = [(5.08, 2.2), (10.24, 2.0)]          # (wall x, hole centre y)
+
+
+def face(p, q):
+    """facing (degrees, 0 = +Y, 90 = -X) from p towards q."""
+    return math.degrees(math.atan2(-(q[0] - p[0]), q[1] - p[1]))
+
+
+def walk_path(p0, p1):
+    """Straight line from p0 to p1, routed through the hole of every wall it crosses."""
+    pts = [Vector((p0[0], p0[1]))]
+    s = 1 if p1[0] > p0[0] else -1
+    for wx, hy in sorted(HOLES, key=lambda h: s * h[0]):
+        if (p0[0] - wx) * (p1[0] - wx) < 0:
+            pts += [Vector((wx - s * 0.45, hy)), Vector((wx + s * 0.45, hy))]
+    pts.append(Vector((p1[0], p1[1])))
+    return pts
+
+
+def bump(x, y):
+    """Lift the body a little while stepping over the bottom of a hole."""
+    for wx, hy in HOLES:
+        d = abs(x - wx)
+        if d < 0.35 and abs(y - hy) < 0.6:
+            return 0.1 * (1 + math.cos(math.pi * d / 0.35)) / 2
+    return 0.0
+
+
+def walk(who, t0, t1, pts, f_from, f_to):
+    """Walk along pts (walking cycle in place, the rig carried along the path), turning from f_from at the start
+    and into f_to at the end."""
+    lens = [(b - a).length for a, b in zip(pts, pts[1:])]
+    L = max(1e-3, sum(lens))
+    dur = t1 - t0
+    n = fr(t1) - fr(t0)
+
+    def at(s):
+        s = max(0.0, min(L, s))
+        for (a, b), l in zip(zip(pts, pts[1:]), lens):
+            if s <= l or l == lens[-1]:
+                return a.lerp(b, s / max(l, 1e-6)) if l > 0 else a
+            s -= l
+        return pts[-1]
+
+    def place(j):
+        u = min(1.0, j / max(1, n - 1))
+        uu = u * u * (3 - 2 * u) * 0.35 + u * 0.65            # soft start and stop
+        p = at(uu * L)
+        q = at(uu * L + 0.35)
+        if (q - p).length < 1e-3:
+            q = p + (pts[-1] - pts[-2])
+        fw = face(p, q)
+        t = j / FPS
+        k0, k1 = seg(t, 0.0, 0.45), seg(t, dur - 0.45, dur)
+
+        def mix(a, b, k):
+            d = (b - a + 180) % 360 - 180
+            return a + d * k
+        fac = mix(mix(f_from, fw, k0), f_to, k1)
+        return (p.x, p.y, bump(p.x, p.y)), fac
+    v = L / dur
+    mocap.apply(CH[who], clip("walking"), start=fr(t0), length=n, in_place=True, loop=True,
+                speed=max(0.6, min(1.4, v / 1.3)), place=place, blend=8)
+    LASTSEG[who] = t1
 
 
 def act(who, name, t0, t1, pos, facing, follow=None, turn=0.0, **kw):
     """Character `who` plays clip `name` from t0 to t1 (seconds) at pos/facing.
-    Inside a shot (t0 is not a cut) the body eases out of the previous pose, and with follow=True the hips
-    continue from where the previous segment left them (no jump); turn: seconds to turn from the old facing."""
+    When the segment follows on from the previous one the body eases out of the previous pose and the hips
+    continue from where they were (no jump); if the new place is further away, the character first walks there
+    (through the holes in the walls). turn: seconds to turn from the old facing."""
     rig = CH[who].rig
-    n = fr(t1) - fr(t0)
     in_shot = t0 not in CUTS and LASTSEG.get(who) == t0
     if follow is None:
         follow = in_shot
@@ -332,6 +404,14 @@ def act(who, name, t0, t1, pos, facing, follow=None, turn=0.0, **kw):
         sc.frame_set(fr(t0) - 1)
         hips_prev = (rig.matrix_world @ rig.pose.bones["pelvis"].matrix).translation.copy()
         old_rz = rig.rotation_euler[2]
+        dist = (Vector((pos[0], pos[1])) - hips_prev.xy).length
+        if dist > 0.35:
+            pts = walk_path(hips_prev.xy, pos)
+            L = sum((b - a).length for a, b in zip(pts, pts[1:]))
+            tw = min(max(0.7, L / 1.25), 0.75 * (t1 - t0))
+            walk(who, t0, t0 + tw, pts, math.degrees(old_rz - math.pi), facing)
+            return act(who, name, t0 + tw, t1, pos, facing, turn=0.3, **kw)
+    n = fr(t1) - fr(t0)
     mocap.apply(CH[who], clip(name), start=fr(t0), length=n, offset=pos, facing=facing,
                 blend=8 if in_shot else 0, **kw)
     if hips_prev is not None:
@@ -362,8 +442,8 @@ for _ch in CH.values():
 
 # who is in which set (hidden otherwise, saves render time)
 PRESENT = {
-    "mom": [(0, 19.0), (26.6, 75.5)], "kazemi": [(0, 75.5)], "arian": [(24.5, 75.5)], "mahsa": [(24.5, 75.5)],
-    "rezaei": [(41.0, 75.5)], "kian": [(62.0, 75.5)],
+    "mom": [(0, 75.5)], "kazemi": [(0, 75.5)], "arian": [(24.5, 75.5)], "mahsa": [(24.5, 75.5)],
+    "rezaei": [(41.0, 75.5)], "kian": [(62.0, 75.5)], "me": [(0, 75.5)],
 }
 # ---- mom
 GRAB, PULL = 2.0, 2.9                    # hand on the knob / door let go
@@ -371,47 +451,72 @@ act("mom", "opening_door_inwards", 0.0, GRAB, (1.80, 1.05, 0), 180, src_from=0.8
 act("mom", "opening_door_inwards", GRAB, PULL, (1.80, 1.05, 0), 180, src_from=3.1, speed=-1.1, follow=False)
 act("mom", "nervously_look_around", PULL, 7.4, (1.8, 1.3, 0), 180)
 act("mom", "breathing_idle", 7.4, 10.0, (1.6, 1.45, 0), 200, src_from=1.0)
-act("mom", "punching_bag", 10.0, 12.4, (1.2, 0.62, 0), 180)
+act("mom", "punching_bag", 10.0, 12.4, (1.0, 0.62, 0), 180)
 act("mom", "opening_a_filing_cabinet", 12.4, 16.4, (1.2, 3.45, 0), 0, src_from=1.4, speed=0.7)
 act("mom", "pushing", 16.4, 19.0, (1.2, 3.45, 0), 180, src_from=2.0, speed=0.75)
-act("mom", "nervously_look_around", 24.5, 33.5, (5.7, 3.0, 0), -70)
-act("mom", "breathing_idle", 33.5, 41.0, (8.6, 3.0, 0), -100)
-act("mom", "nervously_look_around", 41.0, 51.0, (11.3, 2.7, 0), -60)
-act("mom", "breathing_idle", 51.0, 59.4, (11.7, 2.6, 0), 10)
-act("mom", "nervously_look_around", 59.4, 75.5, (11.7, 2.6, 0), -55, loop=True)
+act("mom", "breathing_idle", 19.0, 27.4, (2.9, 3.0, 0), -60)
+act("mom", "nervously_look_around", 27.4, 33.5, (6.0, 3.4, 0), -70)
+act("mom", "breathing_idle", 33.5, 45.0, (8.6, 3.0, 0), -100)
+act("mom", "nervously_look_around", 45.0, 51.0, (11.6, 3.5, 0), -60)
+act("mom", "breathing_idle", 51.0, 59.4, (11.0, 2.6, 0), 10)
+act("mom", "nervously_look_around", 59.4, 75.5, (11.0, 2.6, 0), -55, loop=True)
 # ---- Kazemi
 act("kazemi", "breathing_idle", 0.0, 5.0, (3.9, 1.6, 0), 200)
 act("kazemi", "nervously_look_around", 5.0, 7.4, (3.75, 0.8, 0), 180, src_from=0.5)
 act("kazemi", "cross_punch", 7.4, 9.6, (3.6, 0.72, 0), 180)
 act("kazemi", "nervously_look_around", 9.6, 12.4, (3.6, 0.95, 0), 190)
-act("kazemi", "punching_bag", 12.4, 13.4, (4.45, 2.2, 0), -90)
-act("kazemi", "thinking", 13.4, 19.0, (4.3, 2.0, 0), -110)
+act("kazemi", "punching_bag", 12.4, 13.9, (4.45, 2.2, 0), -90)
+act("kazemi", "thinking", 13.9, 19.0, (4.3, 2.0, 0), -110)
 act("kazemi", "double_dagger_stab", 19.0, 22.1, (4.45, 2.2, 0), -90)
 act("kazemi", "double_dagger_stab", 22.1, 24.5, (4.45, 2.2, 0), -90, src_from=0.4)
 act("kazemi", "jump", 24.5, 27.0, (4.35, 2.2, 0), -90)
-act("kazemi", "breathing_idle", 27.0, 33.5, (6.5, 2.0, 0), -60)
+act("kazemi", "breathing_idle", 27.0, 33.5, (8.6, 3.3, 0), -60)
 act("kazemi", "double_dagger_stab", 33.5, 36.6, (9.6, 2.0, 0), -90)
 act("kazemi", "double_dagger_stab", 36.6, 41.0, (9.6, 2.0, 0), -90, src_from=0.4, speed=0.85)
-act("kazemi", "breathing_idle", 41.0, 51.0, (11.0, 2.3, 0), -70)
-act("kazemi", "breathing_idle", 51.0, 59.4, (12.1, 2.3, 0), 5, src_from=3.0)
-act("kazemi", "nervously_look_around", 59.4, 75.5, (12.1, 2.3, 0), -60, src_from=1.0, loop=True)
+act("kazemi", "breathing_idle", 41.0, 51.0, (11.7, 2.8, 0), -70)
+act("kazemi", "breathing_idle", 51.0, 59.4, (10.6, 3.4, 0), 5, src_from=3.0)
+act("kazemi", "nervously_look_around", 59.4, 75.5, (10.6, 3.4, 0), -60, src_from=1.0, loop=True)
 # ---- Arian and Mahsa under the table
 act("arian", "pushing", 24.5, 27.0, (7.3, 1.9, 0), 180, speed=0.05)
 act("arian", "pushing", 27.0, 29.5, (7.3, 1.75, 0), 180, src_from=0.2, speed=1.0)
 act("arian", "nervously_look_around", 29.5, 33.5, (7.3, 1.6, 0), 160)
-act("arian", "nervously_look_around", 33.5, 41.0, (8.9, 3.3, 0), -70, src_from=2.0)
-act("arian", "breathing_idle", 41.0, 51.0, (11.0, 2.1, 0), -70)
-act("arian", "breathing_idle", 51.0, 59.4, (11.3, 2.25, 0), 0, src_from=4.0)
-act("arian", "terrified", 59.4, 75.5, (11.3, 2.25, 0), -50, src_from=1.0)
+act("arian", "nervously_look_around", 33.5, 44.0, (8.9, 3.3, 0), -70, src_from=2.0)
+act("arian", "breathing_idle", 44.0, 51.0, (11.1, 3.0, 0), -70)
+act("arian", "breathing_idle", 51.0, 59.4, (10.7, 2.0, 0), 0, src_from=4.0)
+act("arian", "terrified", 59.4, 75.5, (10.7, 2.0, 0), -50, src_from=1.0)
 act("mahsa", "pushing", 24.5, 33.5, (7.9, 2.45, 0), 200, speed=0.04)
-act("mahsa", "nervously_look_around", 33.5, 41.0, (8.1, 2.7, 0), -80)
-act("mahsa", "nervously_look_around", 41.0, 51.0, (10.9, 2.9, 0), -60, src_from=3.0)
-act("mahsa", "breathing_idle", 51.0, 59.4, (12.3, 2.85, 0), 0, src_from=6.0)
-act("mahsa", "nervously_look_around", 59.4, 75.5, (12.3, 2.85, 0), -50, loop=True)
+act("mahsa", "nervously_look_around", 33.5, 44.5, (8.1, 2.7, 0), -80)
+act("mahsa", "nervously_look_around", 44.5, 51.0, (10.7, 3.6, 0), -60, src_from=3.0)
+act("mahsa", "breathing_idle", 51.0, 59.4, (11.0, 3.5, 0), 0, src_from=6.0)
+act("mahsa", "nervously_look_around", 59.4, 75.5, (11.0, 3.5, 0), -50, loop=True)
 # ---- Rezaei on the bed
 act("rezaei", "sitting_idle", 41.0, 75.5, (13.0, 3.0, 0.02), 180, loop=True)
 # ---- Kian behind the far wall (only his face shows through the hole)
 act("kian", "breathing_idle", 62.0, 75.5, (15.75, 1.5, 0), 90, loop=True)
+# ---- me (the camera is my eyes; the head is hidden, the hands and feet show when I use them or look down)
+DOOR, WIN = (1.2, 0.0), (3.6, 0.0)
+ME = [
+    ("breathing_idle", 0.0, 5.0, (2.35, 2.05), face((2.35, 2.05), DOOR), {}),
+    ("nervously_look_around", 5.0, 7.4, (2.35, 2.05), face((2.35, 2.05), WIN), {}),
+    ("breathing_idle", 7.4, 10.0, (2.35, 2.05), face((2.35, 2.05), (1.6, 1.45)), {}),
+    ("punching_bag", 10.0, 12.4, (1.45, 0.62), 180, {}),                         # fists on the steel door
+    ("nervously_look_around", 12.4, 16.4, (2.5, 1.25), face((2.5, 1.25), (4.45, 2.2)), {}),
+    ("breathing_idle", 16.4, 19.0, (2.5, 1.25), face((2.5, 1.25), (1.2, 3.45)), {}),
+    ("breathing_idle", 19.0, 25.3, (3.3, 1.3), face((3.3, 1.3), (5.08, 2.2)), {}),
+    ("nervously_look_around", 25.3, 33.5, (6.1, 1.4), face((6.1, 1.4), (7.5, 2.1)), {}),   # through the hole
+    ("breathing_idle", 33.5, 42.0, (7.9, 1.2), face((7.9, 1.2), (10.24, 2.0)), {}),
+    ("nervously_look_around", 42.0, 47.0, (11.9, 1.4), face((11.9, 1.4), (13.0, 3.0)), {}),
+    ("breathing_idle", 47.0, 51.0, (12.5, 2.1), face((12.5, 2.1), (13.0, 3.0)), {}),
+    ("nervously_look_around", 51.0, 58.8, (12.5, 2.1), face((12.5, 2.1), (11.2, 4.3)), {}),
+    ("breathing_idle", 58.8, 62.0, (12.2, 1.5), face((12.2, 1.5), (13.0, 3.0)), {}),
+    ("breathing_idle", 62.0, 63.2, (12.2, 1.5), -90, {}),
+    ("nervously_look_around", 63.2, 66.0, (14.6, 1.5), -90, {}),
+    ("hands_forward_gesture", 66.0, 69.1, (14.75, 1.5), -90, {}),               # reaching to the hole
+    ("breathing_idle", 69.1, 72.0, (14.75, 1.5), -90, {}),
+    ("nervously_look_around", 72.0, 75.5, (14.75, 1.5), face((14.75, 1.5), (13.0, 3.0)), dict(turn=0.8)),
+]
+for nm, a_, b_, p_, f_, kw_ in ME:
+    act("me", nm, a_, b_, (p_[0], p_[1], 0), f_, **kw_)
 
 # the front door follows mom's hand while she pulls it, then swings on by itself
 _rig = CH["mom"].rig
@@ -479,7 +584,7 @@ wall_with_hole(10.24, 2.0, 1.0, 0.25, 1.75, M_["wallB"], "BC wall", plug_until=W
 WORRY = {"mom": [(0, 0.2), (2.6, 1.8), (19, 1.2), (52, 1.6), (59, 2.0)],
          "kazemi": [(0, 0.3), (6.4, 1.4), (13, 0.6), (19, 1.0), (52, 1.5), (59, 1.9)],
          "arian": [(24.5, 2.0), (33, 1.4), (52, 1.6), (59, 2.0)], "mahsa": [(24.5, 2.0), (52, 1.6), (59, 2.0)],
-         "rezaei": [(41, 0.0)], "kian": [(62, 2.0)]}
+         "rezaei": [(41, 0.0)], "kian": [(62, 2.0)], "me": [(0, 0.5)]}
 
 
 def worry(who, t):
@@ -592,7 +697,101 @@ hf = hammer_mesh("Hammer floor")
 hf.matrix_world = Matrix.Translation((0.75, 4.2, 0.06)) @ Matrix.Rotation(math.radians(-80), 4, "Z")
 floor_h = [hf]
 show(floor_h, [(12.4, 16.4)])
-# mom's phone in her right hand 7.4-10 (screen: dark grey + 'no signal' bars are in the caption)
+# ------------------------------------------------------------------ camera: my eyes (POV), fisheye added in post
+me = CH["me"]
+mrig = me.rig
+hb = mrig.pose.bones["head"]                 # my head is hidden (scaled to nothing): the camera sits there
+hb.scale = (0.001, 0.001, 0.001)
+hb.keyframe_insert("scale", frame=1)
+nb = mrig.pose.bones["neck_01"]
+nb.scale = (0.2, 0.2, 0.2)
+nb.keyframe_insert("scale", frame=1)
+sc.frame_set(fr(49))
+_r = CH["rezaei"].rig
+_ua = (_r.matrix_world @ _r.pose.bones["upperarm_r"].head).lerp(_r.matrix_world @ _r.pose.bones["lowerarm_r"].head, 0.6)
+HANDS = "hands"
+# (t, where I look, seconds to turn there)
+LOOK = [
+    (0.0, (1.85, 1.0, 0.0), 0.0),            # waking up: my feet
+    (1.1, (1.2, 0.0, 1.1), 0.9),             # mom at the front door
+    (5.0, (3.6, 0.0, 1.4), 0.6),             # Kazemi at the window
+    (7.4, (1.55, 1.25, 1.05), 0.6),          # mom's phone: no signal
+    (10.0, (1.3, 0.0, 1.15), 0.5),           # the steel door, my fists
+    (12.4, (4.6, 2.2, 1.3), 0.7),            # Kazemi knocks on the wall
+    (16.4, (1.2, 3.45, 1.0), 0.6),           # mom with the sledgehammer
+    (19.0, (5.0, 2.2, 1.1), 0.6),            # the wall breaks
+    (25.3, (4.7, 2.2, 0.8), 0.5),
+    (26.1, (5.4, 2.2, 0.0), 0.5),            # my feet over the rubble
+    (27.6, (7.5, 2.1, 0.45), 0.8),           # Arian and Mahsa under the table
+    (33.5, (10.1, 2.0, 1.1), 0.6),           # the next wall
+    (42.0, (10.0, 2.0, 0.9), 0.5),
+    (43.0, (10.5, 2.0, 0.0), 0.5),           # stepping through
+    (44.8, (13.0, 3.0, 1.0), 0.8),           # Rezaei on the bed
+    (47.0, tuple(_ua), 0.8),                 # the bite on his arm
+    (51.0, (11.2, 4.3, 1.12), 0.7),          # the TV
+    (58.8, (13.0, 3.0, 1.15), 0.4),          # everyone turns to Rezaei
+    (62.0, (15.4, 1.5, 1.35), 0.5),          # a knock in the far wall
+    (66.0, (15.4, 1.5, 1.37), 0.3),          # Kian's face in the hole
+    (72.0, (13.0, 3.0, 1.2), 0.8),           # Rezaei looks up
+]
+
+
+def hands_mid(f):
+    sc.frame_set(f)
+    a = (mrig.matrix_world @ mrig.pose.bones["hand_r"].matrix).translation
+    b = (mrig.matrix_world @ mrig.pose.bones["hand_l"].matrix).translation
+    return (a + b) / 2
+
+
+cam = bpy.data.objects.new("Camera", bpy.data.cameras.new("Camera"))
+sc.collection.objects.link(cam)
+sc.camera = cam
+cam.data.clip_start = 0.03
+cam.data.lens = 15
+cam.data.sensor_width = 36
+cam.rotation_mode = "QUATERNION"
+import random
+_rnd = random.Random(7)
+eye_s = None
+hand_s = None
+d_prev = None
+EYE = {}
+for f in range(1, N + 1):
+    t = (f - 1) / FPS
+    sc.frame_set(f)
+    hw = mrig.matrix_world @ nb.matrix          # neck base (head and neck are shrunk)
+    fwd = Vector((-math.sin(mrig.rotation_euler[2] - math.pi), math.cos(mrig.rotation_euler[2] - math.pi), 0))
+    eye = hw.translation + Vector((0, 0, 0.23)) + fwd * 0.13
+    eye_s = eye if eye_s is None else eye_s.lerp(eye, 0.45)
+    hm = hands_mid(f)
+    hand_s = hm if hand_s is None else hand_s.lerp(hm, 0.3)
+    sc.frame_set(f)
+
+    def target(k):
+        v = LOOK[k][1]
+        return hand_s if v == HANDS else Vector(v)
+    k = max(i for i, l in enumerate(LOOK) if l[0] <= t)
+    d1 = (target(k) - eye_s).normalized()
+    if k > 0:
+        d0 = (target(k - 1) - eye_s).normalized()
+        d = d0.lerp(d1, seg(t, LOOK[k][0], LOOK[k][0] + LOOK[k][2])).normalized()
+    else:
+        d = d1
+    d_prev = d if d_prev is None else d_prev.lerp(d, 0.5).normalized()
+    q = d_prev.to_track_quat("-Z", "Y")
+    amp = 0.004
+    q.rotate(Matrix.Rotation(amp * _rnd.uniform(-1, 1), 4, "X"))
+    cam.location = eye_s
+    cam.rotation_quaternion = q
+    cam.keyframe_insert("location", frame=f)
+    cam.keyframe_insert("rotation_quaternion", frame=f)
+    EYE[f] = eye_s.copy()
+for owner in (cam,):
+    for fc in fcurves_of(owner):
+        for kp in fc.keyframe_points:
+            kp.interpolation = "LINEAR"
+# mom's phone in her right hand 7.4-10
+M_["phone"] = P.mat("Phone body", (0.08, 0.08, 0.1), 0.3)
 sc.frame_set(fr(8.5))
 pm = CH["mom"].rig.matrix_world @ CH["mom"].rig.pose.bones["hand_r"].matrix
 ph = put(P.box(pm.translation + pm.to_3x3() @ Vector((0, 0.09, -0.02)), (0.075, 0.15, 0.01), M_["phone"], "Mom phone"))
@@ -602,50 +801,6 @@ con.target, con.subtarget = CH["mom"].rig, "hand_r"
 con.inverse_matrix = pm.inverted()
 show([ph], [(7.4, 10.0)])
 
-# ------------------------------------------------------------------ camera: shots (t0, t1, cam0, cam1, aim0, aim1, lens)
-SHOTS = [
-    (0.0, 5.0, (3.5, 1.75, 1.55), (3.4, 1.65, 1.5), (1.15, 0.0, 1.1), (1.15, 0.0, 1.1), 22),
-    (5.0, 7.4, (4.7, 2.6, 1.5), (4.6, 2.3, 1.5), (3.5, 0.2, 1.45), (3.55, 0.1, 1.5), 22),
-    (7.4, 12.4, (3.4, 3.4, 1.75), (3.3, 3.2, 1.7), (2.3, 0.6, 1.15), (2.2, 0.6, 1.15), 18),
-    (12.4, 16.4, (2.6, 0.6, 1.5), (2.7, 0.7, 1.5), (4.6, 2.4, 1.3), (4.5, 2.5, 1.3), 20),
-    (16.4, 19.0, (2.5, 1.7, 1.35), (2.4, 1.85, 1.35), (1.2, 3.45, 0.95), (1.2, 3.45, 1.1), 22),
-    (19.0, 24.5, (3.2, 0.5, 1.35), (3.35, 0.55, 1.35), (4.95, 2.4, 1.2), (4.95, 2.35, 1.1), 20),
-    (24.5, 27.0, (7.4, 0.55, 1.3), (7.3, 0.6, 1.3), (5.1, 2.2, 1.0), (5.3, 2.2, 1.0), 20),
-    (27.0, 33.5, (9.2, 0.45, 1.05), (9.1, 0.5, 1.1), (7.2, 2.1, 0.6), (7.2, 2.0, 0.8), 19),
-    (33.5, 41.0, (7.3, 0.45, 1.6), (7.5, 0.5, 1.55), (9.9, 2.2, 1.15), (10.1, 2.1, 1.1), 18),
-    (41.0, 47.0, (11.7, 0.5, 1.55), (11.9, 0.8, 1.45), (13.0, 3.0, 1.0), (13.0, 3.0, 1.05), 24),
-    (47.0, 51.0, (12.25, 2.1, 1.15), (12.35, 2.25, 1.15), (12.85, 3.1, 0.95), (12.85, 3.1, 0.95), 32),
-    (51.0, 58.8, (12.2, 0.55, 1.6), (12.0, 0.8, 1.55), (11.2, 4.3, 1.1), (11.2, 4.3, 1.12), 22),
-    (58.8, 62.0, (11.7, 4.0, 1.45), (11.75, 3.9, 1.45), (11.9, 2.4, 1.45), (11.9, 2.4, 1.45), 20),
-    (62.0, 66.0, (12.6, 0.8, 1.4), (12.9, 1.0, 1.4), (15.4, 1.55, 1.3), (15.4, 1.5, 1.35), 22),
-    (66.0, 72.0, (14.45, 1.5, 1.37), (14.75, 1.5, 1.37), (15.6, 1.5, 1.37), (15.6, 1.5, 1.37), 30),
-    (72.0, 75.5, (13.1, 1.6, 1.0), (13.05, 2.2, 1.05), (13.0, 3.0, 1.18), (13.0, 3.0, 1.2), 28),
-]
-sc.frame_set(fr(49))
-_r = CH["rezaei"].rig
-_ua = (_r.matrix_world @ _r.pose.bones["upperarm_r"].head).lerp(_r.matrix_world @ _r.pose.bones["lowerarm_r"].head, 0.6)
-SHOTS[10] = (47.0, 51.0, tuple(_ua + Vector((-0.45, -0.75, 0.2))), tuple(_ua + Vector((-0.38, -0.62, 0.18))),
-             tuple(_ua), tuple(_ua), 30)
-cam = bpy.data.objects.new("Camera", bpy.data.cameras.new("Camera"))
-sc.collection.objects.link(cam)
-sc.camera = cam
-cam.data.clip_start = 0.05
-for t0, t1, c0, c1, a0, a1, lens in SHOTS:
-    f0, f1 = fr(t0), fr(t1) - 1
-    for f, c, a in ((f0, c0, a0), (f1, c1, a1)):
-        cam.location = c
-        cam.rotation_euler = (Vector(a) - Vector(c)).to_track_quat("-Z", "Y").to_euler()
-        cam.keyframe_insert("location", frame=f)
-        cam.keyframe_insert("rotation_euler", frame=f)
-        cam.data.lens = lens
-        cam.data.keyframe_insert("lens", frame=f)
-for owner in (cam, cam.data):
-    for fc in fcurves_of(owner):
-        for k in fc.keyframe_points:
-            k.interpolation = "LINEAR"
-# camera shake on the hammer blows / door reveal
-# (small, keyed on top: handled in post with a short shake filter)
-
 # ------------------------------------------------------------------ look
 sc.frame_set(1)
 T.SAT = 0.6                                # fewer, quieter colours (the user asked)
@@ -653,7 +808,10 @@ T.toonify(sc, samples=int(os.environ.get("SAMPLES", "8")))
 inked = [o for o in bpy.data.objects if o.type == "MESH" and not any(
     k in o.name.lower() for k in ("high-poly", "lash", "brow", "teeth", "tongue", "rivet", "crack", "screen", "glass", "dust",
                                   "floor", "ceiling"))]
-T.ink(inked, 0.005)
+me_objs = {o for o in bpy.data.objects if o.type == "MESH" and o.parent == CH["me"].rig}
+me_objs.add(CH["me"].body)
+T.ink([o for o in inked if o not in me_objs], 0.005)
+T.ink([o for o in inked if o in me_objs], 0.0015)
 sc.render.resolution_x, sc.render.resolution_y = 540, 960
 sc.render.film_transparent = False
 sc.eevee.use_shadows = True if hasattr(sc.eevee, "use_shadows") else None
