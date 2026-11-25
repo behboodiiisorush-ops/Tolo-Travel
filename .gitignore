@@ -28,3 +28,8 @@ blender/studio/post_tmp/
 blender/studio/out/*.wav
 blender/studio/*.blend
 blender/mocap/test/
+blender/wall/frames/
+blender/wall/test/
+blender/wall/post_tmp/
+blender/wall/*.blend
+blender/wall/out/*.wav

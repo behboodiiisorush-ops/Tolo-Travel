@@ -9,7 +9,7 @@ everything, and sweat drops for scared faces.
 import bpy, math, random
 from mathutils import Vector
 
-SAT = 1.9
+SAT = 1.3
 BANDS = ((0.0, 0.5), (0.12, 0.78), (0.45, 1.0))     # (light level where the band starts, brightness)
 
 

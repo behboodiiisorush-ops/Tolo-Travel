@@ -60,13 +60,15 @@ def _src_name(arm, short):
 
 
 def apply(ch, clip, start=1, length=None, speed=1.0, offset=(0, 0, 0), facing=0.0, in_place=False,
-          fps=24, put=None):
-    """Key ch.rig for `length` frames from `start` (default: the whole clip). facing in degrees (0 = +Y)."""
+          fps=24, put=None, src_from=0.0, loop=False, place=None):
+    """Key ch.rig for `length` frames from `start` (default: the rest of the clip). facing in degrees (0 = +Y).
+    src_from: seconds into the clip to start from; loop: wrap around (for walk cycles);
+    place: optional fn(j) -> (offset, facing) per frame j (moving along a path; use in_place=True)."""
     sc = bpy.context.scene
     src, tgt = clip.arm, ch.rig
     names = {t: _src_name(src, s) for t, s in MAP.items()}
     names = {t: s for t, s in names.items() if s and t in tgt.pose.bones}
-    n = length or int(clip.seconds * fps / speed) + 1
+    n = length or int(max(0.0, clip.seconds - src_from) * fps / speed) + 1
     # target placement: rig object at offset, rotated to `facing`
     rz = math.radians(facing) + math.pi
     tgt.location = offset
@@ -90,7 +92,7 @@ def apply(ch, clip, start=1, length=None, speed=1.0, offset=(0, 0, 0), facing=0.
     # onto the source bone's rest direction, in world space
     off = {}
     for t, sn in names.items():
-        tdir = (Tq @ trest_arm[t].to_quaternion()) @ Vector((0, 1, 0))
+        tdir = trest_arm[t].to_quaternion() @ Vector((0, 1, 0))      # armature space == source world (both face -Y)
         sdir = srest[sn].to_quaternion() @ Vector((0, 1, 0))
         off[t] = tdir.rotation_difference(sdir)
     order = [b for b in tgt.pose.bones]          # data order is parent-before-child
@@ -98,7 +100,20 @@ def apply(ch, clip, start=1, length=None, speed=1.0, offset=(0, 0, 0), facing=0.
     prevq = {}
     for j in range(n):
         f = start + j
-        sf = clip.first + j * speed * clip.fps / fps
+        sf = clip.first + src_from * clip.fps + j * speed * clip.fps / fps
+        if loop:
+            span = clip.last - clip.first
+            sf = clip.first + (sf - clip.first) % span
+        sf = min(sf, clip.last)
+        if place is not None:
+            off_j, fac_j = place(j)
+            Tm = Matrix.Translation(Vector(off_j)) @ Matrix.Rotation(math.radians(fac_j) + math.pi, 4, "Z")
+            T, Tq = Tm, Tm.to_quaternion()
+            tgt.location = off_j
+            tgt.rotation_euler = (0, 0, math.radians(fac_j) + math.pi)
+            for i in range(3):
+                tgt.keyframe_insert("location", index=i, frame=start + j)
+            tgt.keyframe_insert("rotation_euler", index=2, frame=start + j)
         sc.frame_set(int(sf), subframe=sf - int(sf))
         Rdes = {}                                    # desired armature-space rotation of each target bone
         for pb in order:
@@ -108,7 +123,7 @@ def apply(ch, clip, start=1, length=None, speed=1.0, offset=(0, 0, 0), facing=0.
                 sn = names[pb.name]
                 sw = (S0 @ src.pose.bones[sn].matrix).to_quaternion()
                 delta = sw @ srest[sn].to_quaternion().inverted()          # world-space change from rest
-                want = Tq.inverted() @ delta @ off[pb.name] @ Tq @ rest.to_quaternion()
+                want = delta @ off[pb.name] @ rest.to_quaternion()
             else:
                 pr = Rdes.get(b.parent.name) if b.parent else None
                 if pr is None:
@@ -132,7 +147,7 @@ def apply(ch, clip, start=1, length=None, speed=1.0, offset=(0, 0, 0), facing=0.
         d = (hw - hips_src_rest) * k
         if in_place:
             d.x = d.y = 0.0
-        d_arm = T.inverted().to_3x3() @ d
+        d_arm = d                                   # source world == target armature space
         rest = trest_arm["pelvis"]
         par = trest_arm["Root"] if "Root" in trest_arm else Matrix()
         loc = rest.to_quaternion().inverted() @ d_arm
