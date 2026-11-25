@@ -1,44 +1,58 @@
-# «زنگ آخر» — نسخهٔ ترکیبی (هوش مصنوعی + تدوین ما)
+# «زنگ آخر» — نسخهٔ کارتونی با هوش مصنوعی (هوش مصنوعی + تدوین ما)
 
 همان داستان و همان زمان‌بندی `blender/last_bell_real/voice_script.md`، ولی هر شات با ابزار
-«تصویر ← ویدیو» (Veo / Kling / Runway / Sora) ساخته می‌شود تا حرکت، پوست، عرق و نور طبیعی شود.
-شخصیت‌ها همان بازیگران ثابت `blender/cast/` هستند.
+«تصویر ← ویدیو» (Veo / Kling / Runway / Sora) و با ظاهر **خیلی کارتونی** ساخته می‌شود:
+انیمیشن سه‌بعدی سینمایی، چشم‌های درشت، بدن‌های اغراق‌شده، رنگ‌های شاد، حرکت کش‌دار و پرانرژی.
+شخصیت‌ها همان بازیگران ثابت `blender/cast/` هستند، فقط کارتونی‌شده.
 
 ## روند کار (۴ مرحله)
 
-1. **تصویر مرجع هر شخصیت** (یک بار برای همیشه) — بخش ۳.
+1. **تصویر مرجع کارتونی هر شخصیت** (یک بار برای همیشه) — بخش ۳.
    عکس `blender/cast/sheets/<key>_face.png` و `<key>_full.png` را به ابزار تصویر بدهید
    (حالت image-to-image / character reference) + پرامپت همان شخصیت. از بین نتیجه‌ها **یکی** را انتخاب کنید
    و اسمش را بگذارید `ref_<key>.png`. از این به بعد همیشه همین یک عکس مرجع است.
 2. **فریم شروع هر شات** — پرامپت «Start frame» هر شات + عکس‌های مرجع شخصیت‌های داخل آن شات.
-3. **ویدیو** — فریم شروع را بدهید به حالت image-to-video + پرامپت «Motion». نسبت ۹:۱۶، ۲۴ فریم.
-   - **صدای ساخته‌شده را خاموش کنید** (یا بعداً دور می‌ریزیم) — صداها را خودتان با ElevenLabs می‌سازید.
+3. **ویدیو** — فریم شروع را بدهید به حالت image-to-video + پرامپت «Motion» + بلوک حرکت کارتونی. نسبت ۹:۱۶.
+   - **صدای ساخته‌شده را خاموش کنید** — صداها را خودتان با ElevenLabs می‌سازید.
    - در شات‌هایی که کسی حرف می‌زند، عبارت *speaking* در پرامپت هست تا لب‌ها تکان بخورد.
    - از هر شات ۲ تا ۴ نسخه بگیرید و بهترین را نگه دارید.
 4. **تحویل به من** — فایل‌ها را با اسم شات (`S01.mp4`, `S02.mp4`, …) آپلود کنید.
-   من: برش و ترتیب، یکسان کردن رنگ همهٔ شات‌ها، زیرنویس فارسی (وزیرمتن)، جای صداها، افکت صوتی، خروجی نهایی.
+   من: برش و ترتیب، یکسان کردن رنگ، زیرنویس فارسی (وزیرمتن)، جای صداها، افکت صوتی، خروجی نهایی.
 
 ## قوانین ثابت (در همهٔ شات‌ها)
 - هیچ‌کس حجاب ندارد.
 - هیچ پرچم، آرم، نشان، نوشته روی دیوار، اسم مکان یا لوگوی تلویزیون/ارتش. هلیکوپتر و کامیون بی‌علامت.
-- زامبی‌ها «ترسناک ولی نه خون‌آلود زیاد» — بعضی ابزارها خون زیاد را رد می‌کنند؛ پرامپت‌ها عمداً ملایم نوشته شده.
+- زامبی‌ها کارتونی: سبز کم‌رنگ، چشم سفید گرد، لباس پاره — بدون خون واقعی (ابزارها هم راحت‌تر قبول می‌کنند).
 
 ---
 
-## ۱. بلوک سبک — آخر *همهٔ* پرامپت‌ها اضافه شود
+## ۱. بلوک سبک — آخر *همهٔ* پرامپت‌های تصویر و ویدیو اضافه شود
 
 ```
-Photorealistic live-action film still, shot on 35mm, natural skin texture with pores and fine sweat,
-soft realistic lighting, shallow depth of field, subtle film grain, muted warm colour grade,
-vertical 9:16 frame. Middle-Eastern (Iranian) people with warm olive skin.
+Stylized 3D animated feature film look, very cartoony: big expressive eyes, exaggerated
+proportions, oversized heads and hands, soft rounded shapes, smooth clean skin, bright saturated
+colours, warm cinematic lighting with rim light, playful toy-like environments,
+vertical 9:16 frame. Iranian characters with warm olive skin.
 No text, no logos, no flags, no emblems, no signs, no headscarves.
 ```
+
+### بلوک حرکت — فقط آخر پرامپت‌های «Motion»
+
+```
+Snappy exaggerated cartoon animation: squash and stretch, big anticipation before every action,
+bouncy follow-through, rubbery limbs, huge facial expressions, cartoon sweat drops and
+motion lines when scared or rushing.
+```
+
+### سبک‌های جایگزین (اگر خواستید عوض کنید — فقط بلوک سبک را جابه‌جا کنید)
+- **دوبعدی دستی:** `Hand-drawn 2D cartoon, thick clean black outlines, flat bright colours, simple painted backgrounds, big round eyes, 9:16.`
+- **مثل «واگن آخر» خودمان (تون):** `Toon-shaded 3D puppet characters, bold black outlines, flat cel shading, chunky simple shapes, saturated colours, 9:16.`
 
 ## ۲. پرامپت منفی (اگر ابزار جایش را دارد)
 
 ```
-cartoon, 3D render, CGI, plastic skin, doll face, extra fingers, deformed hands, text, watermark,
-logo, flag, emblem, insignia, subtitles, headscarf, hijab, oversaturated, blurry face
+photorealistic, realistic skin, live action, photo, uncanny, gore, realistic blood, extra fingers,
+deformed hands, text, watermark, logo, flag, emblem, insignia, subtitles, headscarf, hijab, blurry face
 ```
 
 ---
@@ -47,28 +61,27 @@ logo, flag, emblem, insignia, subtitles, headscarf, hijab, oversaturated, blurry
 
 | key | نام | Identity block (انگلیسی، ثابت) |
 |---|---|---|
-| `me` | من | `a 15-year-old Iranian boy, slim, dark brown side-swept hair falling over his forehead, navy blue hoodie, blue jeans` |
-| `arian` | آرین | `a tall lanky 15-year-old Iranian boy, short black hair, playful grin, slate-blue polo shirt, dark jeans` |
-| `mahsa` | مهسا | `a 15-year-old Iranian girl, black hair tied back in a low ponytail, red rectangular glasses, navy t-shirt, grey trousers, red flat shoes, sharp confident eyes` |
-| `kian` | کیان | `a small 13-year-old Iranian boy, short messy black hair, light-blue hoodie, jeans, green backpack, nervous eyes` |
-| `mom` | مامان | `a 42-year-old Iranian woman, brown hair in a neat bun, uncovered head, cream knitted sweater, navy trousers, warm worried face` |
-| `kazemi` | آقای کاظمی | `a 50-year-old Iranian male teacher, greying brown hair, black rectangular glasses, brown jacket and brown trousers, stern face` |
-| `rezaei` | آقای رضایی | `a 58-year-old Iranian janitor, grey slicked-back hair, wrinkled kind face, plain blue work overalls` |
-| `rezaei_z` | رضایی زامبی | `the same 58-year-old janitor in blue overalls, now infected: pale grey-green skin, dark veins, cloudy white eyes, dirty torn overalls, dark stains around the mouth` |
-| `anchor` | گوینده اخبار | `a 45-year-old Iranian male news anchor, short dark hair, dark suit, white shirt, plain tie` |
-| `soldier` | سرباز | `a 28-year-old Iranian soldier, plain olive-green uniform with no patches or insignia, olive steel helmet with net, black gloves` |
+| `me` | من | `a cartoon 15-year-old Iranian boy, slim, big dark-brown side-swept fringe flopping over one eye, navy blue hoodie, blue jeans` |
+| `arian` | آرین | `a cartoon 15-year-old Iranian boy, super tall and noodle-thin with long arms, spiky short black hair, huge mischievous grin, slate-blue polo shirt, dark jeans` |
+| `mahsa` | مهسا | `a cartoon 15-year-old Iranian girl, black hair in a bouncy ponytail, big red rectangular glasses, determined eyebrows, navy t-shirt, grey trousers, red flat shoes` |
+| `kian` | کیان | `a tiny cartoon 13-year-old Iranian boy, round face, huge teary eyes, messy black hair, light-blue hoodie, jeans, a giant green backpack almost as big as him` |
+| `mom` | مامان | `a cartoon 42-year-old Iranian mother, round friendly face, brown hair in a big tall bun, uncovered head, cream knitted sweater, navy trousers` |
+| `kazemi` | آقای کاظمی | `a cartoon 50-year-old Iranian male teacher, tall and stiff, square jaw, bushy grey eyebrows, greying brown hair, thick black rectangular glasses, brown jacket and trousers` |
+| `rezaei` | آقای رضایی | `a cartoon 58-year-old Iranian janitor, short and round, big grey moustache, grey slicked-back hair, kind crinkly eyes, plain blue work overalls` |
+| `rezaei_z` | رضایی زامبی | `the same cartoon janitor in blue overalls, now a goofy-scary cartoon zombie: pale mint-green skin, big blank white round eyes, droopy jaw, torn dirty overalls, arms stretched forward` |
+| `anchor` | گوینده اخبار | `a cartoon 45-year-old Iranian male news anchor, perfectly combed shiny dark hair, big square chin, dark suit, white shirt, plain tie` |
+| `soldier` | سرباز | `a cartoon 28-year-old Iranian soldier, broad heroic shoulders, plain olive-green uniform with no patches or insignia, round olive helmet, black gloves` |
 
 ### پرامپت تصویر مرجع (مرحلهٔ ۱) — برای هر شخصیت
 
 ورودی: `<key>_face.png` + `<key>_full.png`. پرامپت:
 
 ```
-Turn this 3D character into a real person. Keep exactly the same face shape, hairstyle, hair colour,
-glasses and clothes. [IDENTITY BLOCK]. Studio portrait, plain light-grey background,
-front view, head and shoulders, neutral expression, soft daylight. [STYLE BLOCK]
+Redesign this 3D character as a cartoon animated-movie character. Keep the same hairstyle, hair
+colour, glasses and clothes, but make the face and body cartoony and appealing. [IDENTITY BLOCK].
+Character turnaround sheet: front view, three-quarter view and full body, plain light background,
+friendly neutral expression. [STYLE BLOCK]
 ```
-
-بعد با همان عکس مرجع یک **عکس تمام‌قد** هم بگیرید (`full body, standing, front view`) — برای شات‌های دور.
 
 ---
 
@@ -113,7 +126,7 @@ POV یعنی دوربین چشم «من» است (خودش دیده نمی‌ش�
 
 ### S08 · ۲۰–۲۶ ث · پیام صوتی مامان
 - **Start frame:** `POV looking down at a smartphone hidden under a wooden desk, the screen shows only a plain audio waveform, no app interface, no text.`
-- **Motion:** `The waveform plays; the thumb hesitates over the screen; the camera glances up at the teacher and back down. Close, intimate, slightly shaky.`
+- **Motion:** `The waveform plays; the thumb hesitates over the screen; the camera glances up at the teacher and back down. Close and slightly shaky.`
 - دیالوگ (صدای مامان): «داره اتفاقایی میفته... مواظب خودت باش...»
 
 ### S09 · ۲۶–۳۳ ث · خنده
@@ -132,12 +145,12 @@ POV یعنی دوربین چشم «من» است (خودش دیده نمی‌ش�
 - دیالوگ: مهسا «اون... آقای رضاییه؟»
 
 ### S12 · ۴۳–۴۵ ث · چشم‌ها
-- **Start frame:** `Extreme close-up of [rezaei_z] face pressed against a window from outside, cloudy white eyes, breath fogging the glass.`
+- **Start frame:** `Extreme close-up of [rezaei_z] face pressed against a window from outside, big blank white eyes, cheek squished flat against the glass, breath fogging it.`
 - **Motion:** `His eyes snap to the camera; he slams a palm on the glass. Behind the camera [kian] gasps (reflection in the glass).`
 - دیالوگ: کیان «چشماش!»
 
 ### S13 · ۴۵–۵۰ ث · سنگر
-- **Start frame:** `[kazemi] and [arian] pushing heavy wooden school desks against a classroom door, other students helping, chaos, sweat on their faces.`
+- **Start frame:** `[kazemi] and [arian] pushing heavy wooden school desks against a classroom door, other students helping, chaos, big cartoon sweat drops flying.`
 - **Motion:** `Fast handheld: desks scrape across the floor, Kazemi shouts orders, Arian pushes with all his weight, sweat and strain, chairs fall.`
 - دیالوگ: کاظمی «میزها رو بیارید!» — آرین «هل بده! هل بده!»
 
@@ -172,8 +185,8 @@ POV یعنی دوربین چشم «من» است (خودش دیده نمی‌ش�
 - دیالوگ: «زود باش! دستتو بده!»
 
 ### S20 · ۷۲–۷۶ ث · پایان
-- **Start frame:** `Close-up of [soldier] gripping the camera's wrist, pulling up. Just above his right elbow: a torn sleeve and a fresh bite wound.`
-- **Motion:** `He pulls; the camera's gaze drops to the bite, then rises to his face — his eyes slowly turn cloudy white. Wind noise, slow motion. Hard cut to black.`
+- **Start frame:** `Close-up of [soldier] gripping the camera's wrist, pulling up. Just above his right elbow: a torn sleeve and a small cartoon bite mark.`
+- **Motion:** `He pulls; the camera's gaze drops to the bite, then rises to his face — his pupils slowly fade to blank white and his skin tints mint-green. Wind noise, slow motion. Hard cut to black.`
 - دیالوگ: من «ارتش... نابسامان شده...»
 
 ---
@@ -183,4 +196,5 @@ POV یعنی دوربین چشم «من» است (خودش دیده نمی‌ش�
 - [ ] Identity block را هیچ‌وقت تغییر ندهید، فقط کپی.
 - [ ] همهٔ شات‌ها ۹:۱۶، ۲۴ فریم، صدای ابزار خاموش.
 - [ ] شات‌های یک مکان (کلاس: S06 تا S16) را پشت سر هم بسازید و از یک فریم شروع کلاس برای همه استفاده کنید.
-- [ ] اگر ابزار خون یا زامبی را رد کرد: کلمهٔ *infected* را به *sick, pale, feverish* تغییر دهید.
+- [ ] اگر ابزار زامبی را رد کرد: کلمهٔ *zombie* را به *sick, sleepy, pale green* تغییر دهید.
+- [ ] اگر نتیجه زیادی واقعی شد: «very cartoony» را اول پرامپت هم بنویسید و پرامپت منفی را حتماً بدهید.
