@@ -9,6 +9,7 @@ everything, and sweat drops for scared faces.
 import bpy, math, random
 from mathutils import Vector
 
+SAT = 1.9
 BANDS = ((0.0, 0.5), (0.12, 0.78), (0.45, 1.0))     # (light level where the band starts, brightness)
 
 
@@ -36,18 +37,87 @@ def _is_emissive(mat):
     return src.type in ("EMISSION", "BSDF_TRANSPARENT", "MIX_SHADER", "ADD_SHADER")
 
 
-def cel(mat, shine=0.0, flat=None):
+_MEAN = {}
+
+
+def _img_mean(img):
+    if img.name not in _MEAN:
+        import numpy as np
+        try:
+            px = np.array(img.pixels[:], dtype=np.float32).reshape(-1, img.channels)
+            a = px[:, 3:4] if img.channels == 4 else np.ones((len(px), 1), np.float32)
+            w = a[::7, 0] > 0.5
+            col = px[::7, :3][w].mean(0) if w.any() else px[:, :3].mean(0)
+            _MEAN[img.name] = tuple(float(c) for c in col)
+        except Exception:
+            _MEAN[img.name] = (0.5, 0.5, 0.5)
+    return _MEAN[img.name]
+
+
+def _eval(sock, depth=0):
+    """Rough average colour of whatever feeds a colour socket (texture means, tints, mixes)."""
+    if depth > 12:
+        return (0.5, 0.5, 0.5)
+    if not sock.is_linked:
+        v = sock.default_value
+        try:
+            return tuple(v[:3])
+        except TypeError:
+            return (float(v),) * 3
+    n = sock.links[0].from_node
+    if n.type == "TEX_IMAGE" and n.image:
+        return _img_mean(n.image)
+    if n.type == "RGB":
+        return tuple(n.outputs[0].default_value[:3])
+    if n.type in ("MIX", "MIX_RGB"):
+        if n.type == "MIX":
+            fac, a, b = n.inputs[0], n.inputs[6], n.inputs[7]
+        else:
+            fac, a, b = n.inputs[0], n.inputs[1], n.inputs[2]
+        f = 0.5 if fac.is_linked else fac.default_value
+        ca, cb = _eval(a, depth + 1), _eval(b, depth + 1)
+        bt = n.blend_type
+        if bt == "MULTIPLY":
+            r = [x * y for x, y in zip(ca, cb)]
+        elif bt == "SCREEN":
+            r = [1 - (1 - x) * (1 - y) for x, y in zip(ca, cb)]
+        elif bt == "OVERLAY":
+            r = [2 * x * y if x < 0.5 else 1 - 2 * (1 - x) * (1 - y) for x, y in zip(ca, cb)]
+        else:
+            r = cb
+        return tuple(x * (1 - f) + y * f for x, y in zip(ca, r))
+    for i in n.inputs:                                   # pass through (hue/sat, bright/contrast, ...)
+        if i.type == "RGBA":
+            return _eval(i, depth + 1)
+    return (0.5, 0.5, 0.5)
+
+
+def cel(mat, shine=0.0, flat=None, keep_tex=False):
     """Turn one material into flat colour * 3 light bands (+ optional hard white highlight).
     flat=(r,g,b) drops the texture and uses one flat colour (comic look)."""
     if not mat.use_nodes or _is_emissive(mat):
         return
     nt = mat.node_tree
     sock, rgba = _base_colour(mat)
+    alpha = None
+    for n in nt.nodes:
+        if n.type == "BSDF_PRINCIPLED" and n.inputs["Alpha"].is_linked:
+            alpha = n.inputs["Alpha"].links[0].from_socket
     if flat is not None:
         sock, rgba = None, tuple(flat) + (1.0,)
-    keep = {sock.node} if sock else set()
+    elif sock is not None and not keep_tex:
+        for n in nt.nodes:
+            if n.type == "BSDF_PRINCIPLED":
+                rgba = _eval(n.inputs["Base Color"]) + (1.0,)
+                break
+        sock = None
+    if rgba is not None and not keep_tex:          # comic colours: a bit richer than the realistic ones
+        import colorsys
+        h_, s_, v_ = colorsys.rgb_to_hsv(*[max(0.0, min(1.0, c)) for c in rgba[:3]])
+        rgba = colorsys.hsv_to_rgb(h_, min(1.0, s_ * SAT), min(1.0, v_ * 1.05)) + (1.0,)
+    keep = ({alpha.node} if alpha else set()) | ({sock.node} if sock is not None else set())
     # keep the whole texture chain feeding the colour
-    stack = list(keep)
+    stack = list(keep)  # keep only the alpha chain
     while stack:
         n = stack.pop()
         for i in n.inputs:
@@ -94,6 +164,12 @@ def cel(mat, shine=0.0, flat=None):
         L.new(st.outputs[0], add.inputs[0]); L.new(col, add.inputs[6]); add.inputs[7].default_value = (1, 1, 1, 1)
         col = add.outputs[2]
     L.new(col, em.inputs[0])
+    if alpha is not None:                          # hair cards, lashes: keep the cut-out
+        tr = N.new("ShaderNodeBsdfTransparent")
+        mx = N.new("ShaderNodeMixShader")
+        L.new(alpha, mx.inputs[0]); L.new(tr.outputs[0], mx.inputs[1]); L.new(em.outputs[0], mx.inputs[2])
+        L.new(mx.outputs[0], out.inputs[0])
+        return
     L.new(em.outputs[0], out.inputs[0])
 
 
@@ -107,13 +183,23 @@ def toonify(sc, samples=16):
             continue
         n = m.name.lower()
         flat = _flat_for(m)
-        cel(m, shine=0.06 if ("eye white" in n or "pupil" in n or "sweat" in n) else 0.0, flat=flat)
+        imgs = [x.image.name.lower() for x in m.node_tree.nodes if x.type == "TEX_IMAGE" and x.image] if m.use_nodes else []
+        eyes = (("eye" in n and "brow" not in n and "lash" not in n) or "teeth" in n
+                or any(i.endswith("_eye.png") or "eye.png" in i and "brow" not in i and "lash" not in i for i in imgs))
+        cel(m, shine=0.06 if ("eye" in n or "pupil" in n or "sweat" in n) and "brow" not in n and "lash" not in n else 0.0,
+            flat=flat, keep_tex=eyes and flat is None)
 
 
 SKIN = {}      # character object name prefix -> skin rgb (filled by register())
 
 
-def register(ch, key):
+def register(ch, key, realistic=False):
+    if realistic:
+        import cast
+        d = cast.CAST[key]
+        skin = tuple(c * 0.78 for c in d.get("skin_tint", cast.WARM))
+        SKIN[ch.name] = (skin, {k: v for k, v in d.get("clothes", {}).items() if v})
+        return
     import characters as C
     d = C.SHEET[key]
     SKIN[ch.name] = (d["skin"], d.get("clothes", {}))
