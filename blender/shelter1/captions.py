@@ -37,3 +37,10 @@ QUESTION = "اگه تو بودی...\nدرِ پناهگاه رو باز می‌ک
 END = max([e for s, e in TIMES.values()], default=70.0) + 1.5
 CARD_SECONDS = 8
 FLASH_AFTER = 0.6   # the flash comes this long after the line "n2" ends
+
+# phone notifications shown as a banner at the top of the screen:
+# (start, end, app name, icon colour, title, message)
+NOTIFS = [
+    (0.5, 6.4, "هشدار اضطراری", (210, 40, 40), "هشدار اضطراری",
+     "حملهٔ هسته‌ای! فوراً به نزدیک‌ترین پناهگاه بروید."),
+]

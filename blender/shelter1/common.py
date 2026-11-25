@@ -774,6 +774,61 @@ def rails(x, y0, y1, z0, name="Rails"):
     return parts
 
 
+# ================================================================ phone held in one hand
+
+PHONE_HAND_POS = (0.12, -0.12, -0.42)         # camera space: right of centre, a little low
+PHONE_HAND_ROT = (D(8), D(-14), D(-9))       # tilted towards us, leaning a little
+
+
+def phone_in_hand(cam, texture_path, name="Phone"):
+    """An upright phone held in the right hand (fingers round its left edge, thumb on the right),
+    screen glowing towards the camera.  Animate root.scale to show/hide; put the POV right hand
+    at phone_palm() so the sleeve comes in from the bottom right."""
+    root = empty(name)
+    parent_local(root, cam)
+    body = box((0, 0, 0), (0.078, 0.16, 0.011), toon("Phone case", (0.1, 0.1, 0.12), 0.1), f"{name} body",
+               bevel=0.009)
+    m = bpy.data.materials.new(f"{name} screen")
+    m.use_nodes = True
+    nt = m.node_tree
+    nt.nodes.clear()
+    out = nt.nodes.new("ShaderNodeOutputMaterial")
+    tex = nt.nodes.new("ShaderNodeTexImage")
+    tex.image = bpy.data.images.load(texture_path)
+    e = nt.nodes.new("ShaderNodeEmission")
+    e.inputs["Strength"].default_value = 1.3
+    nt.links.new(tex.outputs["Color"], e.inputs["Color"])
+    nt.links.new(e.outputs[0], out.inputs["Surface"])
+    bpy.ops.mesh.primitive_plane_add(size=1, location=(0, 0, 0.0062))
+    sc = bpy.context.object
+    sc.scale = (0.07, 0.148, 1)
+    bpy.ops.object.transform_apply(scale=True)
+    sc.name = f"{name} screen"
+    sc.data.materials.append(m)
+    skin = toon("POV skin", (0.93, 0.7, 0.52), 0.35)
+    parts = [body, sc]
+    for k, y in enumerate((-0.055, -0.03, -0.005, 0.02)):  # four fingers curled over the left edge
+        parts.append(rod((-0.05, y, -0.006), (-0.034, y + 0.002, 0.009), 0.0095, skin, f"{name} finger {k}", verts=10))
+        parts.append(ball((-0.034, y + 0.002, 0.009), 0.0095, skin, f"{name} fingertip {k}", seg=10))
+    parts.append(rod((0.05, -0.075, -0.008), (0.043, -0.035, 0.008), 0.011, skin, f"{name} thumb", verts=10))
+    parts.append(ball((0.043, -0.035, 0.008), 0.011, skin, f"{name} thumb tip", seg=10))
+    parts.append(ball((0.004, -0.05, -0.03), 0.045, skin, f"{name} palm", scale=(1.15, 1.3, 0.55)))
+    for p in parts:
+        parent_keep(p, root) if root.name in REST else parent_local(p, root)
+    root.rotation_mode = "XYZ"
+    root.location = PHONE_HAND_POS
+    root.rotation_euler = PHONE_HAND_ROT
+    return root
+
+
+PHONE_SCALE = 1.9
+
+
+def phone_palm(scale=PHONE_SCALE):
+    """Where the POV right hand goes while holding the phone (camera space): below and behind it."""
+    return Vector(PHONE_HAND_POS) + Vector((0.02, -0.075, 0.02)) * scale
+
+
 # ================================================================ render
 
 

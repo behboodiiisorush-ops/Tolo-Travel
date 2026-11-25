@@ -231,34 +231,6 @@ def build_bunker():
     return hinge, gaps, flash, lamp, lamp_bulb, burst, led
 
 
-def build_phone(cam):
-    phone = empty("Phone")
-    parent_local(phone, cam)
-    body = box((0, 0, 0), (0.08, 0.16, 0.012), toon("Phone case", (0.12, 0.12, 0.14), 0.1), "Phone body",
-               bevel=0.008)
-    parent_keep(body, phone)
-    m = bpy.data.materials.new("Phone alert")
-    m.use_nodes = True
-    nt = m.node_tree
-    nt.nodes.clear()
-    out = nt.nodes.new("ShaderNodeOutputMaterial")
-    tex = nt.nodes.new("ShaderNodeTexImage")
-    tex.image = bpy.data.images.load(os.path.join(HERE, "textures", "phone_alert.png"))
-    e = nt.nodes.new("ShaderNodeEmission")
-    e.inputs["Strength"].default_value = 1.2
-    nt.links.new(tex.outputs["Color"], e.inputs["Color"])
-    nt.links.new(e.outputs[0], out.inputs["Surface"])
-    bpy.ops.mesh.primitive_plane_add(size=1, location=(0, 0, 0.0065))
-    sc = bpy.context.object
-    sc.scale = (0.07, 0.145, 1)
-    bpy.ops.object.transform_apply(scale=True)
-    sc.name = "Phone screen"
-    sc.data.materials.append(m)
-    parent_keep(sc, phone)
-    phone.rotation_mode = "XYZ"
-    return phone
-
-
 def build_torch(cam):
     root = empty("Torch")
     parent_local(root, cam)
@@ -324,7 +296,7 @@ def build():
     cam = make_camera(scene)
     arms = POVArms(cam)
     arms.reach = 1.2
-    phone = build_phone(cam)
+    phone = phone_in_hand(cam, os.path.join(HERE, "textures", "phone_alert.png"))
     torch, spot = build_torch(cam)
 
     rnd = random.Random(3)
@@ -373,7 +345,7 @@ def build():
 
         # ---------------- where we look
         if house:
-            yaw, pitch = 0, -55                                          # the phone
+            yaw, pitch = 8, -16                                          # the phone, the room behind it
             k = seg(t, at("mom1") - 0.5, at("mom1"))
             ym, pm = look(pos, mom_house + Vector((0, 0, 1.3)))
             yaw = lerp_yaw(yaw, ym, k); pitch = lerp(pitch, pm, k)
@@ -423,11 +395,8 @@ def build():
 
         # ---------------- the phone (in the house), the torch (in the dark)
         phone_on = t < at("mom1") - 0.4
-        phone.scale = (1.5,) * 3 if phone_on else (0.001,) * 3
-        phone.location = (0.0, -0.2, -0.42)
-        phone.rotation_euler = (D(-20), 0, 0)
-        for prop in ("scale", "location", "rotation_euler"):
-            phone.keyframe_insert(prop, frame=f)
+        phone.scale = (PHONE_SCALE,) * 3 if phone_on else (0.001,) * 3
+        phone.keyframe_insert("scale", frame=f)
         on = t >= torch_t
         spot.data.energy = 900 if on else 0
         spot.data.keyframe_insert("energy", frame=f)
@@ -456,9 +425,9 @@ def build():
 
         # ---------------- our hands
         bpy.context.view_layer.update()
-        if phone_on:
-            arms.set(f, "R", (0.06, -0.33, -0.43))
-            arms.set(f, "L", (-0.08, -0.34, -0.44))
+        if phone_on:  # one hand holds the phone up; the other is out of sight
+            arms.set(f, "R", phone_palm())
+            arms.set(f, "L", (-0.35, -0.95, -0.2))
         elif house:
             arms.set(f, "L", (-0.3, -0.42, -0.46))
             target = world_to_cam(cam, lena.hand_world("L"))

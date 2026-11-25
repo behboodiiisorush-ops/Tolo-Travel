@@ -22,7 +22,7 @@ FPS = 24
 W, H = 1080, 1920
 
 sys.path.insert(0, HERE)
-from captions import CAPTIONS, CARD_SECONDS, END, FLASH_AFTER, KEY_OF, NARRATION, QUESTION  # noqa: E402
+from captions import CAPTIONS, CARD_SECONDS, END, FLASH_AFTER, KEY_OF, NARRATION, NOTIFS, QUESTION  # noqa: E402
 
 FLASH = KEY_OF["n2"][1] + FLASH_AFTER   # the bomb
 FA = "۰۱۲۳۴۵۶۷۸۹"
@@ -84,11 +84,37 @@ def question_banner(d, k):
     d.text((cx, cy), QUESTION, font=f, fill=(255, 255, 255), anchor="mm", direction="rtl", language="fa")
 
 
+def notification(img, t, start, end, app, icon_col, title, body):
+    """A phone notification banner sliding down from the top of the screen (RTL)."""
+    if not (start <= t <= end):
+        return
+    k = min(1.0, (t - start) / 0.3, (end - t) / 0.3)
+    k = k * k * (3 - 2 * k)
+    top = int(-260 + (60 + 260) * k)
+    d = ImageDraw.Draw(img, "RGBA")
+    x0, x1, h = 28, W - 28, 230
+    d.rounded_rectangle((x0 + 6, top + 10, x1 + 6, top + h + 10), radius=44, fill=(0, 0, 0, 70))
+    d.rounded_rectangle((x0, top, x1, top + h), radius=44, fill=(246, 246, 246, 255))
+    # icon + app name on the right (RTL), "الان" on the left
+    ix = x1 - 40 - 56
+    d.rounded_rectangle((ix, top + 30, ix + 56, top + 86), radius=14, fill=icon_col)
+    d.rounded_rectangle((ix + 13, top + 44, ix + 43, top + 66), radius=8, fill=(255, 255, 255))
+    d.polygon([(ix + 18, top + 64), (ix + 26, top + 64), (ix + 16, top + 74)], fill=(255, 255, 255))
+    d.text((ix - 18, top + 58), app, font=font(36), fill=(110, 110, 115), anchor="rm", direction="rtl", language="fa")
+    d.text((x0 + 40, top + 58), "الان", font=font(34), fill=(140, 140, 145), anchor="lm", direction="rtl", language="fa")
+    d.text((x1 - 40, top + 120), title, font=font(46), fill=(10, 10, 10), anchor="rm", direction="rtl", language="fa")
+    size = 40
+    while size > 26 and d.textlength(body, font=font(size), direction="rtl", language="fa") > (x1 - x0 - 80):
+        size -= 2
+    d.text((x1 - 40, top + 182), body, font=font(size), fill=(30, 30, 30), anchor="rm", direction="rtl", language="fa")
+
+
 def overlay(img, t):
     d = ImageDraw.Draw(img)
     pill(d, W - 170, 150, "پناهگاه ۱", (60, 60, 70), 46)
     # the countdown: red digits in a dark box, blinking at zero
-    if t >= 0.4:
+    banner = any(n[0] <= t <= n[1] for n in NOTIFS)
+    if t >= 0.4 and not banner:
         s = clock(t)
         if t < FLASH or int(t * 2.5) % 2 == 0:
             f = font(96)
@@ -107,6 +133,8 @@ def overlay(img, t):
                 y = int(H * 0.68)
                 pill(d, W // 2, y - 105 - 50 * text.count("\n"), name, col)
                 draw_text(d, (W // 2, y), text, int(80 * (0.85 + 0.15 * k)))
+    for n in NOTIFS:
+        notification(img, t, *n)
     if t < 0.5:
         img = Image.blend(Image.new("RGB", img.size, (0, 0, 0)), img, t / 0.5)
     if FLASH <= t < FLASH + 1.4:  # the white flash of the bomb, through every frame
