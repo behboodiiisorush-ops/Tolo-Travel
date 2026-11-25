@@ -206,6 +206,15 @@ def ruin_the_world():
                 if n.type == "EMISSION":
                     n.inputs["Color"].default_value = (0.08, 0.08, 0.09, 1)
                     n.inputs["Strength"].default_value = 0.2
+    for m in bpy.data.materials:  # the whole city washed grey by the ash
+        if m.name.startswith(("Building", "Asphalt", "Sidewalk", "Road line", "Pole", "Dark window", "Car ",
+                              "Car glass", "Tyre")) and m.use_nodes:
+            for n in m.node_tree.nodes:
+                if n.type in ("BSDF_TOON", "EMISSION"):
+                    c = n.inputs["Color"].default_value
+                    g = 0.3 * c[0] + 0.55 * c[1] + 0.15 * c[2]
+                    g = 0.25 + 0.5 * g
+                    n.inputs["Color"].default_value = (g, g, g * 1.02, 1)
     for o in list(bpy.data.objects):
         if o.type == "LIGHT" and o.data.type == "POINT" and abs(o.location.x - SX) < 1 and o.location.z > 5:
             bpy.data.objects.remove(o)        # the street lamps are dead
@@ -253,6 +262,40 @@ def build_dust():
         v.visible_shadow = False
         haze.append(v)
     return motes
+
+
+def build_fog():
+    """Grey fog outside: many faint veils one behind another, so far things fade away.
+    The veils sit in their own collection, which the Freestyle outlines ignore."""
+    fog_col = bpy.data.collections.new("Fog")
+    bpy.context.scene.collection.children.link(fog_col)
+    m = bpy.data.materials.new("Fog veil")
+    m.use_nodes = True
+    nt = m.node_tree
+    nt.nodes.clear()
+    out = nt.nodes.new("ShaderNodeOutputMaterial")
+    mix = nt.nodes.new("ShaderNodeMixShader")
+    mix.inputs[0].default_value = 0.14
+    tr = nt.nodes.new("ShaderNodeBsdfTransparent")
+    em = nt.nodes.new("ShaderNodeEmission")
+    em.inputs["Color"].default_value = (0.72, 0.72, 0.73, 1)
+    em.inputs["Strength"].default_value = 1.0
+    nt.links.new(tr.outputs[0], mix.inputs[1])
+    nt.links.new(em.outputs[0], mix.inputs[2])
+    nt.links.new(mix.outputs[0], out.inputs["Surface"])
+    for k in range(18):
+        y = DOOR_Y - 2.2 - k * 2.6
+        bpy.ops.mesh.primitive_plane_add(size=1, location=(BX, y, 6), rotation=(D(90), 0, 0))
+        v = bpy.context.object
+        v.scale = (120, 12, 1)
+        v.name = "Fog veil"
+        v.data.materials.append(m)
+        v.visible_shadow = False
+        v.visible_diffuse = False
+        for c in list(v.users_collection):
+            c.objects.unlink(v)
+        fog_col.objects.link(v)
+    return fog_col
 
 
 def build_status_lights():
@@ -358,6 +401,7 @@ def build():
     ruin_the_world()
     motes = build_dust()
     reds, greens, status = build_status_lights()
+    fog_col = build_fog()
     lena, mom, guard, zombie = make_lena(), make_mom(), make_guard(), make_zombie_jalal()
     sitters = [make_extra(i + 1, 0.95) for i in range(5)]
     cam = make_camera(scene)
@@ -536,10 +580,17 @@ def build():
 
     bpy.ops.object.light_add(type="SUN", rotation=(D(55), D(15), D(-30)))
     sun = bpy.context.object
-    sun.data.energy = 1.6
-    sun.data.color = (0.95, 0.85, 0.72)
+    sun.data.energy = 1.0
+    sun.data.color = (0.85, 0.86, 0.9)
     darken_toon(0.6)
-    setup_render(scene, sky=(0.62, 0.56, 0.5), sky_strength=0.9)
+    setup_render(scene, sky=(0.66, 0.66, 0.67), sky_strength=1.0)
+    ls = scene.view_layers[0].freestyle_settings.linesets[0]
+    ls.select_by_collection = True
+    ls.collection = fog_col
+    ls.collection_negation = "EXCLUSIVE"
+    fade = ls.linestyle.alpha_modifiers.new("Fog fade", "DISTANCE_FROM_CAMERA")  # outlines vanish in the fog
+    fade.range_min, fade.range_max = 5.0, 24.0
+    fade.invert = True
     scene.frame_set(1)
     return scene
 
