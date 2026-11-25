@@ -167,8 +167,6 @@ for o in (lbase, lscr, lpix):
 lap.rotation_euler.z = math.pi            # screen faces Nina first
 lap_light = P.area_light((3.0, 3.1, 0.6), (3.0, 4.4, 0.9), 0, 0.3, (0.7, 1.0, 0.8), name="Laptop glow")
 H.put(lap_light, LC)
-H.put(P.box((-1.25, 4.85, 0.45), (0.42, 0.42, 0.04), M["furn"], "Desk chair seat"), h.C["FURNITURE"])
-H.put(P.box((-1.25, 5.04, 0.72), (0.42, 0.04, 0.52), M["furn"], "Desk chair back"), h.C["FURNITURE"])
 
 # ================================================================== cast
 me = pov.POV("me", name="Me")
@@ -183,8 +181,8 @@ for ch in (me, arian, nina, i1, i2):
 # doors
 front, bed_door, liv_door = h.doors["front"], h.doors["bedroom"], h.doors["living"]
 front.swing(fr(3.0), fr(3.0) + 4, 0, 105)                 # kicked in
-bed_door.swing(1, 2, 75, 75)
-bed_door.swing(fr(40.7), fr(41.9), 75, 0)                 # I close it
+bed_door.swing(1, 2, 95, 95)
+bed_door.swing(fr(40.7), fr(41.9), 95, 0)                 # I close it
 bed_door.press_handle(fr(41.9), hold=10)
 gh.rotation_euler.x = 0
 gh.keyframe_insert("rotation_euler", index=0, frame=fr(53.7))
@@ -200,7 +198,7 @@ for t_, p_ in ((0.0, (-2.62, 2.12, 0.98)), (1.4, (-2.6, 2.1, 1.02)), (2.6, (-2.6
     sandwich.keyframe_insert("location", frame=fr(t_))
 
 # paths
-me_crawl = Path([(-3.2, 2.3), (-1.6, 2.0), (-0.45, 1.8), (0.0, 2.15), (0.0, 4.55), (-0.45, 5.0), (-1.3, 5.0)])
+me_crawl = Path([(-3.2, 2.3), (-1.6, 2.0), (-0.45, 1.8), (0.0, 2.15), (0.0, 4.35), (-0.45, 4.82), (-1.3, 4.9)])
 ar_crawl = Path([(-1.15, 2.65), (-0.9, 1.9), (-0.1, 1.85), (0.05, 2.4), (0.05, 4.6), (-0.5, 5.05), (-1.9, 5.25)])
 i1_in = Path([(0.0, -0.4), (0.0, 1.7), (-0.4, 1.72)])
 i1_kitchen = Path([(-0.2, 1.7), (-1.0, 1.5), (-1.55, 1.25)])

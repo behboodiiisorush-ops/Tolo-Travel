@@ -84,28 +84,30 @@ def main():
                     "-frames:v", str(n_pic),
                     "-vf", f"scale={W}:{H}:flags=lanczos,lenscorrection=k1=0.1:k2=0.02:i=bilinear,"
                            f"scale={int(W * 1.08)}:{int(H * 1.08)},crop={W}:{H},vignette=PI/5",
-                    os.path.join(TMP, "u_%04d.png")], check=True)
+                    "-q:v", "2", os.path.join(TMP, "u_%04d.jpg")], check=True)
     names = sorted(n for n in os.listdir(TMP) if n.startswith("u_"))
     total = len(names) + int(CARD * FPS)
     for i in range(total):
         t = i / FPS
         if i < len(names):
             img = Image.open(os.path.join(TMP, names[i])).convert("RGB")
+            os.remove(os.path.join(TMP, names[i]))      # keep the disk small
             fade = min(1.0, max(0.0, (END - t) / 0.6))
             if fade < 1:
                 img = Image.blend(Image.new("RGB", img.size), img, fade)
         else:
             img = card(t - len(names) / FPS)
-        img.save(os.path.join(TMP, f"n_{i:04d}.png"))
+        img.save(os.path.join(TMP, f"n_{i:04d}.jpg"), quality=95)
         for a, b, who, text in LINES:
             if a <= t <= b and i < len(names):
                 caption(img, who, text)
-        img.save(os.path.join(TMP, f"c_{i:04d}.png"))
-    encode(os.path.join(TMP, "c_%04d.png"), os.path.join(OUT, "rules_captions.mp4"))
-    encode(os.path.join(TMP, "n_%04d.png"), os.path.join(OUT, "rules_clean.mp4"))
+        img.save(os.path.join(TMP, f"c_{i:04d}.jpg"), quality=95)
+    encode(os.path.join(TMP, "c_%04d.jpg"), os.path.join(OUT, "rules_captions.mp4"))
+    encode(os.path.join(TMP, "n_%04d.jpg"), os.path.join(OUT, "rules_clean.mp4"))
     sfx = os.path.join(OUT, "rules_sfx.wav")
     if os.path.exists(sfx):
-        encode(os.path.join(TMP, "c_%04d.png"), os.path.join(OUT, "rules_sfx.mp4"), sfx)
+        encode(os.path.join(TMP, "c_%04d.jpg"), os.path.join(OUT, "rules_sfx.mp4"), sfx)
+    shutil.rmtree(TMP, ignore_errors=True)
 
 
 if __name__ == "__main__":
