@@ -388,17 +388,147 @@ def act(who, name, t0, t1, pos, facing, speed=SPEED, **kw):
     rig.keyframe_insert("rotation_euler", index=2, frame=fr(t1) - 1)
 
 
-def walk(who, t0, t1, p0, p1, clipname="walking", speed=1.0):
-    p0, p1 = Vector(tuple(p0[:2]) + (0.0,)), Vector(tuple(p1[:2]) + (0.0,))
-    d = p1 - p0
-    fac = math.degrees(math.atan2(-d.x, d.y))
+NAT = {}
+
+
+def natural_speed(who, clipname):
+    """metres per second the clip's feet really travel, on this character (for foot-locked walking)."""
+    key = (who, clipname)
+    if key in NAT:
+        return NAT[key]
+    c = clip(clipname)
+    a = c.arm
+    Mw = a.matrix_world
+    b = {s: a.pose.bones[mocap._src_name(a, s)] for s in ("Hips", "LeftFoot", "RightFoot", "LeftUpLeg")}
+    rest = {s: Mw @ pb.bone.matrix_local for s, pb in b.items()}
+    src_leg = (rest["LeftUpLeg"].translation - rest["LeftFoot"].translation).length
+    tr = CH[who].rig.data.bones
+    tgt_leg = (tr["thigh_l"].matrix_local.translation - tr["foot_l"].matrix_local.translation).length
+    hips, feet = [], []
+    f = int(c.first)
+    while f <= c.last:
+        sc.frame_set(f)
+        hips.append((Mw @ b["Hips"].head).copy())
+        feet.append(((Mw @ b["LeftFoot"].head).copy(), (Mw @ b["RightFoot"].head).copy()))
+        f += 1
+    root = (hips[-1] - hips[0])
+    root.z = 0
+    sp = []
+    for i in range(1, len(hips)):
+        low = min(feet[i][0].z, feet[i][1].z)
+        for s_ in (0, 1):
+            if feet[i][s_].z < low + 0.02:
+                v = (feet[i][s_] - hips[i]) - (feet[i - 1][s_] - hips[i - 1])
+                v.z = 0
+                sp.append(v.length * c.fps)
+    sp.sort()
+    v = sp[len(sp) // 2] if sp else 1.0
+    if root.length > 0.5:                      # clip with real root motion: use it
+        v = root.length / c.seconds
+    NAT[key] = v * tgt_leg / max(1e-6, src_leg)
+    print("NATURAL SPEED", who, clipname, round(NAT[key], 3))
+    return NAT[key]
+
+
+def pos_at(who, t):
+    """where `who` stands (pelvis on the floor) at time t, from the motion keyed so far."""
+    sc.frame_set(fr(t))
+    rig = CH[who].rig
+    p = rig.matrix_world @ rig.pose.bones["pelvis"].head
+    return (p.x, p.y)
+
+
+def facing_at(who, t):
+    sc.frame_set(fr(t))
+    return math.degrees(CH[who].rig.rotation_euler.z - math.pi)
+
+
+def walk(who, t0, t1, pts, clipname="walking", back=False, end_face=None, turn=0.35):
+    """`who` walks along the polyline pts (first point None = from where he stands) from t0 to t1.
+    Feet keep their real stride: the clip speed follows the path speed. back=True: steps backwards,
+    facing against the direction of travel. Turns smoothly into the path and (end_face) at the end."""
+    pts = list(pts)
+    if pts[0] is None:
+        pts[0] = pos_at(who, t0 - 1.0 / FPS)
+    P_ = [Vector((p[0], p[1], 0.0)) for p in pts]
+    d0 = P_[1] - P_[0]
+    f_prev = math.degrees(math.atan2(-d0.x, d0.y)) + (180 if back else 0)
+    if t0 > 0.05:
+        f_prev = facing_at(who, t0 - 1.0 / FPS)
+    L = [0.0]
+    for a, b in zip(P_, P_[1:]):
+        L.append(L[-1] + (b - a).length)
+    total = max(1e-4, L[-1])
     n = fr(t1) - fr(t0)
+    dur = n / FPS
+    ease = min(0.25, dur * 0.2)                    # accelerate / slow down over `ease` seconds
+    vmax = total / (dur - ease)
+
+    def dist(tt):                                  # distance along the path at tt seconds into the walk
+        if tt < ease:
+            return 0.5 * vmax * tt * tt / ease
+        if tt > dur - ease:
+            r = dur - tt
+            return total - 0.5 * vmax * r * r / ease
+        return vmax * (tt - ease / 2)
+
+    def at(d):
+        d = max(0.0, min(total, d))
+        for i in range(len(P_) - 1):
+            if d <= L[i + 1] or i == len(P_) - 2:
+                u = (d - L[i]) / max(1e-6, L[i + 1] - L[i])
+                return P_[i].lerp(P_[i + 1], max(0.0, min(1.0, u)))
+
+    def angdiff(a, b):
+        return (b - a + 180) % 360 - 180
 
     def place(j):
-        u = seg(j / max(1, n - 1), 0, 1) * 0.3 + 0.7 * (j / max(1, n - 1))
-        return tuple(p0 + d * u), fac
-    mocap.apply(CH[who], clip(clipname), start=fr(t0), length=n, offset=tuple(p0), facing=fac, speed=speed,
-                in_place=True, loop=True, place=place)
+        tt = j / FPS
+        d = dist(tt)
+        p = at(d)
+        q = at(min(total, d + 0.35)) - at(max(0.0, d - 0.05))
+        if q.length < 1e-4:
+            q = P_[-1] - P_[-2]
+        fac = math.degrees(math.atan2(-q.x, q.y)) + (180 if back else 0)
+        if tt < turn:
+            fac = f_prev + angdiff(f_prev, fac) * seg(tt, 0, turn)
+        if end_face is not None and tt > dur - turn:
+            fac = fac + angdiff(fac, end_face) * seg(tt, dur - turn, dur)
+        return tuple(p), fac
+
+    sp = vmax / natural_speed(who, clipname)
+    sp = max(0.5, min(2.2, sp))
+    mocap.apply(CH[who], clip(clipname), start=fr(t0), length=n, offset=tuple(P_[0]), facing=f_prev,
+                speed=-sp if back else sp, in_place=True, loop=True, place=place)
+    return tuple(P_[-1])
+
+
+def pace(who, name, t0, t1, pieces, start, facing, speed=1.0, center=True):
+    """Root-motion clip played as a chain of short pieces [(src_a, src_b), ...] (repeated until t1), each one
+    picking up exactly where the last one stopped, so he really walks to and fro without leaving the area.
+    center: the whole walk is shifted so that its average position is `start`."""
+    _pace(who, name, t0, t1, pieces, start, facing, speed)
+    if center:
+        ps = [Vector(pos_at(who, t0 + (t1 - t0) * k / 20) + (0.0,)) for k in range(20)]
+        mid = sum(ps, Vector()) / len(ps)
+        st = Vector((start[0], start[1], 0.0)) + (Vector((start[0], start[1], 0.0)) - mid)
+        _pace(who, name, t0, t1, pieces, tuple(st), facing, speed)
+
+
+def _pace(who, name, t0, t1, pieces, start, facing, speed):
+    t, i = t0, 0
+    want = Vector((start[0], start[1], 0.0))
+    while t < t1 - 0.05:
+        a, b = pieces[i % len(pieces)]
+        te = min(t1, t + (b - a) / speed)
+        off = Vector(want)
+        for _ in range(2):                         # place the piece so that its first frame lands on `want`
+            act(who, name, t, te, tuple(off), facing, speed=speed, src_from=a)
+            got = Vector(pos_at(who, t) + (0.0,))
+            off += want - got
+        act(who, name, t, te, tuple(off), facing, speed=speed, src_from=a)
+        want = Vector(pos_at(who, te - 1.0 / FPS) + (0.0,))
+        t, i = te, i + 1
 
 
 def face(a, b):
@@ -414,21 +544,28 @@ for k, off in (("arian", 0.0), ("me", 1.3), ("kian", 2.6)):
 act("mahsa", "sitting_idle", 0.0, 19.5, SIT["mahsa"], 180, loop=True, src_from=3.1, speed=1.0)
 # Mahsa searches the floor by the drops 19.5-30.5 (squats, searches, stands)
 MAHSA_SEARCH = (10.65, 5.3, 0)
-act("mahsa", "opening_a_filing_cabinet", 19.5, 30.5, MAHSA_SEARCH, face(MAHSA_SEARCH, (11.2, 5.8)), speed=1.25)
+walk("mahsa", 19.5, 20.7, [(9.95, 4.15), MAHSA_SEARCH[:2]], end_face=face(MAHSA_SEARCH, (11.2, 5.8)))
+act("mahsa", "opening_a_filing_cabinet", 20.7, 30.5, MAHSA_SEARCH, face(MAHSA_SEARCH, (11.2, 5.8)), speed=1.25)
 # ---- standing 30.5-44
 STAND = {"arian": (3.6, 4.1, 0), "me": (7.6, 4.3, 0), "kian": (7.05, 4.05, 0), "mahsa": (9.9, 4.7, 0)}
 act("arian", "dismissing_gesture", 30.5, 33.4, STAND["arian"], face(STAND["arian"], (7.3, 4.2)), speed=1.0)
 act("arian", "breathing_idle", 33.4, 44.0, STAND["arian"], face(STAND["arian"], SOLDIER), src_from=2.0)
-act("me", "nervously_look_around", 30.5, 44.0, STAND["me"], face(STAND["me"], SOLDIER), loop=True)
+walk("me", 30.5, 31.8, [(6.3, 4.45), STAND["me"][:2]], end_face=face(STAND["me"], SOLDIER))
+act("me", "nervously_look_around", 31.8, 44.0, STAND["me"], face(STAND["me"], SOLDIER), loop=True)
 act("kian", "breathing_idle", 30.5, 41.2, STAND["kian"], face(STAND["kian"], SOLDIER), src_from=1.0)
 act("kian", "terrified", 41.2, 44.0, STAND["kian"], face(STAND["kian"], SOLDIER), src_from=0.0, speed=1.5)
-act("mahsa", "nervously_look_around", 30.5, 44.0, STAND["mahsa"], face(STAND["mahsa"], SOLDIER), src_from=2.0, loop=True)
+walk("mahsa", 30.5, 31.6, [MAHSA_SEARCH[:2], STAND["mahsa"][:2]], end_face=face(STAND["mahsa"], SOLDIER))
+act("mahsa", "nervously_look_around", 31.6, 44.0, STAND["mahsa"], face(STAND["mahsa"], SOLDIER), src_from=2.0, loop=True)
 # ---- they step back 44-57
 BACK = {"arian": (5.9, 3.9, 0), "me": (7.05, 3.95, 0), "kian": (6.55, 3.75, 0), "mahsa": (8.9, 3.4, 0)}
-act("arian", "nervously_look_around", 44.0, 57.0, BACK["arian"], face(BACK["arian"], SOLDIER), loop=True, src_from=1.0)
-act("me", "terrified", 44.0, 54.5, BACK["me"], face(BACK["me"], SOLDIER), src_from=8.0, speed=1.0)
-act("kian", "terrified", 44.0, 57.0, BACK["kian"], face(BACK["kian"], SOLDIER), src_from=3.0, speed=1.0)
-act("mahsa", "breathing_idle", 44.0, 57.0, BACK["mahsa"], face(BACK["mahsa"], SOLDIER), loop=True)
+walk("arian", 44.0, 46.0, [STAND["arian"][:2], BACK["arian"][:2]], end_face=face(BACK["arian"], SOLDIER))
+act("arian", "nervously_look_around", 46.0, 57.0, BACK["arian"], face(BACK["arian"], SOLDIER), loop=True, src_from=1.0)
+walk("me", 44.0, 44.8, [STAND["me"][:2], BACK["me"][:2]], back=True)
+act("me", "terrified", 44.8, 54.5, BACK["me"], face(BACK["me"], SOLDIER), src_from=8.0, speed=1.0)
+walk("kian", 44.0, 44.75, [STAND["kian"][:2], BACK["kian"][:2]], back=True)
+act("kian", "terrified", 44.75, 57.0, BACK["kian"], face(BACK["kian"], SOLDIER), src_from=3.0, speed=1.0)
+walk("mahsa", 44.0, 45.4, [STAND["mahsa"][:2], BACK["mahsa"][:2]], back=True)
+act("mahsa", "breathing_idle", 45.4, 57.0, BACK["mahsa"], face(BACK["mahsa"], SOLDIER), loop=True)
 KEY_FLOOR = (7.35, 4.3, 0.012)
 act("me", "opening_a_filing_cabinet", 54.5, 57.0, (7.15, 4.0, 0), face((7.15, 4.0), KEY_FLOOR), speed=1.6)
 # ---- after he's gone 57-END
@@ -444,22 +581,27 @@ act("arian", "nervously_look_around", 57.0, END, (5.9, 3.9, 0), face((5.9, 3.9),
 act("mahsa", "nervously_look_around", 57.0, END, (8.9, 3.4, 0), face((8.9, 3.4), (11.3, 9.0)), loop=True, src_from=0.5)
 # ---- Kazemi
 KZ_RADIO = (TABLE[0], TABLE[1] - 0.6, 0)
-act("kazemi", "breathing_idle", 0.0, 8.0, KZ_RADIO, 0, speed=1.0)
-act("kazemi", "talking_phone_pacing", 8.0, 34.5, KZ_RADIO, 10, in_place=True, src_from=2.0, speed=1.0)
+# he comes back from the windows to the radio, then paces up and down beside the table with the handset
+walk("kazemi", 0.0, 3.4, [(4.6, 7.2), (6.6, 7.55), KZ_RADIO[:2]], end_face=0)
+act("kazemi", "breathing_idle", 3.4, 8.0, KZ_RADIO, 0, speed=1.0)
+# pieces of the pacing clip that turn round and come back (out-and-back ~2.5 m along the table)
+pace("kazemi", "talking_phone_pacing", 8.0, 34.5, [(3.0, 7.5), (11.0, 15.0)], (KZ_RADIO[0] - 0.3, KZ_RADIO[1] - 0.1), 90)
 KZ_MEET = (10.85, 5.75, 0)
-walk("kazemi", 34.5, 36.4, (KZ_RADIO[0] + 0.2, KZ_RADIO[1] - 0.4), KZ_MEET[:2])
-act("kazemi", "breathing_idle", 36.4, 44.0, KZ_MEET, face(KZ_MEET, SOLDIER), speed=1.0)
+walk("kazemi", 34.5, 37.0, [None, (9.6, 6.6), KZ_MEET[:2]], end_face=face(KZ_MEET, SOLDIER))
+act("kazemi", "breathing_idle", 37.0, 44.0, KZ_MEET, face(KZ_MEET, SOLDIER), speed=1.0)
 KZ_BACK = (10.6, 4.6, 0)
-act("kazemi", "hands_forward_gesture", 44.0, 46.0, KZ_BACK, face(KZ_BACK, SOLDIER), speed=1.5)
-act("kazemi", "breathing_idle", 46.0, 62.0, KZ_BACK, face(KZ_BACK, SOLDIER), loop=True)
-act("kazemi", "breathing_idle", 62.0, 68.4, KZ_RADIO, 180, loop=True)
-act("kazemi", "talking_phone_pacing", 68.4, 72.5, KZ_RADIO, 235, in_place=True, src_from=1.0, speed=1.0)
-act("kazemi", "nervously_look_around", 72.5, END, KZ_RADIO, 120, speed=1.3)
+walk("kazemi", 44.0, 45.2, [KZ_MEET[:2], KZ_BACK[:2]], back=True)
+act("kazemi", "hands_forward_gesture", 45.2, 47.3, KZ_BACK, face(KZ_BACK, SOLDIER), speed=1.5)
+act("kazemi", "breathing_idle", 47.3, 62.0, KZ_BACK, face(KZ_BACK, SOLDIER), loop=True)
+walk("kazemi", 62.0, 64.8, [KZ_BACK[:2], (9.7, 6.4), KZ_RADIO[:2]], end_face=180)
+act("kazemi", "breathing_idle", 64.8, 68.4, KZ_RADIO, 180, loop=True)
+pace("kazemi", "talking_phone_pacing", 68.4, 72.5, [(26.0, 28.7)], KZ_RADIO, 235, speed=0.66)
+act("kazemi", "nervously_look_around", 72.5, END, pos_at("kazemi", 72.45) + (0,), 120, speed=1.3)
 # ---- the soldier
-act("soldier", "reloading", 0.0, 8.0, SOLDIER + (0,), 15, loop=True, in_place=True)
-act("soldier", "breathing_idle", 8.0, 15.6, SOLDIER + (0,), 10, loop=True)
+walk("soldier", 0.0, 5.6, [(8.2, 4.7), (10.3, 5.6), SOLDIER], clipname="reloading", end_face=15)
+act("soldier", "breathing_idle", 5.6, 15.6, SOLDIER + (0,), 15, loop=True)
 act("soldier", "breathing_idle", 15.6, 27.0, SOLDIER + (0,), 20, src_from=2.0, loop=True)
-act("soldier", "reloading", 27.0, 34.5, SOLDIER + (0,), 30, loop=True, speed=1.4, in_place=True)
+act("soldier", "thinking", 27.0, 34.5, SOLDIER + (0,), 30, loop=True, speed=1.0)
 act("soldier", "breathing_idle", 34.5, 39.0, SOLDIER + (0,), face(SOLDIER, KZ_MEET), speed=1.0)
 act("soldier", "thinking", 39.0, 44.0, SOLDIER + (0,), face(SOLDIER, KZ_MEET), speed=1.1)
 S_TALK = (11.4, 6.1, 0)
@@ -468,7 +610,7 @@ act("soldier", "thinking", 48.4, 53.2, S_TALK, face(S_TALK, BACK["me"]), speed=1
 act("soldier", "dismissing_gesture", 53.2, 54.5, S_TALK, face(S_TALK, BACK["me"]), speed=1.5)
 act("soldier", "breathing_idle", 54.5, 57.0, S_TALK, face(S_TALK, BACK["me"]), speed=1.0)
 DOOR_IN = ((STORE_X0 + STORE_X1) / 2, D - 0.75)
-walk("soldier", 57.0, 58.8, S_TALK[:2], DOOR_IN, clipname="walking_2", speed=1.0)
+walk("soldier", 57.0, 58.8, [S_TALK[:2], DOOR_IN], end_face=0)
 act("soldier", "opening_door_inwards", 58.8, 62.0, DOOR_IN + (0,), 0, speed=1.6)
 act("soldierZ", "zombie_idle", 61.5, END, ((STORE_X0 + STORE_X1) / 2 + 0.08, D + 0.55, 0), 180, loop=True, speed=1.0)
 
