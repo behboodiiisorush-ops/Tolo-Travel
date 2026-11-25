@@ -27,3 +27,4 @@ blender/studio/test/
 blender/studio/post_tmp/
 blender/studio/out/*.wav
 blender/studio/*.blend
+blender/mocap/test/
