@@ -561,7 +561,7 @@ for k, c in enumerate(crumb_objs):
 
 # ------------------------------------------------------------------ the bird: camera = its eyes
 EYE_H = 0.07                     # eye above the feet
-RAILP = Vector((0.85, BY0 + 0.05, RAIL_Z + 0.025 + EYE_H))
+RAILP = Vector((0.85, BY0 - 0.03, RAIL_Z + 0.025 + EYE_H))
 ROOFP = Vector((-1.0, -5.92, 9.4 + EYE_H))
 LAMPP = LAMP_TOP + Vector((0.11, 0, EYE_H))
 DOORS = Vector((0.0, IY0 + 0.12, F + EYE_H))          # on the door sill
@@ -734,7 +734,7 @@ beak = bpy.data.objects.new("Beak", me_)
 sc.collection.objects.link(beak)
 me_.materials.append(M_["beak"])
 beak.parent = cam
-beak.location = (0, -0.016, -0.011)
+beak.location = (0, -0.0215, -0.011)
 beak.rotation_euler = (math.radians(-12), 0, 0)
 
 
@@ -811,6 +811,10 @@ if "--still" in args:
     from bpy_extras.object_utils import world_to_camera_view
     for f in [int(v) for v in args[args.index("--still") + 1].split(",")]:
         sc.frame_set(f)
+        _r = CH["kian"].rig
+        _fb = _r.pose.bones["foot_l"]
+        _d = (_r.matrix_world @ _fb.tail) - (_r.matrix_world @ _fb.head)
+        print("KIANFOOT", f, round(math.degrees(math.atan2(-_d.x, _d.y)), 1), round(math.degrees(_r.rotation_euler[2]), 1))
         print("PROJ", f, {k: tuple(round(v, 2) for v in world_to_camera_view(sc, cam, head_of(k))) for k in CH})
     os.makedirs(os.path.join(HERE, "test"), exist_ok=True)
     for f in [int(v) for v in args[args.index("--still") + 1].split(",")]:
