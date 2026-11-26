@@ -2,6 +2,7 @@
 # Render frames A..B of «جرقه» with auto-restart.  ./chain.sh 1 1392   (builds spark.blend first if missing)
 cd "$(dirname "$0")"
 A=${1:-1}; B=${2:-1392}
+export SAMPLES=${SAMPLES:-16}
 LOG=/tmp/claude-0/spark_render_$A.log
 mkdir -p /tmp/claude-0
 [ -f spark.blend ] || ../cast/bpy.sh scene.py --save >> $LOG 2>&1

@@ -380,7 +380,7 @@ def pelvis_xy(ch, f):
 
 
 SIT = Vector((CHAIR.x + 0.02, CHAIR.y, 0.2))   # on the chair, facing the desk (+X)
-STAND = Vector((1.55, DESK.y - 0.45, 0))       # standing beside the desk, by the lamp
+STAND = Vector((1.2, DESK.y - 0.45, 0))       # standing beside the desk, by the lamp
 # 0-15 s: sitting at the desk (studying, then the blackout)
 play(ar, CL["sitting_idle"], 1, T(15.0), offset=SIT, facing=-90, in_place=True, loop=True)
 # 15 s: (cut) standing by the desk, fiddling with the lamp switch
@@ -465,7 +465,7 @@ for fn in ("thumb_03_r", "index_03_r", "middle_03_r", "ring_03_r", "pinky_03_r")
         continue
     sc.frame_set(1)
     tip = ar.rig.matrix_world @ ar.rig.pose.bones[fn].tail
-    s = P.sphere(tip, 0.012, m_glow, "Tip glow")
+    s = P.sphere(tip, 0.02, m_glow, "Tip glow")
     MT.attach(s, ar.rig, fn)
     tips.append(s)
 gl = bpy.data.lights.new("Hand light", "POINT")
@@ -490,7 +490,7 @@ for f in range(1, N + 1):
     t = (f - 1) / FPS
     g = glow(t)
     s = glow_em.inputs["Strength"] if "Strength" in glow_em.inputs else glow_em.inputs["Emission Strength"]
-    s.default_value = 40 * g
+    s.default_value = 90 * g
     s.keyframe_insert("default_value", frame=f)
     gl.energy = 90 * g
     gl.keyframe_insert("energy", frame=f)
