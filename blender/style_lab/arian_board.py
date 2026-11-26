@@ -1,0 +1,224 @@
+"""Test board for the "stylized realistic" look the user sent (Arian: red hoodie, headphones round the neck,
+dark messy hair, big expressive eyes; a cosy teenager's bedroom). No logos anywhere.
+
+    ../cast/bpy.sh arian_board.py --part char     -> out/board_turn_*.png, out/board_face_*.png
+    ../cast/bpy.sh arian_board.py --part room     -> out/board_room.png
+"""
+import bpy, sys, os, math
+from mathutils import Vector
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(HERE, "..", "cast"))
+sys.path.append(os.path.join(HERE, "..", "shelter3"))
+sys.path.append(os.path.join(HERE, "..", "studio"))
+import cast  # noqa: E402
+import mocap2 as MC  # noqa: E402
+import props as P  # noqa: E402
+import mpfb_tools as MT  # noqa: E402
+import look as LK  # noqa: E402
+
+argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
+PART = argv[argv.index("--part") + 1] if "--part" in argv else "char"
+OUT = os.path.join(HERE, "out")
+os.makedirs(OUT, exist_ok=True)
+
+bpy.ops.wm.read_factory_settings(use_empty=True)
+sc = bpy.context.scene
+idle = MC.load(os.path.join(HERE, "..", "mocap", "breathing_idle.fbx"))
+sit = MC.load(os.path.join(HERE, "..", "mocap", "sitting_idle.fbx")) if PART == "room" else None
+
+# ------------------------------------------------------------------ the new Arian
+STYLE = dict(LK.STYLE)
+STYLE.update({"l-eye-scale-incr": 1.0, "r-eye-scale-incr": 1.0, "head-scale-vert-incr": 0.2,
+              "nose-scale-horiz-decr": 0.7, "mouth-scale-horiz-decr": 0.2})
+cast.STYLE = STYLE
+cast.CAST["arian"] = dict(cast.CAST["arian"], age=0.42, height=0.55, weight=0.4,
+                          hair="culturalibre_hair_14", hair_col=(0.035, 0.025, 0.02), brow="eyebrow002",
+                          clothes={"elvs_hooded_sweat_jacket1": (0.55, 0.06, 0.07),
+                                   "cortu_cargo_pants": (0.07, 0.07, 0.08),
+                                   "culturalibre_sneakers": (0.92, 0.9, 0.88)})
+ar = cast.spawn("arian")
+cast.cartoon_face(ar)
+
+# headphones round the neck: a band behind the neck, two cups on the collarbones
+m_hp = P.mat("Headphones", (0.04, 0.04, 0.045), 0.35)
+m_cush = P.mat("Cushion", (0.12, 0.12, 0.13), 0.8)
+sc.frame_set(1)
+bpy.context.view_layer.update()
+neck = ar.rig.matrix_world @ ar.rig.pose.bones["neck_01"].head
+parts = []
+bpy.ops.mesh.primitive_torus_add(major_radius=0.105, minor_radius=0.012, location=neck + Vector((0, 0.0, -0.02)))
+band = bpy.context.object
+band.scale = (1.05, 0.9, 1.0)
+band.data.materials.append(m_hp)
+parts.append(band)
+for sx in (-1, 1):   # cups lie on the collarbones, facing up
+    c = P.cyl(neck + Vector((sx * 0.1, -0.035, -0.075)), neck + Vector((sx * 0.1, -0.035, -0.045)), 0.045, m_hp, "Cup", 24)
+    s = P.cyl(neck + Vector((sx * 0.1, -0.035, -0.045)), neck + Vector((sx * 0.1, -0.035, -0.03)), 0.04, m_cush,
+              "Cushion", 24)
+    parts += [c, s]
+for o in parts:
+    bpy.ops.object.shade_smooth() if False else None
+    MT.attach(o, ar.rig, "neck_01")
+
+# ------------------------------------------------------------------ materials: warm, saturated, soft skin
+for m in bpy.data.materials:
+    b = next((n for n in m.node_tree.nodes if n.type == "BSDF_PRINCIPLED"), None) if m.use_nodes else None
+    if not b or "eye" in m.name.lower():
+        continue
+    s = b.inputs["Base Color"]
+    if s.is_linked:
+        h = m.node_tree.nodes.new("ShaderNodeHueSaturation")
+        h.inputs["Saturation"].default_value = 1.2
+        m.node_tree.links.new(s.links[0].from_socket, h.inputs["Color"])
+        m.node_tree.links.new(h.outputs[0], s)
+
+# ------------------------------------------------------------------ render setup
+sc.render.engine = "BLENDER_EEVEE"
+sc.eevee.taa_render_samples = 48
+for prop, v in (("use_raytracing", True), ("use_shadows", True), ("use_fast_gi", True)):
+    if hasattr(sc.eevee, prop):
+        setattr(sc.eevee, prop, v)
+sc.view_settings.view_transform = "AgX"
+sc.view_settings.exposure = 0.3
+sc.render.image_settings.file_format = "PNG"
+world = bpy.data.worlds.new("W")
+sc.world = world
+world.use_nodes = True
+cam_d = bpy.data.cameras.new("Cam")
+cam = bpy.data.objects.new("Cam", cam_d)
+sc.collection.objects.link(cam)
+sc.camera = cam
+aim = P.empty("Aim")
+tc = cam.constraints.new("TRACK_TO")
+tc.target, tc.track_axis, tc.up_axis = aim, "TRACK_NEGATIVE_Z", "UP_Y"
+
+
+def shot(path, loc, at, lens, w, h):
+    cam.location, aim.location, cam_d.lens = loc, at, lens
+    sc.render.resolution_x, sc.render.resolution_y = w, h
+    sc.render.filepath = path
+    bpy.ops.render.render(write_still=True)
+
+
+def keys(**v):
+    for k, kb in ar.keys.items():
+        kb.value = 0.0
+    for k, val in v.items():
+        k = k.replace("_", "-")
+        for side in ("left", "right"):
+            kk = k.replace("SIDE", side)
+            if kk in ar.keys:
+                ar.keys[kk].value = val
+
+
+if PART == "char":
+    MC.apply(ar, idle, start=1, length=40, offset=(0, 0, 0), facing=180, in_place=True, step=1)
+    MC.flush(ar)
+    sc.frame_set(20)
+    world.node_tree.nodes["Background"].inputs[0].default_value = (0.09, 0.08, 0.11, 1)
+    P.box((0, 0, -0.05), (20, 20, 0.1), P.mat("Floor", (0.16, 0.15, 0.18), 0.9), "Floor")
+    P.area_light((-1.8, -2.2, 2.6), (0, 0, 1.0), 450, 1.6, (1.0, 0.9, 0.8), name="Key")
+    P.area_light((2.4, -1.6, 1.6), (0, 0, 1.0), 160, 2.5, (0.8, 0.85, 1.0), name="Fill")
+    P.area_light((0.5, 2.5, 2.4), (0, 0, 1.4), 420, 1.0, (1.0, 0.75, 0.5), name="Rim")
+    head = ar.rig.matrix_world @ ar.rig.pose.bones["head"].head
+    hz = head.z
+    cam_d.dof.use_dof = False
+    # turnaround: the character turns, the camera stays
+    for i, ang in enumerate((0, 35, 90, 180)):
+        ar.rig.rotation_euler.z = math.radians(ang)
+        ar.rig.keyframe_insert("rotation_euler", index=2, frame=20)
+        sc.frame_set(20)
+        shot(os.path.join(OUT, f"board_turn_{i}.png"), (0, -5.2, hz * 0.55), (0, 0, hz * 0.52), 50, 540, 960)
+    ar.rig.rotation_euler.z = math.radians(12)
+    ar.rig.keyframe_insert("rotation_euler", index=2, frame=20)
+    sc.frame_set(20)
+    head = ar.rig.matrix_world @ ar.rig.pose.bones["head"].head + Vector((0, 0, 0.07))
+    cam_d.dof.use_dof = True
+    cam_d.dof.focus_distance = 0.75
+    cam_d.dof.aperture_fstop = 2.0
+    faces = {
+        "happy": dict(mouth_corner_puller=1.0, mouth_elevation=0.3, eye_SIDE_slit=0.35, eyebrows_SIDE_extern_up=0.4),
+        "surprised": dict(mouth_open=0.8, eye_SIDE_opened_up=1.0, eyebrows_SIDE_up=1.0),
+        "sad": dict(eyebrows_SIDE_inner_up=1.0, mouth_depression=0.8, eye_SIDE_slit=0.25),
+        "angry": dict(eyebrows_SIDE_down=1.0, mouth_compression=0.6, nose_SIDE_elevation=0.4, eye_SIDE_slit=0.3),
+        "scared": dict(eyebrows_SIDE_inner_up=1.0, eyebrows_SIDE_up=0.5, eye_SIDE_opened_up=0.9, mouth_open=0.35,
+                       mouth_retraction=0.5),
+    }
+    for name, v in faces.items():
+        keys(**v)
+        shot(os.path.join(OUT, f"board_face_{name}.png"), head + Vector((0.12, -0.72, 0.0)), head + Vector((0, 0, -0.02)),
+             85, 480, 480)
+
+if PART == "room":
+    # cosy bedroom: lilac-blue walls, wooden shelves with toys, desk with a monitor, bed with a navy blanket,
+    # big window with blue curtains, warm lamps; Arian sits on the bed
+    world.node_tree.nodes["Background"].inputs[0].default_value = (0.5, 0.6, 0.8, 1)
+    m_wall = P.mat("Wall", (0.42, 0.42, 0.62), 0.85)
+    m_floor = P.wood("Floor", (0.55, 0.36, 0.22), planks=True)
+    m_wood = P.wood("Wood", (0.6, 0.4, 0.24), planks=False)
+    m_navy = P.mat("Blanket", (0.08, 0.12, 0.32), 0.95)
+    m_sheet = P.mat("Sheet", (0.85, 0.85, 0.9), 0.9)
+    m_curt = P.mat("Curtain", (0.12, 0.25, 0.5), 0.95)
+    m_sky = P.emit("Sky", (1.0, 0.85, 0.65), 3.0)
+    m_dark = P.mat("Dark", (0.03, 0.03, 0.035), 0.3)
+    m_screen = P.emit("Screen", (0.35, 0.55, 0.9), 1.5)
+    m_rug = P.mat("Rug", (0.6, 0.55, 0.5), 0.95)
+    m_plant = P.mat("Leaf", (0.15, 0.45, 0.15), 0.7)
+    m_pot = P.mat("Pot", (0.85, 0.85, 0.82), 0.5)
+    m_lamp = P.emit("Lamp", (1.0, 0.75, 0.45), 8.0)
+    P.box((0, 0, -0.05), (5, 5, 0.1), m_floor, "Floor")
+    P.box((0, 2.5, 1.4), (5, 0.1, 2.8), m_wall, "Back")
+    P.box((-2.5, 0, 1.4), (0.1, 5, 2.8), m_wall, "Left")
+    P.box((2.5, 0, 1.4), (0.1, 5, 2.8), m_wall, "Right")
+    P.box((0, 0, 2.85), (5, 5, 0.1), P.mat("Ceil", (0.85, 0.82, 0.8), 0.9), "Ceil")
+    P.window((0.9, 2.43, 1.55), 1.5, 1.4, "y", m_sky, P.mat("Frame", (0.9, 0.9, 0.88), 0.5))
+    for x in (-0.05, 1.85):
+        P.box((x, 2.35, 1.4), (0.35, 0.08, 2.6), m_curt, "Curtain")
+    # bed along the left wall
+    P.box((-1.5, 1.0, 0.2), (1.6, 2.6, 0.4), m_wood, "Bed base")
+    P.box((-1.5, 1.0, 0.48), (1.5, 2.5, 0.16), m_sheet, "Mattress")
+    P.box((-1.5, 0.6, 0.58), (1.6, 1.7, 0.06), m_navy, "Blanket")
+    P.box((-1.5, 2.05, 0.65), (0.9, 0.35, 0.18), m_sheet, "Pillow")
+    P.box((-1.5, 2.4, 0.9), (1.6, 0.08, 1.0), m_wood, "Headboard")
+    # shelves with "toys" above the bed
+    for z in (1.6, 2.05):
+        P.box((-1.5, 2.33, z), (1.6, 0.25, 0.04), m_wood, "Shelf")
+    cols = [(0.9, 0.5, 0.15), (0.2, 0.6, 0.8), (0.85, 0.25, 0.3), (0.95, 0.8, 0.2), (0.4, 0.7, 0.35), (0.6, 0.4, 0.8)]
+    for i in range(10):
+        x = -2.2 + i * 0.15
+        z = 1.62 if i < 6 else 2.07
+        P.box((x if i < 6 else x - 0.7, 2.33, z + 0.12), (0.07, 0.18, 0.24),
+              P.mat(f"Book{i}", cols[i % 6], 0.7), "Book")
+    P.sphere((-0.85, 2.33, 1.72), 0.08, P.mat("Toy", (0.95, 0.55, 0.15), 0.6), "Toy")
+    P.sphere((-0.85, 2.33, 1.84), 0.06, P.mat("Toy2", (0.95, 0.55, 0.15), 0.6), "Toy head")
+    # desk + monitor + lamp on the right
+    P.box((1.6, 0.6, 0.74), (1.4, 0.65, 0.05), m_wood, "Desk")
+    for dx in (-0.65, 0.65):
+        P.box((1.6 + dx, 0.6, 0.37), (0.05, 0.6, 0.74), m_wood, "Desk leg")
+    P.box((1.6, 0.75, 1.05), (0.6, 0.04, 0.36), m_dark, "Monitor")
+    P.box((1.6, 0.725, 1.05), (0.56, 0.01, 0.32), m_screen, "Screen")
+    P.cyl((2.15, 0.65, 0.77), (2.15, 0.65, 1.1), 0.012, m_dark, "Lamp arm")
+    P.cyl((2.15, 0.65, 1.08), (2.15, 0.6, 1.16), 0.07, m_lamp, "Desk lamp")
+    P.cyl((2.15, 2.1, 0), (2.15, 2.1, 0.35), 0.16, m_pot, "Pot")
+    for i, (dx, dz, r) in enumerate(((0, 0.6, 0.3), (0.1, 0.9, 0.22), (-0.1, 1.05, 0.18))):
+        P.sphere((2.15 + dx, 2.1, dz), r, m_plant, f"Plant{i}")
+    P.box((0.2, 0.4, 0.008), (1.6, 1.2, 0.016), m_rug, "Rug")
+    for x, c in ((0.1, (0.85, 0.45, 0.2)), (-0.2, (0.3, 0.5, 0.75))):
+        P.box((x + 2.05, 2.44, 1.9), (0.4, 0.01, 0.55), P.mat(f"Poster{x}", c, 0.7), "Poster")
+    # light: warm sunset through the window, lamps, cool fill
+    P.area_light((0.9, 2.2, 1.6), (0, 0, 0.8), 260, 1.4, (1.0, 0.75, 0.5), name="Window")
+    for loc, e in (((2.15, 0.6, 1.15), 25), ((-1.5, 2.1, 2.3), 35)):
+        l = bpy.data.lights.new("Pt", "POINT")
+        l.energy, l.color, l.shadow_soft_size = e, (1.0, 0.7, 0.42), 0.2
+        o = bpy.data.objects.new("Pt", l)
+        sc.collection.objects.link(o)
+        o.location = loc
+    P.area_light((0.5, -2.2, 2.3), (0, 1, 1), 110, 3.0, (0.75, 0.8, 1.0), name="Fill")
+    MC.apply(ar, sit, start=1, length=40, offset=(-0.82, 0.6, 0.45), facing=-105, in_place=True, step=1)
+    MC.flush(ar)
+    sc.frame_set(20)
+    cam_d.dof.use_dof = True
+    cam_d.dof.focus_object = ar.rig
+    cam_d.dof.aperture_fstop = 4.0
+    shot(os.path.join(OUT, "board_room.png"), (1.3, -2.2, 1.55), (-0.4, 1.2, 1.0), 24, 1280, 720)
