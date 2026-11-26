@@ -72,9 +72,7 @@ def build():
     S.heartbeat(62.0, 67.5, 70, 0.3)
     S.put(S.groan(1.6, 80), 63.2, 0.25, 0.3)              # breathing behind the door
     S.put(growl(2.0, 70), 64.8, 0.45, 0.3)
-    S.put(static(0.6, 1.0), 67.4, 0.5, -0.2)             # radio clears
-    S.put(static(4.4, 0.25), 67.8, 0.25, -0.2)
-    t_ = 72.6
+    t_ = 70.6                                             # mum behind the hall doors, then fists
     import random
     r = random.Random(3)
     while t_ < END:                                       # fists on the hall doors

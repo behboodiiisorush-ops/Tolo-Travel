@@ -12,7 +12,7 @@ Shots (seconds) — short shots, clips played a bit faster than real time (the u
   K 39.0-41.2 soldier pauses; K2 41.2-44.0 close: the bite      L 44.0-46.0 the kids step back
   M 46.0-54.5 "wait, listen... the key"; he tosses it           N 54.5-57.0 I pick the key up
   O 57.0-62.0 he goes into the storeroom himself                P 62.0-67.5 the door, the window, the growl
-  Q 67.5-72.5 the radio: mum's voice                            R 72.5-74.5 fists on the hall doors
+  Q 67.5-72.5 the hall doors: mum calls from behind them, fists  R 72.5-74.5 Kazemi frozen by the radio
   S 74.5-76.5 Kian looks at me
 """
 import bpy, sys, os, math, random
@@ -248,11 +248,11 @@ for o in leaf_objs:
 for t, a in ((0, 0), (59.0, 0), (59.9, -85), (61.2, -85), (61.9, 0), (END, 0)):
     s_hinge.rotation_euler = (0, 0, math.radians(a))
     s_hinge.keyframe_insert("rotation_euler", index=2, frame=fr(t))
-# hall doors: banged on from outside 72.5-END
+# hall doors: banged on from outside from "باز کنید!" (70.6) to the end
 rr = random.Random(3)
 for hinge, sgn in HALL_LEAVES:
-    pts = [(0, 0), (72.6, 0)]
-    t = 72.6
+    pts = [(0, 0), (70.6, 0)]
+    t = 70.6
     while t < END:
         t += rr.uniform(0.18, 0.34)
         pts += [(t, sgn * rr.uniform(2.5, 5.0)), (t + 0.08, 0)]
@@ -339,15 +339,8 @@ def flicker(lamp_idx, t0, t1, seed):
 flicker(2, 62.0, 67.4, 5)
 flicker(4, 63.0, 67.0, 9)
 flicker(2, 72.5, END, 6) if False else None
-# radio LED: dark, blinking on the static 8-12.5; flickers with mum's words (the speaker is the radio)
-import random as _rnd
-_r = _rnd.Random(7)
-led_pts = [(0, 0.0), (8.2, 1), (8.5, 0), (9.1, 1), (9.3, 0), (10.2, 1), (10.5, 0), (11.4, 1), (11.6, 0), (67.4, 1)]
-_t = 67.8
-while _t < 71.8:
-    led_pts += [(_t, 0), (_t + 0.06 + 0.06 * _r.random(), 1)]
-    _t += 0.18 + 0.2 * _r.random()
-led_pts += [(71.9, 1), (END, 1)]
+# radio LED: dark, blinking on the static 8-12.5 (nobody answers on the radio)
+led_pts = [(0, 0.0), (8.2, 1), (8.5, 0), (9.1, 1), (9.3, 0), (10.2, 1), (10.5, 0), (11.4, 1), (11.6, 0), (END, 0)]
 for t, v in led_pts:
     led.hide_render = v < 0.5
     led.keyframe_insert("hide_render", frame=fr(t))
@@ -601,7 +594,7 @@ walk("kazemi", 44.0, 45.2, [KZ_MEET[:2], KZ_BACK[:2]], back=True)
 act("kazemi", "hands_forward_gesture", 45.2, 47.3, KZ_BACK, face(KZ_BACK, SOLDIER), speed=1.5)
 act("kazemi", "breathing_idle", 47.3, 62.0, KZ_BACK, face(KZ_BACK, SOLDIER), loop=True)
 walk("kazemi", 62.0, 64.8, [KZ_BACK[:2], (9.7, 6.4), KZ_RADIO[:2]], end_face=215)
-# mum's voice comes out of the radio speaker: he only listens, frozen, the handset stays on the table
+# mum's voice comes from behind the hall doors: he only listens, frozen, the handset stays on the table
 act("kazemi", "breathing_idle", 64.8, 72.5, KZ_RADIO, 215, loop=True, speed=0.8)
 act("kazemi", "nervously_look_around", 72.5, END, pos_at("kazemi", 72.45) + (0,), 120, speed=1.3)
 # ---- the soldier
@@ -731,8 +724,8 @@ SHOTS = [
     (54.5, 57.0, (8.3, 4.75, 0.6), (8.2, 4.7, 0.65), (7.25, 4.15, 0.4), (7.25, 4.1, 0.55), 24),
     (57.0, 62.0, (7.4, 2.9, 1.55), (7.8, 3.3, 1.55), (11.3, 8.6, 1.3), (11.3, 8.8, 1.35), 24),
     (62.0, 67.5, (11.3, 6.2, 1.5), (11.3, 7.3, 1.53), (11.3, 9.0, 1.5), (11.3, 9.0, 1.53), 30),
-    (67.5, 72.5, (9.95, 6.95, 1.35), (9.85, 7.05, 1.4), (8.45, 8.25, 1.0), (8.6, 7.85, 1.4), 26),
-    (72.5, 74.5, (2.6, 3.3, 1.5), (2.4, 3.6, 1.5), (0.0, 4.9, 1.2), (0.0, 4.9, 1.2), 24),
+    (67.5, 72.5, (3.6, 2.8, 1.45), (2.4, 3.6, 1.5), (0.0, 4.9, 1.2), (0.0, 4.9, 1.2), 24),
+    (72.5, 74.5, (9.95, 6.95, 1.35), (9.85, 7.05, 1.4), (8.45, 8.25, 1.0), (8.6, 7.85, 1.4), 26),
     (74.5, END, (7.65, 4.3, 1.55), (7.6, 4.25, 1.52), (6.55, 3.8, 1.25), (6.55, 3.8, 1.25), 34),
 ]
 
