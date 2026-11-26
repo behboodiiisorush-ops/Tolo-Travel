@@ -26,3 +26,6 @@
   as plain text, and never put Persian words in brackets.
 - Persian captions: Vazirmatn font in `blender/fonts/`, Pillow with raqm.
 - Always give times to the user in Berlin time (Europe/Berlin), not UTC.
+- When a film is finished (final mp4s made), tell the user with a push notification (PushNotification tool,
+  status "proactive", one short Persian line with the film's name) and send the videos with SendUserFile
+  (status "proactive") so they reach the phone with a sound.
