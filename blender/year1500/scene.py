@@ -510,28 +510,11 @@ sc.frame_set(1)
 T.SAT = 1.3
 T.toonify(sc, samples=int(os.environ.get("SAMPLES", "8")))
 city.ivy_ink()
-noline = bpy.data.collections.new("NoLine")
-sc.collection.children.link(noline)
-for o in list(C["IVY"]) + [o for o in bpy.data.objects if "tear" in o.name.lower() or o.name.startswith("Glass shards")
-                           or o.name.startswith("Big screen")]:
-    for col in list(o.users_collection):
-        col.objects.unlink(o)
-    noline.objects.link(o)
-sc.render.use_freestyle = True
-sc.render.line_thickness_mode = "ABSOLUTE"
-vl = sc.view_layers[0]
-vl.use_freestyle = True
-fs = vl.freestyle_settings
-ls = fs.linesets[0] if len(fs.linesets) else fs.linesets.new("Ink")
-ls.select_silhouette = ls.select_border = ls.select_crease = True
-ls.select_by_collection = True
-ls.collection = noline
-ls.collection_negation = "EXCLUSIVE"
-if ls.linestyle is None:
-    ls.linestyle = bpy.data.linestyles.new("Ink")
-ls.linestyle.color = (0.02, 0.02, 0.02)
-ls.linestyle.thickness = 1.4
-fs.crease_angle = math.radians(120)
+# black ink outlines (inverted hull: cheap in memory, unlike Freestyle on a whole city)
+people = [o for c_ in CH.values() for o in c_.objects if o.type == "MESH" and o not in HEAD_OBJS and not any(
+    k in o.name.lower() for k in ("high-poly", "lash", "brow", "teeth", "tongue", "tear"))]
+T.ink(people, 0.006)
+T.ink([o for o in C["INK"] if o.type == "MESH"], 0.04)
 sc.render.resolution_x, sc.render.resolution_y = 540, 960
 sc.render.film_transparent = False
 
