@@ -80,7 +80,11 @@ def main():
     os.makedirs(TMP)
     os.makedirs(OUT, exist_ok=True)
     n_pic = int(END * FPS)
-    subprocess.run(["ffmpeg", "-v", "error", "-y", "-framerate", str(FPS), "-i", os.path.join(SRC, "f_%04d.png"),
+    seq = os.path.join(TMP, "seq")            # rendered on twos (1, 3, 5 ...): each drawing held for two frames
+    os.makedirs(seq)
+    for i in range(1, n_pic + 1):
+        os.symlink(os.path.join(SRC, f"f_{i - (1 - i % 2):04d}.png"), os.path.join(seq, f"s_{i:04d}.png"))
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-framerate", str(FPS), "-i", os.path.join(seq, "s_%04d.png"),
                     "-frames:v", str(n_pic),
                     "-vf", f"scale={W}:{H}:flags=lanczos,"
                            "vignette=PI/6",

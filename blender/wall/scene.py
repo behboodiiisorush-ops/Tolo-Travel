@@ -24,17 +24,26 @@ sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(HERE, "..", "cast"))
 sys.path.insert(0, os.path.join(HERE, "..", "studio"))
 bpy.ops.wm.read_factory_settings(use_empty=True)
+sys.path.append(os.path.join(HERE, "..", "shelter3"))     # look.py, mocap2.py (after ours: our captions.py wins)
 import cast, mocap, anim  # noqa: E402
+import look as LK         # noqa: E402
+import mocap2 as MC       # noqa: E402
 import props as P         # noqa: E402
 import toon_look as T     # noqa: E402
 from captions import LINES, END, speaking  # noqa: E402
 
-cast.STYLE = cast.CARTOON
+cast.STYLE = LK.STYLE
+LK.SKIN.update({"kazemi": (0.72, 0.45, 0.31), "arian": (0.76, 0.46, 0.31), "mahsa": (0.8, 0.5, 0.36),
+                "kian": (0.86, 0.58, 0.42), "rezaei": (0.58, 0.5, 0.42), "anchor": (0.74, 0.46, 0.32)})
+LK.IRIS.update({"kazemi": (0.14, 0.08, 0.04), "arian": (0.12, 0.07, 0.03), "mahsa": (0.1, 0.06, 0.03),
+                "kian": (0.22, 0.14, 0.05), "rezaei": (0.35, 0.36, 0.33), "anchor": (0.12, 0.07, 0.03)})
+LK.LIPS.update({"mahsa": (0.72, 0.25, 0.28)})
 FPS = 24
 N = int(END * FPS)
 sc = bpy.context.scene
 sc.render.fps = FPS
 sc.frame_start, sc.frame_end = 1, N
+sc.frame_step = 2                  # rendered on twos; post.py holds each drawing for two frames
 MOC = os.path.join(HERE, "..", "mocap")
 TEX = os.path.join(HERE, "textures")
 
@@ -81,7 +90,10 @@ def put(o):
 
 
 def box(loc, size, m, name="Set"):
-    return put(P.box(loc, size, M_[m] if isinstance(m, str) else m, name))
+    o = P.box(loc, size, M_[m] if isinstance(m, str) else m, name)
+    o.data.transform(Matrix.Translation(-Vector(loc)))     # P.box bakes the position: put the origin back at loc
+    o.location = loc
+    return put(o)
 
 
 def room(u, wm, fm):
@@ -246,7 +258,7 @@ sc.collection.objects.link(sun)
 sun.data.energy = 2.6
 sun.data.use_shadow = False
 sun.rotation_euler = (math.radians(50), 0, math.radians(-35))
-lamp_A = P.area_light((2.5, 2.2, 2.55), (2.5, 2.2, 0), 25, 3.0, (1.0, 0.88, 0.72), name="A lamp")
+lamp_A = P.area_light((2.5, 2.2, 2.55), (2.5, 2.2, 0), 40, 3.0, (1.0, 0.82, 0.62), name="A lamp")
 # B kitchen: table, counter, fridge (only the fridge light and the hole light it)
 box((7.6, 2.4, 0.74), (1.5, 0.95, 0.05), "wood", "Kitchen table")
 for dx in (-0.68, 0.68):
@@ -274,11 +286,11 @@ nt.links.new(tx.outputs[0], e_.inputs[0])
 e_.inputs["Strength"].default_value = 1.6
 nt.links.new(e_.outputs[0], o_.inputs[0])
 scr = put(P.plane((11.2, 4.29, 1.12), (0.8, 0.46), tvm, rot=(math.radians(90), 0, 0), name="TV screen"))
-lamp_C = P.area_light((13.0, 2.2, 2.55), (13.0, 2.2, 0), 15, 3.0, (1.0, 0.8, 0.6), name="C lamp")
+lamp_C = P.area_light((13.0, 2.2, 2.55), (13.0, 2.2, 0), 24, 3.0, (1.0, 0.78, 0.55), name="C lamp")
 tv_glow = P.area_light((11.2, 3.9, 1.2), (11.8, 2.4, 1.2), 30, 0.8, (0.6, 0.7, 1.0), name="TV glow")
 # lights flicker 59.6-62 (C lamp)
 for k, t in enumerate([0, 59.6, 59.8, 60.0, 60.15, 60.5, 60.7, 61.2, 61.4, 62.0]):
-    lamp_C.data.energy = 15 if k % 2 == 0 else 0
+    lamp_C.data.energy = 24 if k % 2 == 0 else 0
     sun.data.energy = 2.6 if k % 2 == 0 else 1.2
     sun.data.keyframe_insert("energy", frame=fr(t))
     lamp_C.data.keyframe_insert("energy", frame=fr(t))
@@ -295,32 +307,29 @@ for k in KEYS:
     else:
         ch = cast.spawn(k)
     T.register(ch, k, realistic=True)
+    LK.before(ch, k)                         # cleaner comic faces (warm skin, open eyes, bold brows, lips)
     CH[k] = ch
-# mom's cream sweater reads as bare skin in the flat look: make it maroon
-skin, clothes = T.SKIN[CH["mom"].name]
-clothes = dict(clothes)
-for kk in list(clothes):
-    if "sweater" in kk:
-        clothes[kk] = (0.55, 0.16, 0.22)
-T.SKIN[CH["mom"].name] = (skin, clothes)
 CLIP = {}
+DIRTY = set()
 
 
 def clip(name):
     if name not in CLIP:
-        CLIP[name] = mocap.load(os.path.join(MOC, name + ".fbx"))
+        CLIP[name] = MC.load(os.path.join(MOC, name + ".fbx"))
     return CLIP[name]
 
 
+def sync():
+    for w_ in list(DIRTY):
+        MC.flush(CH[w_])
+    DIRTY.clear()
+
+
 def act(who, name, t0, t1, pos, facing, **kw):
-    """Character `who` plays clip `name` from t0 to t1 (seconds) at pos/facing."""
+    """Character `who` plays clip `name` from t0 to t1 (seconds) at pos/facing (keys every 2nd frame)."""
     n = fr(t1) - fr(t0)
-    mocap.apply(CH[who], clip(name), start=fr(t0), length=n, offset=pos, facing=facing, **kw)
-    rig = CH[who].rig                       # hold the place until the last frame (then jump at the cut)
-    rig.location = pos
-    rig.rotation_euler = (0, 0, math.radians(facing) + math.pi)
-    rig.keyframe_insert("location", frame=fr(t1) - 1)
-    rig.keyframe_insert("rotation_euler", index=2, frame=fr(t1) - 1)
+    MC.apply(CH[who], clip(name), start=fr(t0), length=n, offset=pos, facing=facing, **kw)
+    DIRTY.add(who)
 
 
 # a character holds his place for the whole segment and jumps (at the cut) to the next one
@@ -378,13 +387,14 @@ act("mahsa", "nervously_look_around", 41.0, 51.0, (10.9, 2.9, 0), -60, src_from=
 act("mahsa", "breathing_idle", 51.0, 59.4, (12.3, 2.85, 0), 0, src_from=6.0)
 act("mahsa", "nervously_look_around", 59.4, 75.5, (12.3, 2.85, 0), -50, loop=True)
 # ---- Rezaei on the bed
-act("rezaei", "sitting_idle", 41.0, 75.5, (13.0, 3.0, 0.02), 180, loop=True)
+act("rezaei", "sitting_idle", 41.0, 75.5, (13.0, 2.95, 0.27), 180, loop=True)   # on the mattress edge
 # ---- Kian behind the far wall (only his face shows through the hole)
 act("kian", "breathing_idle", 62.0, 75.5, (15.75, 1.5, 0), 90, loop=True)
 
 
 def strikes(who, t0, t1, toward_x=True):
     """Moments the sledgehammer hits: local maxima of the right hand's reach towards +X."""
+    sync()
     rig = CH[who].rig
     xs = []
     for f in range(fr(t0), fr(t1)):
@@ -436,6 +446,39 @@ def present(who, t):
     return any(a <= t < b for a, b in PRESENT[who])
 
 
+def sp_tv(t):
+    """everyone watches the TV during the news"""
+    return 52.0 <= t <= 58.8
+
+
+# heads turn to whoever is talking (else straight ahead, level), on top of the mocap
+sync()
+LOOK = {}
+for who, ch in CH.items():
+    e_ = P.empty(f"Look {who}")
+    LOOK[who] = e_
+    for bn, inf in (("head", 0.7), ("neck_01", 0.3)):
+        c_ = ch.rig.pose.bones[bn].constraints.new("DAMPED_TRACK")
+        c_.target, c_.track_axis, c_.influence = e_, "TRACK_Z", inf
+for f in range(1, N + 1, 4):
+    t = (f - 1) / FPS
+    sc.frame_set(f)
+    heads = {w_: c.rig.matrix_world @ c.rig.pose.bones["head"].head for w_, c in CH.items()}
+    spk = [w_ for a, b, w_, _ in LINES if a - 0.2 <= t <= b + 0.3]
+    for who, ch in CH.items():
+        h = heads[who]
+        fz = ch.rig.rotation_euler.z - math.pi
+        fwd = Vector((-math.sin(fz), math.cos(fz), 0))
+        tgt = h + fwd * 2.0 + Vector((0, 0, 0.05))
+        for sp in spk:
+            if sp != who and sp in heads and present(sp, t) and (heads[sp] - h).length < 6.0 \
+                    and fwd.dot(heads[sp] - h) > -0.2:
+                tgt = heads[sp] + Vector((0, 0, 0.05))
+                break
+        if sp_tv(t) and who != "rezaei":
+            tgt = Vector((11.2, 4.29, 1.12))
+        LOOK[who].location = tgt
+        LOOK[who].keyframe_insert("location", frame=f)
 for who, ch in CH.items():
     for f in range(1, N + 1):
         t = (f - 1) / FPS
@@ -514,7 +557,7 @@ show(floor_h, [(12.4, 16.4)])
 # mom's phone in her right hand 7.4-10 (screen: dark grey + 'no signal' bars are in the caption)
 sc.frame_set(fr(8.5))
 pm = CH["mom"].rig.matrix_world @ CH["mom"].rig.pose.bones["hand_r"].matrix
-ph = put(P.box(pm.translation + pm.to_3x3() @ Vector((0, 0.09, -0.02)), (0.075, 0.15, 0.01), M_["phone"], "Mom phone"))
+ph = box(tuple(pm.translation + pm.to_3x3() @ Vector((0, 0.09, -0.02))), (0.075, 0.15, 0.01), M_["phone"], "Mom phone")
 ph.rotation_euler = pm.to_euler()
 con = ph.constraints.new("CHILD_OF")
 con.target, con.subtarget = CH["mom"].rig, "hand_r"
@@ -532,13 +575,13 @@ SHOTS = [
     (24.5, 27.0, (7.4, 0.55, 1.3), (7.3, 0.6, 1.3), (5.1, 2.2, 1.0), (5.3, 2.2, 1.0), 20),
     (27.0, 33.5, (9.2, 0.45, 1.05), (9.1, 0.5, 1.1), (7.2, 2.1, 0.6), (7.2, 2.0, 0.8), 19),
     (33.5, 41.0, (7.3, 0.45, 1.6), (7.5, 0.5, 1.55), (9.9, 2.2, 1.15), (10.1, 2.1, 1.1), 18),
-    (41.0, 47.0, (11.7, 0.5, 1.55), (11.9, 0.8, 1.45), (13.0, 3.0, 1.0), (13.0, 3.0, 1.05), 24),
+    (41.0, 47.0, (11.7, 0.5, 1.7), (11.9, 0.8, 1.6), (13.0, 3.0, 1.2), (13.0, 3.0, 1.25), 24),
     (47.0, 51.0, (12.25, 2.1, 1.15), (12.35, 2.25, 1.15), (12.85, 3.1, 0.95), (12.85, 3.1, 0.95), 32),
     (51.0, 58.8, (12.2, 0.55, 1.6), (12.0, 0.8, 1.55), (11.2, 4.3, 1.1), (11.2, 4.3, 1.12), 22),
     (58.8, 62.0, (11.7, 4.0, 1.45), (11.75, 3.9, 1.45), (11.9, 2.4, 1.45), (11.9, 2.4, 1.45), 20),
     (62.0, 66.0, (12.6, 0.8, 1.4), (12.9, 1.0, 1.4), (15.4, 1.55, 1.3), (15.4, 1.5, 1.35), 22),
     (66.0, 72.0, (14.45, 1.5, 1.37), (14.75, 1.5, 1.37), (15.6, 1.5, 1.37), (15.6, 1.5, 1.37), 30),
-    (72.0, 75.5, (13.1, 1.6, 1.0), (13.05, 2.2, 1.05), (13.0, 3.0, 1.18), (13.0, 3.0, 1.2), 28),
+    (72.0, 75.5, (13.1, 1.6, 1.25), (13.05, 2.2, 1.3), (13.0, 3.0, 1.43), (13.0, 3.0, 1.45), 28),
 ]
 sc.frame_set(fr(49))
 _r = CH["rezaei"].rig
@@ -567,7 +610,13 @@ for owner in (cam, cam.data):
 
 # ------------------------------------------------------------------ look
 sc.frame_set(1)
+sync()
 T.toonify(sc, samples=int(os.environ.get("SAMPLES", "8")))
+LK.after()
+for attr, v in (("use_raytracing", False), ("shadow_ray_count", 1), ("shadow_step_count", 2)):
+    if hasattr(sc.eevee, attr):
+        setattr(sc.eevee, attr, v)
+sc.render.dither_intensity = 0.0
 inked = [o for o in bpy.data.objects if o.type == "MESH" and not any(
     k in o.name.lower() for k in ("high-poly", "lash", "brow", "teeth", "tongue", "rivet", "crack", "screen", "glass", "dust",
                                   "floor", "ceiling"))]

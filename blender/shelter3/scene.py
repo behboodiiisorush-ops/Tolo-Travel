@@ -211,6 +211,8 @@ MOVER = P.empty("MOVER")
 
 def box(loc, size, m, name="Set", rot=(0, 0, 0), move=True, parent=None):
     o = P.box(loc, size, M_[m] if isinstance(m, str) else m, name)
+    o.data.transform(Matrix.Translation(-Vector(loc)))     # P.box bakes the position: put the origin back at loc
+    o.location = loc
     o.rotation_euler = rot
     if parent is not None:
         o.parent = parent
