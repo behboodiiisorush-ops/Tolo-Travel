@@ -2,6 +2,7 @@
     out/year1500_captions.mp4   captions, no sound (for the user's ElevenLabs voices)
     out/year1500_clean.mp4      no captions, no sound
     out/year1500_sfx.mp4        captions + synthesised sound effects (if out/year1500_sfx.wav exists)
+    out/year1500.mp4            the finished film: captions + ElevenLabs voices + effects (voices.py -> year1500_mix.wav)
 """
 import os, shutil, subprocess, sys
 from PIL import Image, ImageDraw, ImageFont, ImageEnhance, ImageFilter
@@ -187,8 +188,9 @@ def main():
                 if a <= t <= b:
                     caption(img, who, text, min(1.0, (t - a) / 0.15))
         img.save(os.path.join(TMP, f"c_{i:04d}.jpg"), quality=94)
+    mix = os.path.join(OUT, "year1500_mix.wav")
     if part:
-        sfx = os.path.join(OUT, "year1500_sfx.wav")
+        sfx = mix if os.path.exists(mix) else os.path.join(OUT, "year1500_sfx.wav")
         encode(os.path.join(TMP, "c_%04d.jpg"), os.path.join(OUT, "year1500_part.mp4"),
                sfx if os.path.exists(sfx) else None)
         shutil.rmtree(TMP, ignore_errors=True)
@@ -198,6 +200,8 @@ def main():
     sfx = os.path.join(OUT, "year1500_sfx.wav")
     if os.path.exists(sfx):
         encode(os.path.join(TMP, "c_%04d.jpg"), os.path.join(OUT, "year1500_sfx.mp4"), sfx)
+    if os.path.exists(mix):                                         # the finished film: ElevenLabs voices + sfx
+        encode(os.path.join(TMP, "c_%04d.jpg"), os.path.join(OUT, "year1500.mp4"), mix)
     shutil.rmtree(TMP, ignore_errors=True)
 
 
