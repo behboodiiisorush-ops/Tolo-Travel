@@ -288,6 +288,8 @@ for dx in (-0.85, 0.85):
     for dy in (-0.3, 0.3):
         box((12.6 + dx, 3.3 + dy, 0.25), (0.04, 0.04, 0.5), "steel", "Cot leg")
 box((13.2, 3.5, 0.68), (0.5, 0.35, 0.25), "bag", "Kit bag")
+# Kian's green backpack on the floor by his cot
+box((7.95, 3.0, 0.13), (0.32, 0.18, 0.26), P.mat("Kian backpack", (0.18, 0.42, 0.16), 0.7), "Backpack on floor")
 # Kazemi's seat: an upturned crate by the radio table
 KZ_SEAT = (7.6, 7.75)
 box((KZ_SEAT[0], KZ_SEAT[1], 0.24), (0.55, 0.45, 0.48), "crate", "Seat crate")
@@ -371,6 +373,10 @@ KEYS = ["me", "arian", "mahsa", "kian", "kazemi"]
 CH = {}
 for k in KEYS:
     CH[k] = cast.spawn(k)
+# night in the shelter: Kian's backpack is off (it lies by his cot)
+for o in [o for o in CH["kian"].objects if o.name.startswith("Backpack")]:
+    CH["kian"].objects.remove(o)
+    bpy.data.objects.remove(o, do_unlink=True)
 # the soldier behind the storeroom window: pale, veins, but still himself
 CH["soldierZ"] = cast.spawn("soldier", zombie=0.35, name="SoldierZ", seed=4)
 M_ = mats()                                # cast building purges unused materials: re-create for later props
@@ -552,7 +558,7 @@ HALL = (0.0, 4.9)                             # the hall doors
 ME_DOOR = (11.05, 8.1)
 ME_BACK = (10.85, 7.55, 0)
 MAHSA_DOOR = (11.85, 7.55, 0)
-KIAN_CHAIN = (0.6, 4.95, 0)
+KIAN_CHAIN = (0.55, 4.9, 0)
 ARIAN_GRAB = (1.4, 4.3, 0)
 KZ_MID = (6.2, 6.0, 0)
 WAKE = {"me": 5.6, "mahsa": 20.0, "kian": 49.0, "arian": 54.5, "kazemi": 62.0}   # eyes open from
@@ -591,10 +597,10 @@ def hands_mid(who, t0, t1):
 
 
 for _ in range(2):                         # stand him where the clip's hands meet the chain
-    act("kian", "reloading", 55.0, 58.4, KIAN_CHAIN, 90, speed=1.0)
+    act("kian", "reloading", 55.0, 58.4, KIAN_CHAIN, 90, speed=1.0, in_place=True)
     hm = hands_mid("kian", 55.3, 58.2)
     KIAN_CHAIN = (KIAN_CHAIN[0] + CHAIN_AT[0] + 0.03 - hm.x, KIAN_CHAIN[1] + CHAIN_AT[1] - hm.y, 0)
-act("kian", "reloading", 55.0, 58.4, KIAN_CHAIN, 90, speed=1.0)          # pulls at the chain
+act("kian", "reloading", 55.0, 58.4, KIAN_CHAIN, 90, speed=1.0, in_place=True)   # pulls at the chain
 print("KIAN AT CHAIN", [round(v, 3) for v in KIAN_CHAIN], "hands", [round(v, 3) for v in hands_mid("kian", 55.3, 58.2)])
 walk("kian", 49.5, 55.0, [SIT["kian"][:2], (5.0, 4.4), KIAN_CHAIN[:2]], end_face=90)
 rc = random.Random(5)
