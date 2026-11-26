@@ -822,12 +822,17 @@ if LOOK == "real":
         sc.view_settings.look = "AgX - Punchy"
     except TypeError:
         sc.view_settings.view_transform = "Filmic"
-    w.color = (0.02, 0.025, 0.04)
+    w.color = (0.04, 0.05, 0.08)
     sun.data.use_shadow = True
+    sc.view_settings.exposure = 1.4
+    for l, _ in LAMPS:
+        l.data.energy *= 1.6
+        if hasattr(l.data, "shadow_soft_size"):
+            l.data.shadow_soft_size = 0.6
 else:
     if LOOK == "anime":
-        T.BANDS = ((0.0, 0.62), (0.22, 0.86), (0.55, 1.0))
-        T.SAT = 1.5
+        T.BANDS = ((0.0, 0.74), (0.3, 0.74), (0.42, 1.0))    # hard two-tone cel, light shadows
+        T.SAT = 1.1
     elif LOOK == "noir":
         T.BANDS = ((0.0, 0.12), (0.28, 0.62), (0.6, 1.0))
     elif LOOK == "toon":
@@ -838,7 +843,7 @@ else:
         for md in o.modifiers:
             if md.type == "SUBSURF":
                 md.render_levels = 0
-    T.ink(inked, {"comic": 0.005, "anime": 0.0025, "noir": 0.008, "toon": 0.003}[LOOK])
+    T.ink(inked, {"comic": 0.005, "anime": 0.0015, "noir": 0.008, "toon": 0.003}[LOOK])
     if LOOK == "anime" and hasattr(sc, "node_tree"):   # soft glow on the lights (old compositor API only)
         sc.use_nodes = True
         nt = sc.node_tree
