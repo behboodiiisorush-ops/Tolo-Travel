@@ -1,0 +1,49 @@
+{
+ "action": "UHS_INTERACT_Punch",
+ "frames": 48,
+ "loop": false,
+ "played": 48,
+ "root_mode": "clip",
+ "speed_m_s": 0.029,
+ "raw_slip_cm": 5.63,
+ "foot_slip": {
+  "max_cm": 4.61,
+  "contacts": 2,
+  "pass_": false
+ },
+ "ground": {
+  "lowest_cm": -0.0,
+  "floating_contacts": 0,
+  "pass_": true
+ },
+ "limb_stretch": {
+  "max_dev": {
+   "knee.L": 0.0,
+   "knee.R": 0.0,
+   "elbow.L": 0.0,
+   "elbow.R": 0.0
+  },
+  "pass_": true
+ },
+ "joints": {
+  "max_deg": {
+   "knee.L": 74.0,
+   "knee.R": 60.7,
+   "elbow.L": 122.4,
+   "elbow.R": 138.3
+  },
+  "reverse_bend_frames": {},
+  "flips": {},
+  "pass_": true
+ },
+ "pops": {
+  "count": 0,
+  "worst": [],
+  "pass_": true
+ },
+ "ik_fk": {
+  "max_cm": 0.21,
+  "pass_": true
+ },
+ "pass": false
+}

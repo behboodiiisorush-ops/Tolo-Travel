@@ -1,0 +1,49 @@
+{
+ "action": "UHS_RUN_Cartoon",
+ "frames": 15,
+ "loop": true,
+ "played": 30,
+ "root_mode": "clip",
+ "speed_m_s": 2.277,
+ "raw_slip_cm": 7.75,
+ "foot_slip": {
+  "max_cm": 0.27,
+  "contacts": 4,
+  "pass_": true
+ },
+ "ground": {
+  "lowest_cm": -0.0,
+  "floating_contacts": 0,
+  "pass_": true
+ },
+ "limb_stretch": {
+  "max_dev": {
+   "knee.L": 0.0,
+   "knee.R": 0.0,
+   "elbow.L": 0.0,
+   "elbow.R": 0.0
+  },
+  "pass_": true
+ },
+ "joints": {
+  "max_deg": {
+   "knee.L": 110.9,
+   "knee.R": 109.2,
+   "elbow.L": 126.9,
+   "elbow.R": 113.1
+  },
+  "reverse_bend_frames": {},
+  "flips": {},
+  "pass_": true
+ },
+ "pops": {
+  "count": 0,
+  "worst": [],
+  "pass_": true
+ },
+ "ik_fk": {
+  "max_cm": 0.0,
+  "pass_": true
+ },
+ "pass": true
+}
