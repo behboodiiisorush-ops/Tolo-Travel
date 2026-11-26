@@ -28,7 +28,8 @@ import toon_look as T     # noqa: E402
 import arm as ARM         # noqa: E402
 from captions import LINES, END, speaking  # noqa: E402
 
-cast.STYLE = cast.CARTOON
+LOOK = os.environ.get("LOOK", "comic")   # comic (default) | real | anime | noir | toon   (style tests)
+cast.STYLE = None if LOOK == "real" else cast.CARTOON
 FPS = 24
 N = int(END * FPS)
 sc = bpy.context.scene
@@ -807,15 +808,50 @@ json.dump({"cuts": [s[0] for s in SHOTS]}, open(os.path.join(HERE, "out", "cuts.
 
 # ------------------------------------------------------------------ look
 sc.frame_set(1)
-T.toonify(sc, samples=int(os.environ.get("SAMPLES", "4")))
-for o in bpy.data.objects:                 # subdivision adds nothing in the flat look but triples the render time
-    for md in o.modifiers:
-        if md.type == "SUBSURF":
-            md.render_levels = 0
-inked = [o for o in bpy.data.objects if o.type == "MESH" and not any(
-    k in o.name.lower() for k in ("high-poly", "lash", "brow", "teeth", "tongue", "court", "floor", "ceiling", "bite",
-                                  "stain", "blood", "night", "tube", "wire", "chain", "led"))]
-T.ink(inked, 0.005)
+NO_INK = ("high-poly", "lash", "brow", "teeth", "tongue", "court", "floor", "ceiling", "bite",
+          "stain", "blood", "night", "tube", "wire", "chain", "led")
+inked = [o for o in bpy.data.objects if o.type == "MESH" and not any(k in o.name.lower() for k in NO_INK)]
+if LOOK == "real":
+    sc.render.engine = "BLENDER_EEVEE"
+    sc.eevee.taa_render_samples = int(os.environ.get("SAMPLES", "32"))
+    for attr in ("use_gtao", "use_shadows", "use_raytracing"):
+        if hasattr(sc.eevee, attr):
+            setattr(sc.eevee, attr, True)
+    try:
+        sc.view_settings.view_transform = "AgX"
+        sc.view_settings.look = "AgX - Punchy"
+    except TypeError:
+        sc.view_settings.view_transform = "Filmic"
+    w.color = (0.02, 0.025, 0.04)
+    sun.data.use_shadow = True
+else:
+    if LOOK == "anime":
+        T.BANDS = ((0.0, 0.62), (0.22, 0.86), (0.55, 1.0))
+        T.SAT = 1.5
+    elif LOOK == "noir":
+        T.BANDS = ((0.0, 0.12), (0.28, 0.62), (0.6, 1.0))
+    elif LOOK == "toon":
+        T.BANDS = ((0.0, 0.8), (0.18, 0.92), (0.7, 1.0))
+        T.SAT = 0.85
+    T.toonify(sc, samples=int(os.environ.get("SAMPLES", "4")))
+    for o in bpy.data.objects:             # subdivision adds nothing in the flat look but triples the render time
+        for md in o.modifiers:
+            if md.type == "SUBSURF":
+                md.render_levels = 0
+    T.ink(inked, {"comic": 0.005, "anime": 0.0025, "noir": 0.008, "toon": 0.003}[LOOK])
+    if LOOK == "anime" and hasattr(sc, "node_tree"):   # soft glow on the lights (old compositor API only)
+        sc.use_nodes = True
+        nt = sc.node_tree
+        rl = next(n for n in nt.nodes if n.type == "R_LAYERS")
+        comp = next(n for n in nt.nodes if n.type == "COMPOSITE")
+        g = nt.nodes.new("CompositorNodeGlare")
+        for k, v in (("glare_type", "FOG_GLOW"), ("threshold", 0.8), ("size", 8), ("mix", 0.0)):
+            try:
+                setattr(g, k, v)
+            except Exception:
+                pass
+        nt.links.new(rl.outputs["Image"], g.inputs[0])
+        nt.links.new(g.outputs[0], comp.inputs[0])
 sc.render.resolution_x, sc.render.resolution_y = 540, 960
 sc.render.film_transparent = False
 
@@ -824,7 +860,7 @@ if "--still" in args:
     os.makedirs(os.path.join(HERE, "test"), exist_ok=True)
     for f in [int(v) for v in args[args.index("--still") + 1].split(",")]:
         sc.frame_set(f)
-        sc.render.filepath = os.path.join(HERE, "test", f"s_{f:04d}.png")
+        sc.render.filepath = os.path.join(HERE, "test", f"{LOOK}_{f:04d}.png")
         bpy.ops.render.render(write_still=True)
 if "--save" in args:
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(HERE, "sleeve.blend"))
