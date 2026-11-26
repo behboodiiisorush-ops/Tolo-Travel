@@ -159,8 +159,6 @@ for dx in (-0.75, 0.75):
 for dz in (-0.7, 0.7):
     P.box((0.9, 2.47, 1.55 + dz), (1.5, 0.08, 0.06), m_frame, "Win frame")
 P.box((0.9, 2.47, 1.55), (0.04, 0.06, 1.4), m_frame, "Win bar")
-glass = P.glass("Window glass", (0.85, 0.9, 1.0), 0.05)
-P.box((0.9, 2.5, 1.55), (1.5, 0.01, 1.4), glass, "Glass")
 P.box((-2.5, 0, 1.4), (0.1, 5, 2.8), m_wall, "Left")
 P.box((2.5, 0, 1.4), (0.1, 5, 2.8), m_wall, "Right")
 P.box((-0.7, -2.5, 1.4), (3.6, 0.1, 2.8), m_wall, "Front L")
@@ -310,7 +308,7 @@ def lamp(name, loc, energy, col, radius=0.15):
 L_desk = lamp("Desk lamp", LAMP + Vector((-0.08, 0, -0.05)), 45, (1.0, 0.72, 0.45))
 L_bed = lamp("Bed lamp", (-0.45, 2.15, 0.95), 30, (1.0, 0.7, 0.42))
 L_ceiling = P.area_light((0.3, 0.3, 2.7), (0.3, 0.3, 0), 140, 1.2, (1.0, 0.85, 0.7), name="Ceiling")
-L_moon = P.area_light((0.9, 3.2, 2.0), (0.6, 0.0, 0.6), 170, 1.6, (0.55, 0.65, 1.0), name="Moon")
+L_moon = P.area_light((0.9, 3.2, 2.0), (0.6, 0.0, 0.6), 420, 1.6, (0.55, 0.65, 1.0), name="Moon")
 L_flash = P.area_light((0.9, 3.6, 2.6), (0.5, 0.0, 0.5), 0, 2.5, (0.8, 0.85, 1.0), name="Lightning")
 L_screen = lamp("Screen glow", (2.15, DESK.y + 0.1, 1.06), 8, (0.4, 0.6, 1.0), 0.3)
 emit_nodes = []
@@ -340,7 +338,7 @@ world = bpy.data.worlds.new("Night")
 sc.world = world
 world.use_nodes = True
 world.node_tree.nodes["Background"].inputs[0].default_value = (0.02, 0.025, 0.05, 1)
-world.node_tree.nodes["Background"].inputs[1].default_value = 0.5
+world.node_tree.nodes["Background"].inputs[1].default_value = 1.2
 
 # ------------------------------------------------------------------ motion (full rate, cross-faded clips)
 def play(ch, clip, start, length, blend=0, **kw):
@@ -493,7 +491,7 @@ for f in range(1, N + 1):
     s = glow_em.inputs["Strength"] if "Strength" in glow_em.inputs else glow_em.inputs["Emission Strength"]
     s.default_value = 40 * g
     s.keyframe_insert("default_value", frame=f)
-    gl.energy = 25 * g
+    gl.energy = 90 * g
     gl.keyframe_insert("energy", frame=f)
 # the spark arc from the lamp to his hand (19.1-19.5 s) and the surge back to the lamp (38.2-38.6 s)
 m_arc = P.emit("Arc", (0.6, 0.85, 1.0), 60.0)
@@ -576,9 +574,9 @@ SHOTS = [
     (23.0, 27.0, 50, lambda f, u: head(f) + Vector((-0.55, -0.4, -0.15)), lambda f, u: (ar.rig.matrix_world @ ar.rig.pose.bones["hand_r"].head + head(f)) / 2),
     (27.0, 34.0, 28, lambda f, u: Vector((0.3, 1.9, 1.5)), lambda f, u: head(f) + Vector((0, -0.4, -0.15))),
     (34.0, 40.0, 26, lambda f, u: Vector((0.2, -1.3 + 0.2 * u, 1.45)), lambda f, u: (head(f) + LAMP) / 2),
-    (40.0, 43.0, 50, lambda f, u: head(f) + Vector((-0.7, -0.35, 0.0)), lambda f, u: head(f) + Vector((0, 0, 0.03))),
+    (40.0, 43.0, 50, lambda f, u: head(f) + Vector((0.65, 0.3, 0.0)), lambda f, u: head(f) + Vector((0, 0, 0.03))),
     (43.0, 49.5, 26, lambda f, u: Vector((1.8, -1.6, 1.55)), lambda f, u: head(f) - Vector((0, 0, 0.2))),
-    (49.5, 52.0, 70, lambda f, u: head(f) + Vector((0.25, 0.05, 0.05)), lambda f, u: Vector((OTHER_WIN.x, 8.6, OTHER_WIN.z))),
+    (49.5, 52.0, 60, lambda f, u: head(f) + Vector((-0.25, -0.45, 0.1)), lambda f, u: Vector((OTHER_WIN.x, 8.6, OTHER_WIN.z))),
     (52.0, 54.6, 45, lambda f, u: head(f) + Vector((0.35, 0.75, 0.0)), lambda f, u: head(f)),
     (54.6, END + 0.1, 30, lambda f, u: head(f) + Vector((0.15 - 0.3 * u, -1.1 - 0.4 * u, 0.25)), lambda f, u: Vector((OTHER_WIN.x, 8.0, OTHER_WIN.z - 0.2))),
 ]
@@ -619,6 +617,10 @@ for prop, v in (("use_raytracing", False), ("use_shadows", True), ("use_fast_gi"
         setattr(ee, prop, v)
 sc.view_settings.view_transform = "AgX"
 sc.view_settings.exposure = 0.2
+for f in range(1, N + 1, 6):        # brighter exposure in the dark part so faces still read
+    t = (f - 1) / FPS
+    sc.view_settings.exposure = 0.2 + 1.3 * (smooth((t - 10.4) / 0.6) - smooth((t - 38.4) / 0.6))
+    sc.view_settings.keyframe_insert("exposure", frame=f)
 sc.render.resolution_x, sc.render.resolution_y = 540, 960
 sc.render.resolution_percentage = 100
 sc.render.image_settings.file_format = "PNG"
