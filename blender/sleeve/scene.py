@@ -339,8 +339,15 @@ def flicker(lamp_idx, t0, t1, seed):
 flicker(2, 62.0, 67.4, 5)
 flicker(4, 63.0, 67.0, 9)
 flicker(2, 72.5, END, 6) if False else None
-# radio LED: dark, blinking on the static 8-12.5, solid green while mum talks
-led_pts = [(0, 0.0), (8.2, 1), (8.5, 0), (9.1, 1), (9.3, 0), (10.2, 1), (10.5, 0), (11.4, 1), (11.6, 0), (67.4, 1), (END, 1)]
+# radio LED: dark, blinking on the static 8-12.5; flickers with mum's words (the speaker is the radio)
+import random as _rnd
+_r = _rnd.Random(7)
+led_pts = [(0, 0.0), (8.2, 1), (8.5, 0), (9.1, 1), (9.3, 0), (10.2, 1), (10.5, 0), (11.4, 1), (11.6, 0), (67.4, 1)]
+_t = 67.8
+while _t < 71.8:
+    led_pts += [(_t, 0), (_t + 0.06 + 0.06 * _r.random(), 1)]
+    _t += 0.18 + 0.2 * _r.random()
+led_pts += [(71.9, 1), (END, 1)]
 for t, v in led_pts:
     led.hide_render = v < 0.5
     led.keyframe_insert("hide_render", frame=fr(t))
@@ -593,9 +600,9 @@ KZ_BACK = (10.6, 4.6, 0)
 walk("kazemi", 44.0, 45.2, [KZ_MEET[:2], KZ_BACK[:2]], back=True)
 act("kazemi", "hands_forward_gesture", 45.2, 47.3, KZ_BACK, face(KZ_BACK, SOLDIER), speed=1.5)
 act("kazemi", "breathing_idle", 47.3, 62.0, KZ_BACK, face(KZ_BACK, SOLDIER), loop=True)
-walk("kazemi", 62.0, 64.8, [KZ_BACK[:2], (9.7, 6.4), KZ_RADIO[:2]], end_face=180)
-act("kazemi", "breathing_idle", 64.8, 68.4, KZ_RADIO, 180, loop=True)
-pace("kazemi", "talking_phone_pacing", 68.4, 72.5, [(26.0, 28.7)], KZ_RADIO, 235, speed=0.66)
+walk("kazemi", 62.0, 64.8, [KZ_BACK[:2], (9.7, 6.4), KZ_RADIO[:2]], end_face=215)
+# mum's voice comes out of the radio speaker: he only listens, frozen, the handset stays on the table
+act("kazemi", "breathing_idle", 64.8, 72.5, KZ_RADIO, 215, loop=True, speed=0.8)
 act("kazemi", "nervously_look_around", 72.5, END, pos_at("kazemi", 72.45) + (0,), 120, speed=1.3)
 # ---- the soldier
 walk("soldier", 0.0, 5.6, [(8.2, 4.7), (10.3, 5.6), SOLDIER], clipname="reloading", end_face=15)
@@ -670,12 +677,12 @@ def place_in_hand(objs, who, t_ref, along=(0, 0.08, 0)):
     in_hand(objs[0], who, "hand_r", t_ref)
 
 
-# radio handset in Kazemi's right hand (8-34.5 and 68.4-72.5)
+# radio handset in Kazemi's right hand (8-34.5)
 hs = [P.box((0, 0, 0), (0.06, 0.04, 0.17), M_["radio"], "Handset")]
 place_in_hand(hs, "kazemi", 9.0, along=(0, 0.07, 0.03))
-show(hs, [(8.0, 34.5), (68.4, 72.5)])
+show(hs, [(8.0, 34.5)])
 hs2 = P.box((TABLE[0] + 0.12, TABLE[1] - 0.05, 0.8), (0.06, 0.17, 0.04), M_["radio"], "Handset on table")
-show([hs2], [(0, 8.0), (34.5, 68.4), (72.5, END)])
+show([hs2], [(0, 8.0), (34.5, END)])
 # the key: in the soldier's hand 48.8-53.6, flying 53.6-54.25, on the floor, in my hand from 56.6
 kh = key_mesh("Key soldier")
 place_in_hand(kh, "soldier", 50.0)
