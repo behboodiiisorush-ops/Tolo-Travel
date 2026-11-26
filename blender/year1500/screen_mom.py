@@ -9,10 +9,10 @@ sys.path.insert(0, os.path.join(HERE, "..", "studio"))
 sys.path.insert(0, HERE)                  # (studio/ has its own captions.py)
 bpy.ops.wm.read_factory_settings(use_empty=True)
 import cast, props as P, toon_look as T  # noqa: E402
-from captions import LINES  # noqa: E402
+from captions import LINES, SCREEN  # noqa: E402
 cast.STYLE = cast.CARTOON
 FPS = 24
-T0, T1 = 37.0, 45.0
+T0, T1 = SCREEN["pic0"], SCREEN["pic1"]
 sc = bpy.context.scene
 mom = cast.spawn("mom")
 kid = cast.spawn("kian")
@@ -53,7 +53,7 @@ sun.data.energy = 2.6
 sun.data.color = (1.0, 0.9, 0.8)
 sun.rotation_euler = (math.radians(55), 0, math.radians(-30))
 sc.frame_set(1)
-T.SAT = 0.75
+T.SAT = 1.2
 T.toonify(sc, samples=6)
 T.ink([o for o in bpy.data.objects if o.type == "MESH" and o.name not in ("Wall", "Floor", "Window")
        and not any(k in o.name.lower() for k in ("high-poly", "lash", "brow", "teeth", "tongue"))], 0.004)

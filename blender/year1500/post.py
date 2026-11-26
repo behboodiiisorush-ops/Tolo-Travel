@@ -7,15 +7,14 @@ import os, shutil, subprocess, sys
 from PIL import Image, ImageDraw, ImageFont, ImageEnhance, ImageFilter
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from captions import LINES, NAMES, END, QUESTION, TITLE, FLASHBACK  # noqa: E402
+from captions import LINES, NAMES, END, QUESTION, TITLE, FLASHBACK, WAKE  # noqa: E402
 FONT = os.path.join(HERE, "..", "fonts", "Vazirmatn-FD-ExtraBold.ttf")
 FPS, W, H = 24, 1080, 1920
 CARD = 4.0
 FB0, FB1 = FLASHBACK
-WAKE = 22.0
 SRC = os.path.join(HERE, "frames")
 TMP, OUT = os.path.join(HERE, "post_tmp"), os.path.join(HERE, "out")
-COL = {"me": (150, 200, 255), "mom": (255, 150, 170), "kian": (255, 230, 90)}
+COL = {"me": (60, 160, 80), "mom": (150, 40, 80), "kian": (30, 110, 200)}   # name pills, like «واگن آخر»
 
 
 def font(s):
@@ -35,20 +34,28 @@ def wrap(d, text, f, maxw):
     return lines
 
 
-def caption(img, who, text):
+def pill(d, cx, cy, text, color, size=44):
+    f = font(size)
+    l, t, r, b = d.textbbox((cx, cy), text, font=f, anchor="mm", direction="rtl", language="fa")
+    px, py = 30, 14
+    d.rounded_rectangle((l - px, t - py, r + px, b + py), radius=(b - t) // 2 + py, fill=color, outline=(15, 15, 15),
+                        width=5)
+    d.text((cx, cy), text, font=f, fill=(255, 255, 255), anchor="mm", direction="rtl", language="fa")
+
+
+def caption(img, who, text, k=1.0):
     d = ImageDraw.Draw(img)
-    f, fs = font(72), font(44)
+    f = font(int(80 * (0.85 + 0.15 * k)))
     lines = wrap(d, text, f, W - 140)
-    y = 1400 - 45 * (len(lines) - 1)
-    d.text((W // 2, y - 80), NAMES[who], font=fs, fill=COL[who], anchor="mm", direction="rtl", language="fa",
-           stroke_width=6, stroke_fill=(0, 0, 0))
-    for k, ln in enumerate(lines):
-        d.text((W // 2, y + k * 90), ln, font=f, fill=(255, 255, 255), anchor="mm", direction="rtl", language="fa",
-               stroke_width=9, stroke_fill=(0, 0, 0))
+    y = int(H * 0.6) - 45 * (len(lines) - 1)
+    pill(d, W // 2, y - 105, NAMES[who], COL[who])
+    for j, ln in enumerate(lines):
+        d.text((W // 2, y + j * 95), ln, font=f, fill=(255, 255, 255), anchor="mm", direction="rtl", language="fa",
+               stroke_width=9, stroke_fill=(15, 15, 15))
 
 
 def title(img, t):
-    a = min(1.0, (t - 0.6) / 0.8, (5.8 - t) / 0.6)
+    a = min(1.0, (t - 0.6) / 0.8, (6.6 - t) / 0.6)
     if a <= 0:
         return img
     ov = Image.new("RGBA", img.size, (0, 0, 0, 0))
@@ -66,6 +73,27 @@ def grade_flashback(img):
     img = Image.merge("RGB", (r.point(lambda v: min(255, int(v * 1.06 + 6))), g, b.point(lambda v: int(v * 0.92))))
     glow = img.filter(ImageFilter.GaussianBlur(18))
     return Image.blend(img, glow, 0.18)
+
+
+def eyelids(img, u):
+    """Opening eyes: black lids from top and bottom part, close once, open again."""
+    if u < 0.9:
+        o = u / 0.9
+    elif u < 1.3:
+        o = 1 - (u - 0.9) / 0.4 * 0.8
+    else:
+        o = min(1.0, 0.2 + (u - 1.3) / 0.8 * 0.8)
+    o = o * o * (3 - 2 * o)
+    gap = int(H / 2 * o)
+    m = Image.new("L", (W, H), 0)
+    ImageDraw.Draw(m).ellipse((-W * 0.3, H / 2 - gap * 1.25, W * 1.3, H / 2 + gap * 1.25), fill=255)
+    m = m.filter(ImageFilter.GaussianBlur(40))
+    blur = img.filter(ImageFilter.GaussianBlur(int(14 * (1 - o))))
+    return Image.composite(blur, Image.new("RGB", (W, H)), m)
+
+
+def badge(img):
+    pill(ImageDraw.Draw(img), W - 150, 150, TITLE, (200, 40, 40), 46)
 
 
 def card(t):
@@ -101,17 +129,35 @@ def main():
     shutil.rmtree(TMP, ignore_errors=True)
     os.makedirs(TMP)
     os.makedirs(OUT, exist_ok=True)
+    # fisheye-style barrel distortion, then zoom in to hide the bent borders (as in «واگن آخر»); the black gap
+    # between the fall and waking up has no frames: fill it with copies so the numbering stays continuous
+    n_pic = int(END * FPS)
+    fill = os.path.join(TMP, "fill")
+    os.makedirs(fill)
+    last = None
+    for f in range(1, n_pic + 1):
+        p = os.path.join(SRC, f"f_{f:04d}.png")
+        if os.path.exists(p):
+            last = p
+        if last:
+            os.symlink(os.path.abspath(last), os.path.join(fill, f"f_{f:04d}.png"))
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-framerate", str(FPS), "-start_number", "1",
+                    "-i", os.path.join(fill, "f_%04d.png"), "-frames:v", str(n_pic),
+                    "-vf", f"lenscorrection=k1=0.22:k2=0.05:i=bilinear,scale={int(W * 1.2)}:{int(H * 1.2)}:flags=lanczos,"
+                           f"crop={W}:{H}", "-start_number", "1", os.path.join(TMP, "d_%04d.png")], check=True)
+    shutil.rmtree(fill)
     vig = vignette()
     black = Image.new("RGB", (W, H))
-    n_pic = int(END * FPS)
     total = n_pic + int(CARD * FPS)
     for i in range(total):
         t = i / FPS
         f = i + 1
         if i < n_pic:
             p = os.path.join(SRC, f"f_{f:04d}.png")
-            if os.path.exists(p) and not (FB1 <= t < WAKE):
-                img = Image.open(p).convert("RGB").resize((W, H), Image.LANCZOS)
+            q = os.path.join(TMP, f"d_{f:04d}.png")
+            if os.path.exists(q) and not (FB1 <= t < WAKE):
+                img = Image.open(q).convert("RGB")
+                os.remove(q)
             else:
                 img = black.copy()
             if FB0 <= t < FB1:
@@ -119,14 +165,16 @@ def main():
                 if t > FB1 - 0.7:                                   # white flash, then black
                     u = (t - (FB1 - 0.7)) / 0.7
                     img = Image.blend(img, Image.new("RGB", (W, H), (255, 255, 255)), min(1.0, u * 1.6))
-            if WAKE <= t < WAKE + 1.2:                              # eyes opening
-                img = Image.blend(black, img, (t - WAKE) / 1.2)
+            if WAKE <= t < WAKE + 2.4:                              # my eyes open: lids, a blink
+                img = eyelids(img, t - WAKE)
             if FB0 - 0.15 <= t < FB0 + 0.25:                        # a soft white dip into the memory
                 u = 1 - abs(t - (FB0 + 0.05)) / 0.2
                 img = Image.blend(img, Image.new("RGB", (W, H), (255, 250, 240)), max(0.0, u) * 0.8)
             img = Image.composite(img, Image.blend(black, img, 0.55), vig)
-            if t < 6.2:
+            if t < 6.8:
                 img = title(img, t)
+            elif t > 7.2:
+                badge(img)
             fade = min(1.0, max(0.0, (END - t) / 0.8))
             if fade < 1:
                 img = Image.blend(black, img, fade)
@@ -136,7 +184,7 @@ def main():
         if i < n_pic:
             for a, b, who, text in LINES:
                 if a <= t <= b:
-                    caption(img, who, text)
+                    caption(img, who, text, min(1.0, (t - a) / 0.15))
         img.save(os.path.join(TMP, f"c_{i:04d}.jpg"), quality=94)
     encode(os.path.join(TMP, "c_%04d.jpg"), os.path.join(OUT, "year1500_captions.mp4"))
     encode(os.path.join(TMP, "n_%04d.jpg"), os.path.join(OUT, "year1500_clean.mp4"))

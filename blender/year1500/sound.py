@@ -5,12 +5,11 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "school_pov"))
 sys.path.insert(0, HERE)
 import sfx as S                                     # noqa: E402
-from captions import END, FLASHBACK                 # noqa: E402
+from captions import END, FLASHBACK, FALL, WAKE     # noqa: E402
 import screen_frames as SF                          # noqa: E402
 
 TOTAL = END + 4.0
 FB0, FB1 = FLASHBACK
-FALL = 17.0
 
 
 def span(t0, t1):
@@ -92,14 +91,14 @@ def build():
     S.heartbeat(FALL, FB1, 130, 0.4)
     S.put(S.tone(3000, 2.5, 0.08) * S.env(int(2.5 * S.SR), 0.05, 1.5), FB1 - 0.3, 0.5)   # ringing in the ears
     # waking up
-    S.put(S.tone(2800, 3.0, 0.05) * S.env(int(3.0 * S.SR), 0.1, 2.5), 22.0, 0.4)
-    S.put(S.scrape(0.5), 23.4, 0.25, 0.3)
-    S.put(tinkle(0.5), 23.8, 0.4, 0.3)
-    S.put(S.scrape(0.5), 24.8, 0.25, -0.3)
-    S.put(tinkle(0.4), 25.1, 0.35, -0.3)
+    S.put(S.tone(2800, 3.0, 0.05) * S.env(int(3.0 * S.SR), 0.1, 2.5), WAKE, 0.4)
+    S.put(S.scrape(0.5), WAKE + 2.6, 0.25, 0.3)              # Kian gets up from the glass
+    S.put(tinkle(0.5), WAKE + 3.0, 0.4, 0.3)
+    S.put(S.scrape(0.5), WAKE + 4.6, 0.25, -0.2)             # I sit up
+    S.put(tinkle(0.4), WAKE + 4.9, 0.35, -0.2)
     # Kian shouts; the echo comes back from the towers (handled by the voice; here: a flock of birds flies off)
     for k in range(10):
-        S.put(S.band(S.noise(int(0.08 * S.SR)), 1500, 4000) * 0.4, 30.0 + k * 0.09, 0.3, S.rng.uniform(-0.8, 0.8))
+        S.put(S.band(S.noise(int(0.08 * S.SR)), 1500, 4000) * 0.4, 28.0 + k * 0.09, 0.3, S.rng.uniform(-0.8, 0.8))
     # the screen
     f_step = 1.0 / 24
     k = SF.ON0
@@ -111,11 +110,12 @@ def build():
             S.put(static(f_step * 1.2, 0.06), k, 0.6, 0.15)
         k += f_step
     S.put(S.tone(60, SF.PIC1 - SF.PIC0, 0.12) * S.env(int((SF.PIC1 - SF.PIC0) * S.SR), 0.3, 0.3), SF.PIC0, 0.4)
-    S.heartbeat(45.5, 51.0, 66, 0.22)                 # Kian's tear
+    S.footsteps(31.0, 34.4, 1.7, 0.25, 0.0)            # we walk towards the screen
+    S.heartbeat(43.5, 49.0, 66, 0.22)                 # Kian's tear
     # walking off
-    S.footsteps(56.2, END, 1.75, 0.3, -0.1)
-    S.footsteps(56.5, END, 1.85, 0.22, 0.15)
-    S.put(S.tone(110, TOTAL - 60, 0.08) * S.env(int((TOTAL - 60) * S.SR), 4.0, 3.0), 60.0, 0.6)
+    S.footsteps(54.2, END, 1.75, 0.3, -0.1)
+    S.footsteps(54.5, END, 1.85, 0.22, 0.15)
+    S.put(S.tone(110, TOTAL - 58, 0.08) * S.env(int((TOTAL - 58) * S.SR), 4.0, 3.0), 58.0, 0.6)
     end = int(TOTAL * S.SR)
     out = np.stack([S.L[:end], S.R[:end]], axis=1)
     out /= max(1e-9, np.max(np.abs(out))) / 0.89

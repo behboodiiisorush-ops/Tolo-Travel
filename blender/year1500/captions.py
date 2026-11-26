@@ -1,33 +1,35 @@
 """«سال ۱۵۰۰» — every spoken line (seconds). Single source for captions, lip sync and the voice script.
-"me" lines are the narrator (voice-over, no lips) except where he speaks on screen (ON_SCREEN)."""
+The film is seen through my eyes (POV, like «واگن آخر»): 'me' is never seen talking, his lines are his voice."""
 # (start, end, who, text)
 LINES = [
-    (1.0, 5.4, "me", "سال ۱۵۰۰. شهری که همه‌چیزش نو بود..."),
-    (6.2, 9.2, "me", "...حالا فقط ما دو نفر توش مونده بودیم."),
-    (10.2, 13.6, "me", "قبلاً همه‌چی خوب بود. مامان بود، کیان بود، شهر پر از آدم بود."),
-    (14.2, 16.2, "mom", "زود باشین بچه‌ها، دیر می‌رسیم!"),
-    (17.4, 19.8, "me", "یه‌هو... همه‌چی به هم ریخت."),
-    (25.4, 27.4, "kian", "داداش؟... ما کجاییم؟"),
-    (29.0, 31.8, "kian", "مامان!... کسی اینجا نیست؟!"),
-    (38.0, 43.6, "mom", "کیان جان، هر جا باشی مامان پیشته. قول بده هیچ‌وقت نترسی."),
-    (46.4, 50.4, "kian", "مامان دیگه نیست... هیچ‌کس نیست."),
-    (51.6, 55.6, "me", "پس خودمون می‌گردیم. شاید یه جایی هنوز زندگی باشه."),
-    (58.0, 63.4, "me", "همه رفته بودن. حالا نوبت ما بود که دنبال سرنوشت خودمون بریم."),
+    (0.8, 6.6, "me", "سال ۱۵۰۰. شهری که همه‌چیزش نو بود... حالا فقط ما دو نفر توش مونده بودیم."),
+    (7.6, 11.0, "me", "قبلاً همه‌چی خوب بود. مامان بود، کیان بود، شهر پر از آدم بود."),
+    (12.0, 14.0, "mom", "زود باشین بچه‌ها، دیر می‌رسیم!"),
+    (15.4, 17.8, "me", "یه‌هو... همه‌چی به هم ریخت."),
+    (23.2, 25.2, "kian", "داداش؟... ما کجاییم؟"),
+    (27.0, 29.8, "kian", "مامان!... کسی اینجا نیست؟!"),
+    (36.0, 41.6, "mom", "کیان جان، هر جا باشی مامان پیشته. قول بده هیچ‌وقت نترسی."),
+    (44.4, 48.4, "kian", "مامان دیگه نیست... هیچ‌کس نیست."),
+    (49.6, 53.6, "me", "پس خودمون می‌گردیم. شاید یه جایی هنوز زندگی باشه."),
+    (56.0, 61.4, "me", "همه رفته بودن. حالا نوبت ما بود که دنبال سرنوشت خودمون بریم."),
 ]
-ON_SCREEN = {(51.6, 55.6)}          # 'me' lines said on camera (lips move); the others are voice-over
 NAMES = {"me": "من", "mom": "مامان", "kian": "کیان"}
 END = 72.0
-FLASHBACK = (9.5, 20.6)             # warm, clean, crowded; then the fall
+FLASHBACK = (7.0, 18.6)             # warm, clean, crowded; the fall starts at FALL
+FALL = 15.0
+WAKE = 20.0                         # black between FLASHBACK end and WAKE
 TITLE = "سال ۱۵۰۰"
 QUESTION = "اگه توی این شهر به این بزرگی فقط تو مونده بودی، اول دنبال چی می‌گشتی؟"
+SCREEN = dict(on=31.0, pic0=35.0, pic1=43.0, off=44.6)
 
 
 def speaking(who, t):
+    """Lip movement: only for people we see talking (not me, not mom's voice from the screen)."""
+    if who == "me":
+        return False
     for a, b, w, _ in LINES:
         if w == who and a <= t <= b:
-            if who == "me" and (a, b) not in ON_SCREEN:
-                return False
-            if who == "mom" and a > 30:          # mom's second line comes from the screen
+            if who == "mom" and a > 30:
                 return False
             return True
     return False

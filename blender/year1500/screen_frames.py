@@ -7,11 +7,10 @@ brightness(t) is also used by scene.py for the screen's glow on the people.   py
 import math, os, random, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from captions import END, FLASHBACK  # noqa: E402
+from captions import END, FLASHBACK, FALL, SCREEN  # noqa: E402
 FPS, W, H = 24, 480, 270
 FB0, FB1 = FLASHBACK
-FALL = 17.0
-ON0, PIC0, PIC1, OFF = 33.0, 37.0, 45.0, 46.6
+ON0, PIC0, PIC1, OFF = SCREEN["on"], SCREEN["pic0"], SCREEN["pic1"], SCREEN["off"]
 
 
 def _r(t, salt=0):
