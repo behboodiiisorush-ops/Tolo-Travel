@@ -38,3 +38,8 @@ blender/sleeve/test/
 blender/sleeve/post_tmp/
 blender/sleeve/*.blend
 blender/sleeve/*.log
+blender/storeroom/frames/
+blender/storeroom/test/
+blender/storeroom/post_tmp/
+blender/storeroom/*.blend
+blender/storeroom/*.log
