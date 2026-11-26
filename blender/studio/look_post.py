@@ -13,7 +13,7 @@ def noir(img):
     r, g, b = a[..., 0], a[..., 1], a[..., 2]
     lum = 0.3 * r + 0.59 * g + 0.11 * b
     lum = np.clip((lum - 0.18) * 1.9 + 0.1, 0, 1) ** 1.15          # hard contrast
-    red = np.clip((r - np.maximum(g, b)) * 4.0 - 0.35, 0, 1)        # how "red" a pixel is
+    red = np.clip((r - 1.6 * g - 0.6 * b) * 4.0 - 0.2, 0, 1)        # only deep reds (blood), not orange
     gray = np.stack([lum] * 3, -1)
     redc = np.stack([np.clip(r * 1.3, 0, 1), g * 0.25, b * 0.25], -1)
     out = gray * (1 - red[..., None]) + redc * red[..., None]
