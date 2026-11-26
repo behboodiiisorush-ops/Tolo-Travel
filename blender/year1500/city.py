@@ -67,6 +67,13 @@ def cube(bm, c, size, rot=None):
     bmesh.ops.create_cube(bm, size=1, matrix=m @ Matrix.Diagonal((*size, 1)))
 
 
+def quad(bm, c, sx, sy, rot):
+    """One-sided quad (normal = rot's +Z), seen only from that side with backface culling."""
+    vs = [bm.verts.new(c + rot.to_3x3() @ Vector((dx * sx / 2, dy * sy / 2, 0)))
+          for dx, dy in ((-1, -1), (1, -1), (1, 1), (-1, 1))]
+    bm.faces.new(vs)
+
+
 def blob(bm, c, axis, r, thick=0.06):
     """Irregular flat leaf-blob (painted-ivy look) facing along axis 'x' or 'y'."""
     res = bmesh.ops.create_cone(bm, cap_ends=True, segments=11, radius1=1, radius2=1, depth=1)
@@ -172,6 +179,7 @@ def vault(x0, x1, cy, radius, z0):
     keep = {k: bmesh.new() for k in ("pane", "pane2", "pane3")}       # panes that survive
     lost = {k: bmesh.new() for k in ("pane", "pane2", "pane3")}       # panes that break in the fall
     shards = bmesh.new()
+    shell_keep, shell_lost = bmesh.new(), bmesh.new()   # dark backing between the panes, cell by cell
     for i in range(nx):
         x = x0 + (i + 0.5) * (x1 - x0) / nx
         # broken glass comes in patches (holes), more towards the far end
@@ -184,6 +192,8 @@ def vault(x0, x1, cy, radius, z0):
             key = "pane3" if rr < 0.06 else "pane2" if rr < 0.17 else "pane"
             hole = (math.sin(x * 0.45 + 1.3) * math.cos(a * 3.1 + x * 0.2) > 0.35) or R.random() < 0.08
             cube((lost if hole else keep)[key], c, ((x1 - x0) / nx * 0.86, math.pi * radius / ny * 0.86, 0.015), q)
+            quad(shell_lost if hole else shell_keep, Vector((x, cy, z0)) + n * (radius - 0.01),
+                 (x1 - x0) / nx * 1.02, math.pi * radius / ny * 1.02, q)
             if hole and R.random() < 0.5:                # its pieces on the floor below
                 p = Vector((x + R.uniform(-0.6, 0.6), c.y * 0.9 + R.uniform(-0.6, 0.6), 0.05))
                 if abs(p.y - cy) < radius - 0.6:
@@ -191,11 +201,8 @@ def vault(x0, x1, cy, radius, z0):
                         cube(shards, p + Vector((R.uniform(-0.3, 0.3), R.uniform(-0.3, 0.3), 0)),
                              (R.uniform(0.08, 0.3), R.uniform(0.06, 0.25), 0.012),
                              Matrix.Rotation(R.uniform(0, 6.3), 4, "Z") @ Matrix.Rotation(R.uniform(-0.2, 0.2), 4, "X"))
-    shell = bmesh.new()
-    bmesh.ops.create_cone(shell, cap_ends=False, segments=48, radius1=radius, radius2=radius, depth=x1 - x0,
-                          matrix=Matrix.Translation(((x0 + x1) / 2, cy, z0)) @ Matrix.Rotation(math.radians(90), 4, "Y"))
-    bmesh.ops.delete(shell, geom=[v for v in shell.verts if v.co.z < z0 - 0.01], context="VERTS")
-    link("Vault bars", shell, [M["bars"]])
+    link("Vault bars", shell_keep, [M["bars"]])
+    link("Vault bars lost", shell_lost, [M["bars"]], INTACT)
     M["bars"].use_backface_culling = True
     for key in keep:
         link("Vault " + key, keep[key], [M[key]])
