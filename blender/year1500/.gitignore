@@ -1,0 +1,6 @@
+test/
+frames/
+post_tmp/
+screen/
+*.blend
+*.blend1

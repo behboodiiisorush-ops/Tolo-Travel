@@ -1,0 +1,16 @@
+"""Render frames of year1500.blend: ../cast/bpy.sh render.py a-b  -> frames/f_XXXX.png (skips frames on disk)."""
+import bpy, sys, os
+HERE = os.path.dirname(os.path.abspath(__file__))
+bpy.ops.wm.open_mainfile(filepath=os.path.join(HERE, "year1500.blend"))
+sc = bpy.context.scene
+a, b = [int(v) for v in sys.argv[-1].split("-")]
+os.makedirs(os.path.join(HERE, "frames"), exist_ok=True)
+for f in range(a, b + 1):
+    out = os.path.join(HERE, "frames", f"f_{f:04d}.png")
+    if os.path.exists(out) and os.path.getsize(out) > 0:
+        continue
+    if 20.6 * 24 < f <= 22.0 * 24:          # the black between the fall and waking up (post draws it)
+        continue
+    sc.frame_set(f)
+    sc.render.filepath = out
+    bpy.ops.render.render(write_still=True)
