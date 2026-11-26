@@ -162,7 +162,14 @@ def build():
     T = KEY_OF
     brake0 = T["rahim2"][0] - 0.3
     stop = T["rahim2"][0] + 2.2
-    v = np.interp(t, [0, T["n2"][0] - 1, T["n2"][0] + 1, brake0, stop, END + 10], [8, 8, 5, 5, 0, 0])
+    chase0 = T["rahim4"][0] + 0.4
+    v = np.interp(t, [0, T["n2"][0] - 1, T["n2"][0] + 1, brake0, stop, chase0, chase0 + 4.1, END + 10],
+                  [8, 8, 5, 5, 0, 0, 7.5, 7.5])
+    t_out0 = T["jalal2"][1] + 0.8
+    seat_t = t_out0 + 3.0
+    push0, push1 = seat_t + 0.5, T["jalal3"][0] + 0.4
+    gone_t = T["lena4"][0] + 1.0
+    heli0 = T["lena5"][0] - 1.6
     # the train: rumble and wheel clacks while it runs
     put(norm(band(noise(N), 25, 200)) * (0.04 + 0.02 * v) * (v > 0.05), 0, 1.0)
     put(clack_track(np.maximum(v, 0)) * np.clip(v / 8, 0, 1) * 0.35, 0, 1.0, 0.2)
@@ -189,6 +196,26 @@ def build():
     for key in ("rahim1", "rahim3"):
         a, b = T[key]
         put(band(noise(int(0.12 * SR)), 1000, 5000), a - 0.35, 0.15, 0.4)
+    # the tractor: a starter whine, then a chugging diesel; the bus scraping over the rails
+    n = int(0.8 * SR)
+    put(np.sin(2 * np.pi * np.cumsum(np.linspace(200, 600, n)) / SR) * env(n, 0.05, 0.2), seat_t - 0.6, 0.06, -0.6)
+    n = int((gone_t + 6 - seat_t) * SR)
+    chug = (np.sin(2 * np.pi * 9 * tt(n)) > 0.3) * band(noise(n), 40, 400) + np.sin(2 * np.pi * 55 * tt(n)) * 0.4
+    put(norm(chug) * env(n, 0.2, 2.0), seat_t, 0.14, -0.7)
+    n = int((push1 - push0) * SR)
+    scr = np.sin(2 * np.pi * np.cumsum(np.linspace(380, 240, n)) / SR) * 0.5 + band(noise(n), 300, 3000)
+    put(norm(scr) * env(n, 0.2, 0.3), push0, 0.2, -0.5)
+    put(norm(clunk), push1 - 0.1, 0.5, -0.5)
+    # the swarm closing on Jalal, then the crowd running after the train
+    for k in range(8):
+        put(growl(1.2, rng.uniform(0.9, 1.3)), T["jalal3"][0] - 1.0 + k * 0.45, 0.25, rng.uniform(-0.9, -0.4))
+    footsteps(T["lena4"][0] - 0.5, chase0 + 8, 7.0, 0.12, -0.6)
+    for k in range(8):
+        put(growl(1.3, rng.uniform(0.9, 1.2)), chase0 + k * 0.9, 0.2 * (1 - k / 10), -0.6)
+    # the helicopter: rotor chop growing from far away
+    n = int((END - heli0 + 8) * SR)
+    chop = band(noise(n), 50, 500) * (0.5 + 0.5 * np.sign(np.sin(2 * np.pi * 5.5 * tt(n))))
+    put(norm(chop) * np.linspace(0.02, 0.2, n) * env(n, 1.0, 1.0), heli0, 1.0, -0.4)
     # heartbeat from the stop to the end; tension pad; the card: only wind
     heartbeat(stop, END, 112, 0.35)
     pad = sum(np.sin(2 * np.pi * f * t + k) for k, f in enumerate((55, 65.4, 82.4, 110)))
