@@ -567,10 +567,10 @@ for j in range(14):
         e_ = sph((xx + dx, yy, zz), 0.045, "eyes", "Eyes in the trees")
         EYES.append((e_, r.uniform(0, 1.5)))
 # far headlights at the end of the road (the unknown car), on at T_LIGHTS
-XL = travelled(END) + 70
+XL = travelled(END) + 45
 FAR = []
 for dy in (-0.8, 0.8):
-    FAR.append(sph((XL, dy - 0.5, 0.8), 0.18, "far_light", "Far headlight"))
+    FAR.append(sph((XL, dy - 0.5, 0.8), 0.28, "far_light", "Far headlight"))
 l_ = bpy.data.lights.new("Far lights", "SPOT")
 l_.energy, l_.spot_size, l_.color = 30000, 0.9, (1.0, 0.97, 0.85)
 far_lamp = bpy.data.objects.new("Far lights", l_)
@@ -752,7 +752,7 @@ for fc in fcurves_of(BUS):
 # the bus doors: open when it stops, shut after boarding
 DOOR_OPEN0, DOOR_SHUT = T_ARRIVE1 + 0.3, T_GO - 0.8
 for piv, j in DOOR_LEAF:
-    sgn = 1 if j == 0 else -1
+    sgn = -1 if j == 0 else 1          # the leaves swing outwards, clear of the seats
     for t, a in ((0, 0.0), (DOOR_OPEN0, 0.0), (DOOR_OPEN0 + 0.6, 1.45), (DOOR_SHUT, 1.45), (DOOR_SHUT + 0.6, 0.0)):
         piv.rotation_euler = (0, 0, sgn * a)
         piv.keyframe_insert("rotation_euler", index=2, frame=fr(t))
@@ -1324,11 +1324,11 @@ shot(A("lena2") - 0.4, A("guard2") - 0.2, (0.9, -8.2, 1.0), H("lena", A("lena2")
 shot(A("guard2") - 0.2, A("resc2") - 0.2, (1.3, -8.3, 1.5), H("guard", A("guard2") + 0.8), 28,
      c1=(1.45, -8.1, 1.5))
 shot(A("resc2") - 0.2, A("mom2") - 0.1, (7.0, -4.2, 0.7), (-14, 0.5, 1.8), 24, a1=(-2.0, 0.0, 1.6))
-shot(A("mom2") - 0.1, A("guard3") - 0.2, (0.9, -8.9, 1.5), mid(H("mom", A("mom2")), H("guard", A("mom2"))), 26)
+shot(A("mom2") - 0.1, A("guard3") - 0.2, (3.9, -8.7, 1.5), mid(H("mom", A("mom2")), H("guard", A("mom2"))), 28)
 shot(A("guard3") - 0.2, A("me2") - 0.2, (2.95, -7.45, 0.95), (2.0, -5.7, 2.2), 24)
 shot(A("me2") - 0.2, T_OUT, (3.7, -7.9, 1.6), (2.2, -5.6, 1.25), 24)
 shot(T_OUT, A("resc3") - 0.2, (DOOR_X + 9.0, 3.6, 1.8), (DOOR_X, -5.2, 1.2), 22, c1=(DOOR_X + 8.0, 3.2, 1.7))
-shot(A("resc3") - 0.2, T_IN, (BUS_DOOR_OUT[0] + 4.5, -5.8, 1.6), H("rescuer", A("resc3")), 26,
+shot(A("resc3") - 0.2, T_IN, (BUS_DOOR_OUT[0] + 5.0, -4.85, 1.6), H("rescuer", A("resc3")), 26,
      a1=add(BUS_DOOR_OUT, (-0.3, 0, 1.2)))
 shot(T_IN, A("lena3") - 0.2, (OLD_ST[0] + 1.3, YL - 0.35, FL + 1.65), H("oldman", T_IN + 1.0), 26,
      a1=H("oldman", A("lena3") - 1))
@@ -1353,7 +1353,7 @@ shot(A("resc6"), A("me5") - 0.2, WB(BUS_X1 - 0.45, AISLE_Y - 0.6, FL + 1.45), H(
 shot(A("me5") - 0.2, T_BANG, WB(-0.6, YR - 2.3, 0.45), WB(-3.4, YR - 0.4, 0.55), 22)
 shot(T_BANG, A("mom5") - 0.2, WB(ROWS[5], AISLE_Y - 0.1, FL + 1.75), WB(BUS_X1, AISLE_Y, FL + 1.0), 22)
 shot(A("mom5") - 0.2, T_STOP + 0.3, (SG[0] + 1.2, YL - 0.5, FL + 1.9), mid(H("mom", A("mom5")), H("lena", A("mom5"))), 24)
-shot(T_STOP + 0.3, A("radio2") - 0.3, WB(10, 10, 6.5), WB(0, BY, 0.8), 20, c1=WB(9, 9.5, 5.8))
+shot(T_STOP + 0.3, A("radio2") - 0.3, WB(17, 2.0, 5.5), WB(0, BY, 0.8), 22, c1=WB(15, 1.6, 4.6))
 shot(A("radio2") - 0.3, A("me6") - 0.2, (ME_AISLE[0] - 0.7, AISLE_Y - 0.3, FL + 1.55), H("me", A("radio2")), 40)
 shot(A("me6") - 0.2, A("n7") - 0.2, (ME_AISLE[0] - 1.0, AISLE_Y - 0.05, FL + 1.55), H("me", A("me6")), 28)
 shot(A("n7") - 0.2, END, WB(BUS_X1 - 2.3, AISLE_Y + 0.35, FL + 1.5), WB(BUS_X1 + 60, BY - 0.5, 1.0), 30,
