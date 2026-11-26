@@ -18,8 +18,14 @@
 ## Rules the user set
 - No hijab on anyone. No flags, emblems, logos or anything that ties a shot to a real place.
 - The story never depends on the audience; a film may end with one question to the viewer.
-- The user records the voices (ElevenLabs); deliver a version without sound, and keep `talking=True`
-  lip movement on the lines in `captions.py` so their voices fit.
+- **Voices and sound effects always come from ElevenLabs** (the connected ElevenLabs MCP tools, `mcp__ElevenLabs__*`):
+  Claude generates every spoken line (one fixed voice per character — designed once with `creative_design_voice` +
+  `creative_save_designed_voice` and reused across films, never a voice_id from memory) and every sound effect
+  (no synthesised numpy effects any more). Keep `talking=True` lip movement on the lines in `captions.py` and fit
+  captions + lips to the generated lengths. Also keep a version without sound. If the ElevenLabs tools are not
+  available in a chat, say so to the user instead of falling back silently.
+- **Credit in every film:** every film shows the text «ساخته شده توسط بلندر» and the channel name «agetobudi»
+  (Vazirmatn; e.g. a short opening/closing card plus a small corner credit), in every delivered version.
 - Voice scripts: give each line in its own copyable block, per speaker. Put the delivery (how to say it)
   inside the line as ElevenLabs v3 audio tags in square brackets, in English, e.g. `[whispers]`, `[shouting]`,
   `[scared]`, `[sighs]` — ElevenLabs performs these and does not read them aloud. Never write the delivery
@@ -35,7 +41,7 @@
 - Its §0 is a permanent law from the user: quality and natural, realistic motion before speed. Every episode ships
   with a QC report; any important problem is fixed before delivery, even if the episode is late.
 - 12 episodes × ~5 min, 16:9 720p, every 2 days, the user publishes at 19:00 Berlin. For this series the user
-  connected ElevenLabs and asked Claude to generate the voices (one fixed designed voice per character).
+  connected ElevenLabs and asked Claude to generate the voices (one fixed designed voice per character) — now the rule for every film.
 - Long renders are always split across several chats (the user's wish): render one frame range here and start
   ~6 worker chats with create_session, each rendering its range (`chain.sh A B`, see `blender/bird/chain.sh`)
   with a keep-alive waiter and pushing only its frames to its own branch `claude/<film>-frames-a…f`;
