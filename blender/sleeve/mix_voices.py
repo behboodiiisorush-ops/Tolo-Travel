@@ -1,25 +1,25 @@
 """Put the user's ElevenLabs voices on «آستین».
 voices/all_lines_take1.mp3 holds every line back to back (one voice); CUTS says where each line is in it and
-where it goes in the film. Mum (behind the hall doors) and the kids are pitched up, mum is also muffled.
+where it goes in the film. Mum is muffled (behind the hall doors); Kian is pitched up a little.
     python3 mix_voices.py   -> out/sleeve_voices.mp4 (captions + voices + sound effects)
 """
 import os, subprocess
 HERE = os.path.dirname(os.path.abspath(__file__))
-SRC = os.path.join(HERE, "voices", "all_lines_take1.mp3")
+SRC = os.path.join(HERE, "voices", "all_lines_take2.mp3")
 OUT = os.path.join(HERE, "out")
 # (name, from, to in the take, start in the film, extra filter)
 CUTS = [
-    ("me_1", 0.00, 2.30, 0.8, "rubberband=pitch=1.08:formant=preserved"),
-    ("card", 2.75, 6.15, 76.9, "rubberband=pitch=1.08:formant=preserved"),
-    ("kazemi_2", 6.20, 8.55, 8.6, "highpass=f=250,lowpass=f=3400"),             # into the radio
-    ("kazemi_7", 8.80, 10.30, 35.6, ""),
-    ("kian_3", 10.40, 12.12, 12.9, "rubberband=pitch=1.3:formant=shifted"),
-    ("soldier_4", 12.12, 14.35, 16.0, ""),
-    ("soldier_8", 14.70, 16.60, 46.3, ""),
-    ("soldier_9", 16.85, 22.05, 48.7, ""),
-    ("mahsa_5", 22.15, 24.30, 24.3, "rubberband=pitch=1.45:formant=shifted"),
-    ("arian_6", 24.80, 26.88, 31.0, "rubberband=pitch=1.08:formant=preserved"),
-    ("mom_10", 26.88, 31.32, 67.8, "rubberband=pitch=1.42:formant=shifted,lowpass=f=2200,aecho=0.6:0.4:18:0.25"),
+    ("me_1", 0.00, 2.25, 0.8, ""),
+    ("card", 2.55, 5.98, 76.9, ""),
+    ("kazemi_2", 6.15, 8.60, 8.6, "highpass=f=250,lowpass=f=3400"),             # into the radio
+    ("kazemi_7", 8.95, 10.20, 35.6, ""),
+    ("kian_3", 10.35, 12.18, 12.9, "rubberband=pitch=1.25:formant=shifted"),
+    ("soldier_4", 12.18, 14.40, 16.0, ""),
+    ("soldier_8", 14.75, 16.55, 46.3, ""),
+    ("soldier_9", 16.70, 21.75, 48.7, ""),
+    ("mahsa_5", 21.95, 24.00, 24.3, ""),
+    ("arian_6", 24.10, 26.60, 31.0, ""),
+    ("mom_10", 26.60, 31.16, 67.8, "lowpass=f=2600,aecho=0.6:0.4:18:0.25"),      # behind the hall doors
 ]
 
 
