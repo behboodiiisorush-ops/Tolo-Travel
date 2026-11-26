@@ -208,9 +208,13 @@ for k, (hy, sgn) in enumerate(((HALL_Y0, 1), (HALL_Y1, -1))):
 for s in (HALL_Y0 - 0.05, HALL_Y1 + 0.05):
     box((0.0, s, 1.15), (0.24, 0.1, 2.3), "frame", "Hall door frame")
 box((0.0, (HALL_Y0 + HALL_Y1) / 2, 2.35), (0.24, HALL_Y1 - HALL_Y0 + 0.2, 0.1), "frame", "Hall door frame")
-# a chain through the push bars (they barricaded the hall)
+# a chain through the push bars (they barricaded the hall); CHAIN_RIG lets it jerk when Kian pulls at it
+CHAIN_AT = (0.12, (HALL_Y0 + HALL_Y1) / 2, 1.0)
+CHAIN_RIG = P.empty("Chain rig", CHAIN_AT)
 for j in range(9):
     l = P.sphere((0.12, (HALL_Y0 + HALL_Y1) / 2 - 0.4 + j * 0.1, 1.0), 0.025, M_["bar"], "Chain", scale=(1, 1.6, 0.7))
+    l.parent = CHAIN_RIG
+    l.matrix_parent_inverse = CHAIN_RIG.matrix_world.inverted()
     SET.append(l)
 # storeroom behind the back wall
 box(((STORE_X0 + STORE_X1) / 2, D + 2.2, 1.5), (2.6, 0.15, 3.0), "store", "Store back")
@@ -576,10 +580,33 @@ act("me", "nervously_look_around", 74.0, END, ME_BACK, face(ME_BACK, (6.0, 5.6))
 walk("mahsa", 20.5, 25.5, [SIT["mahsa"][:2], (10.6, 5.2), MAHSA_DOOR[:2]], end_face=face(MAHSA_DOOR, WINDOW))
 act("mahsa", "breathing_idle", 25.5, 37.0, MAHSA_DOOR, face(MAHSA_DOOR, WINDOW), loop=True)
 act("mahsa", "nervously_look_around", 37.0, END, MAHSA_DOOR, face(MAHSA_DOOR, HALL), loop=True, src_from=2.0)
-# ---- Kian: "mum?" -- straight to the chained hall doors
-walk("kian", 49.5, 55.0, [SIT["kian"][:2], (5.0, 4.4), KIAN_CHAIN[:2]], end_face=90)
+# ---- Kian: "mum?" -- straight to the chained hall doors; his hands must really be on the chain
+def hands_mid(who, t0, t1):
+    rig = CH[who].rig
+    ps = []
+    for k in range(8):
+        sc.frame_set(fr(t0 + (t1 - t0) * (k + 0.5) / 8))
+        ps.append((rig.matrix_world @ rig.pose.bones["hand_r"].head + rig.matrix_world @ rig.pose.bones["hand_l"].head) / 2)
+    return sum(ps, Vector()) / len(ps)
+
+
+for _ in range(2):                         # stand him where the clip's hands meet the chain
+    act("kian", "reloading", 55.0, 58.4, KIAN_CHAIN, 90, speed=1.0)
+    hm = hands_mid("kian", 55.3, 58.2)
+    KIAN_CHAIN = (KIAN_CHAIN[0] + CHAIN_AT[0] + 0.03 - hm.x, KIAN_CHAIN[1] + CHAIN_AT[1] - hm.y, 0)
 act("kian", "reloading", 55.0, 58.4, KIAN_CHAIN, 90, speed=1.0)          # pulls at the chain
-walk("kian", 58.4, 59.2, [KIAN_CHAIN[:2], (1.25, 4.75)], back=True)
+print("KIAN AT CHAIN", [round(v, 3) for v in KIAN_CHAIN], "hands", [round(v, 3) for v in hands_mid("kian", 55.3, 58.2)])
+walk("kian", 49.5, 55.0, [SIT["kian"][:2], (5.0, 4.4), KIAN_CHAIN[:2]], end_face=90)
+rc = random.Random(5)
+t = 55.0
+CHAIN_RIG.keyframe_insert("location", frame=fr(t))
+while t < 58.3:                            # the chain jerks with his pulls
+    t += rc.uniform(0.25, 0.45)
+    CHAIN_RIG.location = (CHAIN_AT[0] + rc.uniform(0.01, 0.035), CHAIN_AT[1] + rc.uniform(-0.03, 0.03), CHAIN_AT[2] + rc.uniform(-0.02, 0.02))
+    CHAIN_RIG.keyframe_insert("location", frame=fr(t))
+CHAIN_RIG.location = CHAIN_AT
+CHAIN_RIG.keyframe_insert("location", frame=fr(58.6))
+walk("kian", 58.4, 59.2, [None, (1.25, 4.75)], back=True)
 act("kian", "terrified", 59.2, END, (1.25, 4.75, 0), face((1.25, 4.75), HALL), src_from=2.0, speed=1.0)
 # ---- Arian wakes and pulls him back
 walk("arian", 55.5, 57.9, [SIT["arian"][:2], ARIAN_GRAB[:2]], end_face=face(ARIAN_GRAB, KIAN_CHAIN))
@@ -627,7 +654,7 @@ hs2 = P.box((TABLE[0] + 0.12, TABLE[1] - 0.05, 0.8), (0.06, 0.17, 0.04), M_["rad
 SHOTS = [
     (0.0, 5.0, (1.2, 0.45, 2.4), (1.5, 0.6, 2.3), (8.5, 5.6, 0.9), (8.7, 5.9, 1.0), 18),
     (5.0, 8.0, (11.3, 6.4, 1.45), (11.3, 7.0, 1.5), (11.3, 9.0, 1.35), (11.3, 9.0, 1.4), 30),
-    (8.0, 10.5, (5.05, 1.95, 1.0), (5.0, 2.05, 1.02), (4.95, 3.3, 1.0), (4.95, 3.3, 1.02), 34),
+    (8.0, 10.5, (5.15, 1.75, 0.85), (5.1, 1.85, 0.86), (4.95, 3.3, 1.02), (4.95, 3.3, 1.05), 30),
     (10.5, 16.0, (4.3, 1.6, 1.7), (7.6, 4.4, 1.7), (6.6, 4.2, 1.1), (11.0, 8.4, 1.3), 24),
     (16.0, 19.0, (9.5, 7.1, 1.5), (9.6, 7.2, 1.5), (11.2, 8.6, 1.45), (11.2, 8.6, 1.45), 28),
     (19.0, 23.5, (11.22, 7.75, 1.58), (11.26, 8.05, 1.6), (11.38, 9.4, 1.62), (11.38, 9.4, 1.62), 34),
@@ -635,15 +662,15 @@ SHOTS = [
     (27.6, 30.2, (11.55, 8.55, 1.5), (11.55, 8.5, 1.5), (11.85, 7.55, 1.45), (11.85, 7.55, 1.45), 34),
     (30.2, 37.0, (11.25, 7.55, 1.56), (11.28, 8.15, 1.6), (11.38, 9.45, 1.6), (11.38, 9.45, 1.62), 32),
     (37.0, 41.0, (11.45, 8.35, 1.62), (11.4, 8.3, 1.62), (0.0, 4.9, 1.2), (0.0, 4.9, 1.2), 30),
-    (41.0, 49.0, (3.6, 2.8, 1.45), (2.0, 3.9, 1.5), (0.0, 4.9, 1.2), (0.0, 4.9, 1.2), 24),
+    (41.0, 49.0, (2.9, 5.9, 1.45), (1.9, 5.3, 1.5), (0.0, 4.9, 1.2), (0.0, 4.9, 1.2), 24),
     (49.0, 53.0, (4.3, 1.3, 1.5), (4.0, 1.4, 1.5), (6.6, 3.9, 1.0), (3.4, 4.6, 1.1), 22),
     (53.0, 56.0, (11.24, 7.9, 1.58), (11.3, 8.2, 1.6), (11.38, 9.45, 1.6), (11.38, 9.45, 1.6), 30),
     (56.0, 59.2, (2.7, 2.5, 1.5), (2.6, 2.6, 1.5), (0.8, 4.7, 1.0), (0.9, 4.6, 1.05), 24),
-    (59.2, 62.5, (2.3, 3.3, 1.4), (2.25, 3.35, 1.4), (1.1, 4.55, 1.3), (1.1, 4.55, 1.3), 30),
+    (59.2, 62.5, (0.45, 5.75, 1.45), (0.5, 5.7, 1.45), (1.35, 4.4, 1.25), (1.35, 4.4, 1.25), 26),
     (62.5, 67.5, (4.6, 3.7, 1.6), (4.8, 3.9, 1.6), (7.2, 7.0, 1.2), (6.2, 6.0, 1.45), 26),
     (67.5, 70.0, (11.3, 6.4, 1.45), (11.3, 6.9, 1.5), (11.3, 9.0, 1.4), (11.3, 9.0, 1.42), 28),
     (70.0, 74.0, (3.2, 3.1, 1.45), (2.3, 3.7, 1.5), (0.0, 4.9, 1.2), (0.0, 4.9, 1.2), 24),
-    (74.0, END, (9.95, 6.85, 1.55), (10.0, 6.9, 1.55), (10.85, 7.55, 1.5), (10.85, 7.55, 1.5), 34),
+    (74.0, END, (9.55, 6.75, 1.45), (9.65, 6.8, 1.45), (10.85, 7.55, 1.35), (10.85, 7.55, 1.38), 30),
 ]
 cam = bpy.data.objects.new("Camera", bpy.data.cameras.new("Camera"))
 sc.collection.objects.link(cam)
@@ -717,7 +744,7 @@ try:
     sc.view_settings.look = "AgX - Punchy"
 except TypeError:
     sc.view_settings.view_transform = "Filmic"
-sc.view_settings.exposure = float(os.environ.get("EXPOSURE", "1.6"))
+sc.view_settings.exposure = float(os.environ.get("EXPOSURE", "1.15"))
 for o in bpy.data.objects:
     for md in o.modifiers:
         if md.type == "SUBSURF":
