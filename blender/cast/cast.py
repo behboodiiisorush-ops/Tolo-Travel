@@ -69,6 +69,28 @@ CAST = {
         hair="short04", hair_col=(0.08, 0.06, 0.05), brow="eyebrow006",
         clothes={"male_worksuit01": (0.25, 0.3, 0.18), "shoes03": (0.15, 0.13, 0.1),
                  "mrgreaterthan_m1_helmet": (0.28, 0.32, 0.2), "toigo_gloves_short": (0.06, 0.06, 0.06)}),
+    "lena": dict(
+        fa="لنا", role="Little girl, 8, the narrator's little sister in «واگن آخر» / «پناهگاه». Light-blue sweater, brown ponytail.",
+        gender=0.0, age=0.17, height=0.32, weight=0.45, muscle=0.3, skin="young_caucasian_female",
+        skin_tint=(0.95, 0.78, 0.64), hair="ponytail01", hair_col=(0.3, 0.16, 0.08), brow="eyebrow010",
+        clothes={"mindfront_knitted_sweater_02": (0.4, 0.68, 0.92), "toigo_harem_pants": (0.5, 0.25, 0.6),
+                 "toigo_ballet_flats": (0.92, 0.42, 0.6)}),
+    "guard": dict(
+        fa="نگهبان", role="Shelter guard, 45, orange work shirt, yellow hard hat (scene prop). Quietly affected by the fallout.",
+        gender=1.0, age=0.66, height=0.6, weight=0.6, muscle=0.6, skin="middleage_caucasian_male", skin_tint=WARM,
+        hair="short02", hair_col=(0.1, 0.07, 0.05), brow="eyebrow005",
+        clothes={"male_worksuit01": (0.92, 0.45, 0.08), "shoes03": (0.08, 0.08, 0.08)}),
+    "oldman": dict(
+        fa="پیرمرد", role="Old passenger on the rescue bus, 72, white hair, brown cardigan, glasses.",
+        gender=1.0, age=0.9, height=0.45, weight=0.45, muscle=0.35, skin="old_caucasian_male", skin_tint=WARM,
+        hair="short04", hair_set=(0.85, 0.85, 0.83), brow="eyebrow006",
+        clothes={"mindfront_cardigan_long_open_front": (0.45, 0.3, 0.18), "mindfront_male_trousers_1": (0.3, 0.3, 0.32),
+                 "shoes03": (0.2, 0.13, 0.08), "kwnet_at_optical_glasses": None}),
+    "rescuer": dict(
+        fa="امدادگر", role="Rescue-bus driver, 35, red jacket, black gloves, short beard look.",
+        gender=1.0, age=0.56, height=0.55, weight=0.5, muscle=0.6, skin="young_caucasian_male", skin_tint=WARM,
+        hair="short01", hair_col=(0.06, 0.05, 0.04), brow="eyebrow004",
+        clothes={"male_casualsuit04": (0.75, 0.12, 0.1), "shoes03": (0.1, 0.1, 0.1), "toigo_gloves_short": (0.05, 0.05, 0.05)}),
 }
 
 EXTRA_HAIR_M = ["short01", "short02", "short03", "short04", "o4saken_curly01", "elvs_short_side_do"]

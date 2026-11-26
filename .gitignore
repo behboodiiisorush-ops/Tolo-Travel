@@ -77,3 +77,9 @@ blender/sleeve/test/
 blender/sleeve/post_tmp/
 blender/sleeve/*.blend
 blender/sleeve/*.log
+blender/shelter3/frames/
+blender/shelter3/post_tmp/
+blender/shelter3/test/
+blender/shelter3/voices/fitted/
+blender/shelter3/*.blend
+blender/shelter3/*.blend1

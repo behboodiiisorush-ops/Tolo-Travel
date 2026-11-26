@@ -46,9 +46,9 @@ LINES = [
 ]
 NARRATION_KEYS = {"n1", "n2", "n3", "n4", "n5", "n6", "n7"}
 
-TIMES = {}
+TIMES, TAIL, TITLE = {}, 3.0, 2.6
 try:
-    from times import TIMES  # noqa: F401
+    from times import TIMES, TAIL, TITLE  # noqa: F401
 except ImportError:
     pass
 
@@ -57,6 +57,24 @@ NARRATION = {TIMES[k][0] for k in NARRATION_KEYS if k in TIMES}
 KEY_OF = {k: TIMES.get(k, (0, 0)) for k, _, _ in LINES}
 
 QUESTION = "اگه تو بودی...\nاز اتوبوس پیاده می‌شدی\nیا منتظر اون ماشین می‌موندی؟"
-END = max([e for s, e in TIMES.values()], default=180.0) + 1.5
+END = max([e for s, e in TIMES.values()], default=180.0) + TAIL
 CARD_SECONDS = 8
 NOTIFS = []
+
+CAST_KEY = {"Me": "me", "Mom": "mom", "Lena": "lena", "Guard": "guard", "Rescuer": "rescuer", "Old man": "oldman"}
+SPEAKERS = {"Me": ("من", (60, 160, 80)), "Mom": ("مامان", (150, 40, 80)), "Lena": ("لنا", (210, 50, 45)),
+            "Guard": ("نگهبان", (230, 120, 20)), "Rescuer": ("امدادگر", (200, 40, 40)),
+            "Old man": ("پیرمرد", (120, 90, 60)), "Radio": ("بی‌سیم", (40, 110, 160))}
+
+
+def at(key):
+    return KEY_OF[key][0]
+
+
+def end_of(key):
+    return KEY_OF[key][1]
+
+
+def speaking(cast_key, t):
+    return any(CAST_KEY.get(who) == cast_key and TIMES.get(k, (0, -1))[0] <= t <= TIMES.get(k, (0, -1))[1]
+               for k, who, _ in LINES)
