@@ -53,16 +53,22 @@ def build():
     S.put(hum(END, 100) * 0.03, 0.0, 1.0)                # the two tubes still on
     for t_ in (1.2, 1.65, 3.4, 3.85, 5.3, 5.72, 6.14, 6.56, 7.0, 7.42):   # tap, tap on the storeroom door
         S.put(S.knock(0.35), t_, 0.5, 0.3)
+    rw = np.random.default_rng(11)
+    for t_, d_ in ((0.2, 1.5), (2.0, 1.8), (4.4, 1.5), (6.2, 1.7), (8.3, 1.3), (10.0, 1.0), (11.4, 0.8)):   # Arian & Kian whisper
+        m = int(d_ * S.SR)
+        tt = np.arange(m) / S.SR
+        syl = np.clip(np.sin(2 * np.pi * rw.uniform(4.5, 6.5) * tt + rw.uniform(0, 6)), 0, 1) ** 2
+        S.put(S.band(S.noise(m), 1800, 6500) * syl * S.env(m, 0.1, 0.2), t_, 0.05, -0.5)
     S.footsteps(10.6, 16.6, 1.6, 0.18, 0.2)               # me across the hall
     S.heartbeat(10.5, 30.2, 84, 0.25)
     S.put(S.tone(60, 1.2, 0.3) * S.env(int(1.2 * S.SR), 0.02, 0.8), 16.8, 0.6)   # the face in the window
     S.footsteps(17.2, 17.9, 3.0, 0.25, 0.2)               # I step back
-    S.footsteps(20.5, 25.5, 1.7, 0.14, 0.35)              # Mahsa comes over
+    S.footsteps(20.7, 25.5, 1.7, 0.14, 0.35)              # Mahsa comes over
     S.heartbeat(30.2, 41.0, 96, 0.3)
     S.put(S.groan(1.2, 70), 36.8, 0.15, 0.3)              # his breath goes rough
     for t_ in (44.5, 45.3, 46.6, 47.4, 70.0, 70.9, 72.2, 73.1):   # someone leaning on the hall doors
         S.put(metal_door(0.18), t_, 0.25, -0.6)
-    S.footsteps(49.3, 55.0, 1.8, 0.16, -0.3)              # Kian to the doors
+    S.footsteps(51.5, 55.0, 1.8, 0.16, -0.3)              # Kian to the doors
     k = 55.1
     import random
     r = random.Random(5)

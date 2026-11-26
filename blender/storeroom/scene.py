@@ -719,14 +719,56 @@ KZ_MID = (6.2, 6.0, 0)
 WAKE = {"me": 5.6, "mahsa": 20.0, "kian": 49.0, "arian": 54.5, "kazemi": 62.0}   # eyes open from
 
 
+SLEEP_FROM = {"arian": 13.5, "kian": 12.8}     # these two whisper first, then doze off
+
+
 def asleep(who, t):
-    return who in WAKE and t < WAKE[who]
+    return who in WAKE and SLEEP_FROM.get(who, 0.0) <= t < WAKE[who]
+
+
+# Arian and Kian whisper together on Arian's cot at the start (no words heard: they whisper)
+WHISPER = {"arian": [(0.2, 1.7), (4.4, 5.9), (8.3, 9.6), (11.4, 12.2)], "kian": [(2.0, 3.8), (6.2, 7.9), (10.0, 11.0)]}
+
+
+def lips(who, t):
+    return speaking(who, t) or any(a <= t <= b for a, b in WHISPER.get(who, ()))
 
 
 # everyone dozes on the cots (Kazemi on his crate) until they get up
-UP = {"me": 10.5, "mahsa": 20.5, "kian": 49.2, "arian": 55.5, "kazemi": 62.5}
-for k, off in (("arian", 0.0), ("me", 1.3), ("kian", 2.6), ("mahsa", 3.1)):
-    act(k, "sitting_idle", 0.0, UP[k], SIT[k], 180, loop=True, src_from=off, speed=0.55)
+# not everyone the same: me sits awake on his cot; Arian and Kian sit side by side on Arian's cot,
+# turned to each other, whispering, then doze off sitting; Mahsa sleeps curled up on her side;
+# Kazemi dozes on his crate by the radio.
+UP = {"me": 10.5, "mahsa": 20.6, "kian": 51.4, "arian": 55.5, "kazemi": 62.5}
+SIT["arian"] = (COTS["arian"] - 0.45, COT_Y - 0.3, 0.0)
+SIT["kian"] = (COTS["arian"] + 0.45, COT_Y - 0.3, 0.0)
+SIT_F = {"arian": 212, "me": 180, "kian": 148, "mahsa": 180}
+for k, off, spd in (("arian", 0.0, 0.5), ("me", 1.3, 0.55), ("kian", 2.6, 0.62), ("mahsa", 3.1, 0.3)):
+    act(k, "sitting_idle", 0.0, UP[k], SIT[k], SIT_F[k], loop=True, src_from=off, speed=spd)
+
+
+def curl_up(who, t_up, dur=0.9, side=1):
+    """`who` lies curled on her side on the cot (the seated pose turned 90 degrees about the forward axis,
+    hips on the canvas) and sits up at t_up..t_up+dur. Done with a parent empty pivoting at the hips."""
+    rig = CH[who].rig
+    sc.frame_set(1)
+    piv = rig.matrix_world @ rig.pose.bones["pelvis"].head
+    e = bpy.data.objects.new(who + " bed pivot", None)
+    sc.collection.objects.link(e)
+    e.location = piv
+    rig.parent = e
+    rig.matrix_parent_inverse = Matrix.Translation(piv).inverted()
+    lie_loc = piv + Vector((0, 0.38, 0.75 - piv.z))
+    for f, loc, ang in ((1, lie_loc, 90 * side), (fr(t_up), lie_loc, 90 * side), (fr(t_up + dur), piv, 0)):
+        e.location = loc
+        e.rotation_euler = (0, math.radians(ang), 0)
+        e.keyframe_insert("location", frame=f)
+        e.keyframe_insert("rotation_euler", frame=f)
+    for fc in fcurves_of(e):
+        for k in fc.keyframe_points:
+            k.interpolation = "BEZIER"
+
+
+curl_up("mahsa", 19.6)
 act("kazemi", "sitting_idle", 0.0, UP["kazemi"], KZ_SIT, 180, loop=True, src_from=2.0, speed=0.5)
 # ---- me: across the dark hall to the storeroom door
 walk("me", 10.5, 16.6, [SIT["me"][:2], (7.2, 4.6), (9.6, 6.6), ME_DOOR], end_face=0)
@@ -738,7 +780,7 @@ act("me", "breathing_idle", 37.0, 53.0, ME_BACK, face(ME_BACK, HALL), loop=True,
 act("me", "nervously_look_around", 53.0, 74.0, ME_BACK, face(ME_BACK, (6.0, 5.6)), loop=True)
 act("me", "nervously_look_around", 74.0, END, ME_BACK, face(ME_BACK, (6.0, 5.6)), src_from=1.5, speed=1.2)
 # ---- Mahsa comes over while he talks
-walk("mahsa", 20.5, 25.5, [SIT["mahsa"][:2], (10.6, 5.2), MAHSA_DOOR[:2]], end_face=face(MAHSA_DOOR, WINDOW))
+walk("mahsa", 20.6, 25.5, [SIT["mahsa"][:2], (10.6, 5.2), MAHSA_DOOR[:2]], end_face=face(MAHSA_DOOR, WINDOW))
 act("mahsa", "breathing_idle", 25.5, 37.0, MAHSA_DOOR, face(MAHSA_DOOR, WINDOW), loop=True)
 act("mahsa", "nervously_look_around", 37.0, END, MAHSA_DOOR, face(MAHSA_DOOR, HALL), loop=True, src_from=2.0)
 # ---- Kian: "mum?" -- straight to the chained hall doors; his hands must really be on the chain
@@ -757,7 +799,7 @@ for _ in range(2):                         # stand him where the clip's hands me
     KIAN_CHAIN = (KIAN_CHAIN[0] + CHAIN_AT[0] + 0.03 - hm.x, KIAN_CHAIN[1] + CHAIN_AT[1] - hm.y, 0)
 act("kian", "reloading", 55.0, 58.4, KIAN_CHAIN, 90, speed=1.0, in_place=True)   # pulls at the chain
 print("KIAN AT CHAIN", [round(v, 3) for v in KIAN_CHAIN], "hands", [round(v, 3) for v in hands_mid("kian", 55.3, 58.2)])
-walk("kian", 49.2, 55.0, [SIT["kian"][:2], (5.0, 4.4), KIAN_CHAIN[:2]], end_face=90)
+walk("kian", 51.4, 55.0, [SIT["kian"][:2], KIAN_CHAIN[:2]], end_face=90)
 rc = random.Random(5)
 t = 55.0
 CHAIN_RIG.keyframe_insert("location", frame=fr(t))
@@ -815,7 +857,8 @@ hs2 = P.box((TABLE[0] + 0.12, TABLE[1] - 0.05, 0.8), (0.06, 0.17, 0.04), M_["rad
 
 # ------------------------------------------------------------------ camera: (t0, t1, cam0, cam1, aim0, aim1, lens)
 SHOTS = [
-    (0.0, 5.0, (1.2, 0.45, 2.4), (1.5, 0.6, 2.3), (8.5, 5.6, 0.9), (8.7, 5.9, 1.0), 18),
+    (0.0, 2.6, (2.9, 1.45, 1.25), (2.75, 1.55, 1.25), (2.6, 3.4, 0.85), (2.6, 3.4, 0.85), 28),
+    (2.6, 5.0, (1.2, 0.45, 2.4), (1.5, 0.6, 2.3), (8.5, 5.6, 0.9), (8.7, 5.9, 1.0), 18),
     (5.0, 8.0, (11.3, 6.4, 1.45), (11.3, 7.0, 1.5), (11.3, 9.0, 1.35), (11.3, 9.0, 1.4), 30),
     (8.0, 10.5, (5.15, 1.75, 0.85), (5.1, 1.85, 0.86), (4.95, 3.3, 1.02), (4.95, 3.3, 1.05), 30),
     (10.5, 16.0, (4.3, 1.6, 1.7), (7.6, 4.4, 1.7), (6.6, 4.2, 1.1), (11.0, 8.4, 1.3), 24),
@@ -826,7 +869,7 @@ SHOTS = [
     (30.2, 37.0, (11.25, 7.55, 1.56), (11.28, 8.15, 1.6), (11.38, 9.45, 1.6), (11.38, 9.45, 1.62), 32),
     (37.0, 41.0, (11.45, 8.35, 1.62), (11.4, 8.3, 1.62), (0.0, 4.9, 1.2), (0.0, 4.9, 1.2), 30),
     (41.0, 49.0, (2.9, 5.9, 1.45), (1.9, 5.3, 1.5), (0.0, 4.9, 1.2), (0.0, 4.9, 1.2), 24),
-    (49.0, 53.0, (4.3, 1.3, 1.5), (4.0, 1.4, 1.5), (7.3, 3.7, 1.0), (3.4, 4.6, 1.1), 22),
+    (49.0, 53.0, (4.3, 1.3, 1.5), (4.0, 1.4, 1.5), (3.0, 3.3, 0.9), (3.4, 4.6, 1.1), 22),
     (53.0, 56.0, (11.24, 7.9, 1.58), (11.3, 8.2, 1.6), (11.38, 9.45, 1.6), (11.38, 9.45, 1.6), 30),
     (56.0, 59.2, (3.7, 2.1, 1.5), (3.6, 2.2, 1.5), (0.8, 4.7, 1.0), (0.9, 4.6, 1.05), 24),
     (59.2, 62.5, (0.45, 5.75, 1.45), (0.5, 5.7, 1.45), (1.35, 4.4, 1.25), (1.35, 4.4, 1.25), 26),
@@ -876,7 +919,7 @@ PRESENT = {k: [(max(a, c), min(b, d)) for a, b in VIS[k] for c, d in PRESENT[k] 
 for who, ch in CH.items():
     for f in range(1, N + 1):
         t = (f - 1) / FPS
-        st = dict(t=t, seed=ch.seed, worry=worry(who, t), talking=speaking(who, t), zombie=ch.zombie)
+        st = dict(t=t, seed=ch.seed, worry=worry(who, t), talking=lips(who, t), zombie=ch.zombie)
         if who == "soldierZ":                # pale and veined, but the face is still his own
             st["zombie"] = 0.0
             st["scream"] = 0.7 * seg(t, 53.6, 54.2) * (1 - seg(t, 55.6, 56.2))
