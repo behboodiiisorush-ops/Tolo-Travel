@@ -346,8 +346,10 @@ for who, ch in CH.items():
         if f == 1 or present(who, t) != present(who, t - 1 / FPS):
             ch.hide(f, not present(who, t))
     ch.flush()
+HEAD_OBJS = [o for k in ("Eyes", "Eyebrows", "Eyelashes", "Hair", "Teeth", "Tongue") for o in CH["me"].parts.get(k, [])]
+print("MY HEAD PARTS", [o.name for o in HEAD_OBJS])
 for o in CH["me"].objects:            # my own head is never seen (the camera is in it)
-    if o.type == "MESH" and any(k in o.name.lower() for k in HEADPARTS):
+    if o.type == "MESH" and (o in HEAD_OBJS or any(k in o.name.lower() for k in HEADPARTS)):
         if o.animation_data:
             o.animation_data_clear()
         o.hide_render = True
@@ -355,8 +357,7 @@ for o in CH["me"].objects:            # my own head is never seen (the camera is
 
 # ------------------------------------------------------------------ Kian's tears (shot I)
 def eye_points(ch):
-    eyes = [o for o in ch.objects if o.type == "MESH" and "eye" in o.name.lower() and "brow" not in o.name.lower()
-            and "lash" not in o.name.lower()]
+    eyes = ch.parts.get("Eyes", [])
     inv = ch.rig.matrix_world.inverted()
     return [inv @ (o.matrix_world @ v.co) for o in eyes for v in o.data.vertices]
 
