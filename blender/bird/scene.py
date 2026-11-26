@@ -258,7 +258,7 @@ for x, y in ((-8, 5.1), (8.5, 5.1), (17, 5.1), (-12, -5.1), (4.5, -5.1), (19, -5
     for k in range(4):
         sph((x + r.uniform(-0.6, 0.6), y + r.uniform(-0.6, 0.6), 3.4 + r.uniform(0, 1.0)), r.uniform(0.9, 1.3),
             "leaf" if k % 2 else "leaf2", "Tree leaves")
-LAMP = (10.5, -4.6)
+LAMP = (12.3, -4.6)
 for x, y in (LAMP, (-6.0, -4.6), (-20, 4.6), (24, 4.6)):
     s = 1 if y > 0 else -1
     cylm((x, y, SW), (x, y, 5.0), 0.07, "pole", "Lamp pole")
@@ -456,14 +456,14 @@ act("kian", "breathing_idle", 6.0, 12.8, KB, 215, src_from=2.0)
 act("kian", "sitting_idle", 12.8, 41.4, SOFA, 180, via=[(0.0, 6.9), (2.1, 8.0)], walk_t=2.6, loop=True)
 act("kian", "breathing_idle", 41.4, 48.8, KI, 180, via=[(1.0, 8.6), (-1.4, 7.4)], walk_t=2.4)
 act("kian", "hands_forward_gesture", 48.8, 49.7, KI, 180, src_from=0.0, speed=1.0)  # reaching for the button
-act("kian", "terrified", 49.7, 53.6, (KI[0] + 0.05, KI[1] + 0.25, F), 175, src_from=3.0, speed=1.0)
+act("kian", "pushing_2", 49.7, 53.6, (KI[0] + 0.05, KI[1] + 0.3, F), 180, src_from=0.0, speed=0.7)
 act("kian", "breathing_idle", 53.6, 61.0, (0.15, 5.32, F), 185, via=[(-0.4, 6.9), (0.0, 6.0)], walk_t=2.3)
 # ---- mom in the kitchen (her back to the door; she turns to answer)
-act("mom", "reloading", 0.0, 10.6, (-2.2, 10.15, F), 0, loop=True)
+act("mom", "reloading", 0.0, 10.6, (-2.2, 10.15, F), 0, loop=True, in_place=True)
 act("mom", "breathing_idle", 10.6, 12.8, (-2.2, 10.15, F), 150, turn=0.5)
-act("mom", "reloading", 12.8, 46.6, (-2.2, 10.15, F), 0, loop=True, turn=0.5)
+act("mom", "reloading", 12.8, 46.6, (-2.2, 10.15, F), 0, loop=True, turn=0.5, in_place=True)
 act("mom", "breathing_idle", 46.6, 50.0, (-2.2, 10.1, F), 165, turn=0.5)
-act("mom", "reloading", 50.0, 61.0, (-2.2, 10.15, F), 0, loop=True, turn=0.6)
+act("mom", "reloading", 50.0, 61.0, (-2.2, 10.15, F), 0, loop=True, turn=0.6, in_place=True)
 # ---- the passer-by walks up behind Rezaei, is knocked down
 PB0 = (19.5, -5.0, SW)
 act("passerby", "breathing_idle", 0.0, 12.0, PB0, 90)
@@ -564,7 +564,7 @@ EYE_H = 0.07                     # eye above the feet
 RAILP = Vector((0.85, BY0 + 0.05, RAIL_Z + 0.025 + EYE_H))
 ROOFP = Vector((-1.0, -5.92, 9.4 + EYE_H))
 LAMPP = LAMP_TOP + Vector((0.11, 0, EYE_H))
-DOORS = Vector((0.0, KY + 0.08, F + EYE_H))          # on the door sill
+DOORS = Vector((0.0, IY0 + 0.12, F + EYE_H))          # on the door sill
 KFACE = lambda: head_of("kian")  # noqa: E731
 
 
@@ -595,14 +595,13 @@ PLAN = [
     ("perch", 27.7, 33.0, DOORS, [(27.7, ("head", "kian")), (29.2, ("head", "mom")), (30.6, V(1.5, 8.2, 3.6)),
                                   (31.4, ("head", "kian")), (32.6, V(0.0, 4.0, 3.6))], []),
     ("fly", 33.0, 33.7, [DOORS, V(0.5, 5.4, 3.9), RAILP], V(4.0, 0.0, 2.0)),
-    ("perch", 33.7, 41.0, RAILP, [(33.7, V(12.0, -4.5, 0.6)), (34.6, ("head", "rezaei")), (36.0, V(15.2, -5.0, 0.3)),
-                                  (36.8, ("head", "rezaei")), (39.6, V(3.0, 5.6, 1.0)), (40.6, V(0.0, 7.0, 3.8))], []),
+    ("perch", 33.7, 41.0, RAILP, [(33.7, V(12.0, -4.5, 0.6)), (34.4, ("head", "rezaei")), (39.6, V(3.0, 5.6, 1.0)), (40.6, V(0.0, 7.0, 3.8))], []),
     ("fly", 41.0, 41.7, [RAILP, V(0.5, 5.4, 4.0), DOORS], V(-0.8, 9.0, 3.8)),
     ("perch", 41.7, 49.0, DOORS, [(41.7, ("head", "kian")), (44.0, ("head", "kian")), (45.8, ("head", "mom")),
                                   (47.0, ("head", "mom")), (48.4, ("head", "kian"))], []),
-    ("fly", 49.0, 49.8, [DOORS, V(-0.7, 6.4, 3.8), V(-1.55, IY0 + 0.15, F + 1.42)], ("head", "kian")),
-    ("hover", 49.8, 52.6, V(-1.6, IY0 + 0.14, F + 1.4), ("head", "kian")),
-    ("fly", 52.6, 54.0, [V(-1.6, IY0 + 0.14, F + 1.4), V(-1.0, 7.0, 4.6), V(0.0, 6.0, 4.7), V(0.6, 5.2, 4.5), RAILP],
+    ("fly", 49.0, 49.8, [DOORS, V(-0.7, 6.4, 3.8), V(-1.6, IY0 + 0.2, F + 1.15)], ("head", "kian")),
+    ("hover", 49.8, 52.6, V(-1.62, IY0 + 0.2, F + 1.12), ("head", "kian")),
+    ("fly", 52.6, 54.0, [V(-1.62, IY0 + 0.2, F + 1.12), V(-1.0, 7.0, 4.6), V(0.0, 6.0, 4.7), V(0.6, 5.2, 4.5), RAILP],
      None),
     ("perch", 54.0, 61.0, RAILP, [(54.0, V(0.0, 7.0, 4.2)), (55.0, ("head", "kian")), (56.4, ("head", "rezaei")),
                                   (58.6, ("head", "kian")), (59.6, ("head", "rezaei"))], []),
@@ -726,8 +725,8 @@ for k, c in enumerate(crumb_objs):
 # beak (bottom centre of the view) and wings (sweep into the lower corners on every downstroke)
 mats()
 bm = bmesh.new()
-bmesh.ops.create_cone(bm, cap_ends=True, segments=10, radius1=0.006, radius2=0.0, depth=0.022,
-                      matrix=Matrix.Translation((0, 0, -0.011)) @ Matrix.Rotation(math.pi, 4, "X"))
+bmesh.ops.create_cone(bm, cap_ends=True, segments=10, radius1=0.0035, radius2=0.0, depth=0.016,
+                      matrix=Matrix.Translation((0, 0, -0.008)) @ Matrix.Rotation(math.pi, 4, "X"))
 me_ = bpy.data.meshes.new("Beak")
 bm.to_mesh(me_)
 bm.free()
@@ -735,7 +734,7 @@ beak = bpy.data.objects.new("Beak", me_)
 sc.collection.objects.link(beak)
 me_.materials.append(M_["beak"])
 beak.parent = cam
-beak.location = (0, -0.021, -0.011)
+beak.location = (0, -0.016, -0.011)
 beak.rotation_euler = (math.radians(-12), 0, 0)
 
 
@@ -809,6 +808,10 @@ sc.render.film_transparent = False
 
 args = sys.argv
 if "--still" in args:
+    from bpy_extras.object_utils import world_to_camera_view
+    for f in [int(v) for v in args[args.index("--still") + 1].split(",")]:
+        sc.frame_set(f)
+        print("PROJ", f, {k: tuple(round(v, 2) for v in world_to_camera_view(sc, cam, head_of(k))) for k in CH})
     os.makedirs(os.path.join(HERE, "test"), exist_ok=True)
     for f in [int(v) for v in args[args.index("--still") + 1].split(",")]:
         sc.frame_set(f)
