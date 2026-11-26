@@ -26,6 +26,8 @@ bpy.ops.wm.read_factory_settings(use_empty=True)
 sc = bpy.context.scene
 idle = MC.load(os.path.join(HERE, "..", "mocap", "breathing_idle.fbx"))
 sit = MC.load(os.path.join(HERE, "..", "mocap", "sitting_idle.fbx")) if PART == "room" else None
+CL = {k: MC.load(os.path.join(HERE, "..", "mocap", k + ".fbx"))
+      for k in ("start_walking", "hands_forward_gesture", "nervously_look_around")} if PART == "anim" else {}
 
 # ------------------------------------------------------------------ the new Arian
 STYLE = dict(LK.STYLE)
@@ -129,18 +131,39 @@ def big_iris(m, k=1.45):
     nt.links.new(add.outputs[0], tex.inputs["Vector"])
 
 
-# warmer, slightly darker skin (the MakeHuman skin reads pale under the soft lights)
-for slot in ar.body.material_slots:
-    m = slot.material
-    b = next((n for n in m.node_tree.nodes if n.type == "BSDF_PRINCIPLED"), None)
-    s_ = b.inputs["Base Color"] if b else None
-    if s_ is not None and s_.is_linked:
-        mul = m.node_tree.nodes.new("ShaderNodeMix")
-        mul.data_type, mul.blend_type = "RGBA", "MULTIPLY"
-        mul.inputs["Factor"].default_value = 1.0
-        mul.inputs["B"].default_value = (0.92, 0.66, 0.5, 1)
-        m.node_tree.links.new(s_.links[0].from_socket, mul.inputs["A"])
-        m.node_tree.links.new(mul.outputs["Result"], s_)
+# warmer, slightly darker skin (the MakeHuman skin sits inside a node group and reads pale under soft lights)
+def warm_skin(nt, col=(0.9, 0.62, 0.47, 1)):
+    for n in list(nt.nodes):
+        if n.type == "GROUP" and n.node_tree and not n.node_tree.get("warm"):
+            n.node_tree["warm"] = 1
+            warm_skin(n.node_tree, col)
+        if n.type in ("BSDF_PRINCIPLED", "SUBSURFACE_SCATTERING", "BSDF_DIFFUSE"):
+            key = "Base Color" if "Base Color" in n.inputs else "Color"
+            s_ = n.inputs[key]
+            mul = nt.nodes.new("ShaderNodeMix")
+            mul.data_type, mul.blend_type = "RGBA", "MULTIPLY"
+            mul.inputs["Factor"].default_value = 1.0
+            mul.inputs["B"].default_value = col
+            if s_.is_linked:
+                nt.links.new(s_.links[0].from_socket, mul.inputs["A"])
+            else:
+                mul.inputs["A"].default_value = tuple(s_.default_value)
+            nt.links.new(mul.outputs["Result"], s_)
+
+
+warm_skin(ar.body.material_slots[0].material.node_tree)
+# bold, opaque brows
+for o in ar.parts.get("Eyebrows", []):
+    for slot in o.material_slots:
+        nt = slot.material.node_tree
+        b = next(n for n in nt.nodes if n.type == "BSDF_PRINCIPLED")
+        al = b.inputs["Alpha"]
+        if al.is_linked:
+            m_ = nt.nodes.new("ShaderNodeMath")
+            m_.operation, m_.use_clamp = "MULTIPLY", True
+            m_.inputs[1].default_value = 3.0
+            nt.links.new(al.links[0].from_socket, m_.inputs[0])
+            nt.links.new(m_.outputs[0], al)
 
 # ------------------------------------------------------------------ render setup
 sc.render.engine = "BLENDER_EEVEE"
@@ -219,7 +242,7 @@ if PART == "char":
         shot(os.path.join(OUT, f"board_face_{name}.png"), head + Vector((0.1, -0.62, 0.0)), head + Vector((0, 0, -0.01)),
              85, 640, 640)
 
-if PART == "room":
+if PART in ("room", "anim"):
     # cosy bedroom: lilac-blue walls, wooden shelves with toys, desk with a monitor, bed with a navy blanket,
     # big window with blue curtains, warm lamps; Arian sits on the bed
     world.node_tree.nodes["Background"].inputs[0].default_value = (0.5, 0.6, 0.8, 1)
@@ -306,6 +329,7 @@ if PART == "room":
         sc.collection.objects.link(o)
         o.location = loc
     P.area_light((0.5, -2.2, 2.3), (0, 1, 1), 110, 3.0, (0.75, 0.8, 1.0), name="Fill")
+if PART == "room":
     MC.apply(ar, sit, start=1, length=40, offset=(-0.82, 0.6, 0.22), facing=-105, in_place=True, step=1)
     MC.flush(ar)
     sc.frame_set(20)
@@ -313,3 +337,87 @@ if PART == "room":
     cam_d.dof.focus_object = ar.rig
     cam_d.dof.aperture_fstop = 4.0
     shot(os.path.join(OUT, "board_room.png"), (1.3, -2.2, 1.55), (-0.4, 1.2, 1.0), 24, 1280, 720)
+
+if PART == "anim":
+    # Arian walks in from the door side, stops by the bed, looks around the room, then "listen..." with both hands
+    import anim
+    N = 150
+
+    def smooth(u):
+        u = max(0.0, min(1.0, u))
+        return u * u * (3 - 2 * u)
+
+    def play(ch, clip, start, length, blend=0, **kw):
+        old = MC.BUF.pop(ch.rig.name, {})
+        MC.apply(ch, clip, start=start, length=length, step=1, **kw)
+        new = MC.BUF[ch.rig.name]
+        merged = {k: dict(v) for k, v in old.items()}
+        quat = {}
+        for (path, idx), pts in new.items():
+            if path.endswith("rotation_quaternion"):
+                quat.setdefault(path, {})[idx] = pts
+                continue
+            dst = merged.setdefault((path, idx), {})
+            for f, v in pts.items():
+                w = smooth((f - start) / blend) if blend and f in dst else 1.0
+                dst[f] = dst.get(f, v) * (1 - w) + v * w
+        for path, comps in quat.items():
+            olds = [merged.setdefault((path, i), {}) for i in range(4)]
+            for f in comps[0]:
+                qn = [comps[i][f] for i in range(4)]
+                if blend and f in olds[0] and f < start + blend:
+                    qo = [olds[i][f] for i in range(4)]
+                    if sum(a * b for a, b in zip(qo, qn)) < 0:
+                        qn = [-v for v in qn]
+                    w = smooth((f - start) / blend)
+                    q = [a * (1 - w) + b * w for a, b in zip(qo, qn)]
+                    n = math.sqrt(sum(v * v for v in q)) or 1.0
+                    qn = [v / n for v in q]
+                for i in range(4):
+                    olds[i][f] = qn[i]
+        MC.BUF[ch.rig.name] = merged
+
+    FACE = 130                                   # walking towards the back-left (the bed)
+    A0 = Vector((1.55, -1.25, 0))
+    play(ar, CL["start_walking"], 1, 72, offset=A0, facing=FACE, in_place=False)
+    MC.flush(ar)
+    sc.frame_set(72)
+    p = ar.rig.matrix_world @ ar.rig.pose.bones["pelvis"].head
+    stop = Vector((p.x, p.y, 0))
+    play(ar, CL["nervously_look_around"], 62, 50, blend=14, offset=stop, facing=FACE - 40, in_place=True)
+    play(ar, CL["hands_forward_gesture"], 104, 47, blend=12, offset=stop, facing=FACE - 70, in_place=True)
+    MC.flush(ar)
+    for f in range(1, N + 1):
+        t = (f - 1) / 24
+        st = dict(t=t, seed=ar.seed, talking=(108 <= f <= 146), worry=0.4)
+        for k, v in anim.face(st).items():
+            if k in ar.keys:
+                ar._put(ar.body.data.shape_keys, f'key_blocks["{k}"].value', 0, f, max(0.0, min(1.0, v)))
+    ar.flush()
+    # camera: from near the desk, follows his head with a slow drift
+    sc.frame_start, sc.frame_end = 1, N
+    sc.render.fps = 24
+    cam_d.lens = 30
+    cam_d.dof.use_dof = True
+    cam_d.dof.focus_object = ar.rig
+    cam_d.dof.aperture_fstop = 3.5
+    for f in range(1, N + 1, 3):
+        sc.frame_set(f)
+        h = ar.rig.matrix_world @ ar.rig.pose.bones["head"].head
+        aim.location = (h.x, h.y, h.z - 0.25)
+        aim.keyframe_insert("location", frame=f)
+        u = (f - 1) / (N - 1)
+        cam.location = (1.6 - 0.5 * u, -2.3 + 0.45 * u, 1.5)
+        cam.keyframe_insert("location", frame=f)
+    sc.render.resolution_x, sc.render.resolution_y = 1280, 720
+    a, b = [int(v) for v in argv[argv.index("--frames") + 1:argv.index("--frames") + 3]] if "--frames" in argv else (1, N)
+    d = os.path.join(HERE, "frames", "arian")
+    os.makedirs(d, exist_ok=True)
+    todo = [int(v) for v in argv[argv.index("--pick") + 1].split(",")] if "--pick" in argv else range(a, b + 1)
+    for f in todo:
+        pth = os.path.join(d, f"f_{f:04d}.png")
+        if os.path.exists(pth) and "--still" not in argv:
+            continue
+        sc.frame_set(f)
+        sc.render.filepath = pth
+        bpy.ops.render.render(write_still=True)
