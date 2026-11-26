@@ -79,7 +79,7 @@ def build():
     S.put(metal_door(1.0), 54.0, 0.7, 0.3)
     S.put(metal_door(0.8), 54.6, 0.6, 0.3)
     S.put(metal_door(1.0), 55.1, 0.7, 0.3)
-    S.put(growl(2.4, 75), 55.6, 0.35, 0.3)
+    # (no synthetic growl when he turns: the user found it grating)
     S.footsteps(55.5, 57.9, 2.0, 0.2, -0.4)               # Arian
     S.heartbeat(56.0, 67.5, 112, 0.35)
     S.footsteps(62.5, 64.2, 1.7, 0.2, 0.0)                # Kazemi
