@@ -131,7 +131,8 @@ def main():
     os.makedirs(OUT, exist_ok=True)
     # fisheye-style barrel distortion, then zoom in to hide the bent borders (as in «واگن آخر»); the black gap
     # between the fall and waking up has no frames: fill it with copies so the numbering stays continuous
-    n_pic = int(END * FPS)
+    part = float(os.environ.get("PART", "0"))     # PART=20 -> only the first 20 s, as a preview (year1500_part.mp4)
+    n_pic = int((part or END) * FPS)
     fill = os.path.join(TMP, "fill")
     os.makedirs(fill)
     last = None
@@ -148,7 +149,7 @@ def main():
     shutil.rmtree(fill)
     vig = vignette()
     black = Image.new("RGB", (W, H))
-    total = n_pic + int(CARD * FPS)
+    total = n_pic + (0 if part else int(CARD * FPS))
     for i in range(total):
         t = i / FPS
         f = i + 1
@@ -186,6 +187,12 @@ def main():
                 if a <= t <= b:
                     caption(img, who, text, min(1.0, (t - a) / 0.15))
         img.save(os.path.join(TMP, f"c_{i:04d}.jpg"), quality=94)
+    if part:
+        sfx = os.path.join(OUT, "year1500_sfx.wav")
+        encode(os.path.join(TMP, "c_%04d.jpg"), os.path.join(OUT, "year1500_part.mp4"),
+               sfx if os.path.exists(sfx) else None)
+        shutil.rmtree(TMP, ignore_errors=True)
+        return
     encode(os.path.join(TMP, "c_%04d.jpg"), os.path.join(OUT, "year1500_captions.mp4"))
     encode(os.path.join(TMP, "n_%04d.jpg"), os.path.join(OUT, "year1500_clean.mp4"))
     sfx = os.path.join(OUT, "year1500_sfx.wav")
