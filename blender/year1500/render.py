@@ -5,6 +5,7 @@ sys.path.insert(0, HERE)
 from captions import FLASHBACK, WAKE  # noqa: E402
 bpy.ops.wm.open_mainfile(filepath=os.path.join(HERE, "year1500.blend"))
 sc = bpy.context.scene
+sc.eevee.taa_render_samples = int(os.environ.get("SAMPLES", "4"))   # flat cel look: 4 is enough, ~2x faster
 a, b = [int(v) for v in sys.argv[-1].split("-")]
 os.makedirs(os.path.join(HERE, "frames"), exist_ok=True)
 for f in range(a, b + 1):
