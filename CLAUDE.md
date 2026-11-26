@@ -18,6 +18,11 @@
   (props, sets, palette, puppets). New shorts: copy `_build/build_shorts.py`; render with `_build/render_shorts.sh`.
 - Older cartoon (toon) films: `blender/school_pov/`, `blender/train_pov/` — workflow skill `/film-toon`.
 
+## Driving quiz Shorts («Quiz»)
+- When the user says **Quiz** (or کوییز): make the next 60 s driving-quiz Short — skill `/quiz`, folder `quiz/driving/`.
+  5 new questions every time: check `quiz/driving/USED_QUESTIONS.md`, never repeat a topic, and add the new ones after.
+  Narrator, sound effects and music come from ElevenLabs (MCP); motion graphics from `quiz/driving/engine/`.
+
 ## Rules the user set
 - No hijab on anyone. No flags, emblems, logos or anything that ties a shot to a real place.
 - The story never depends on the audience; a film may end with one question to the viewer.

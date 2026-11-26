@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<style>
+@font-face { font-family: V; src: url("../../../blender/fonts/Vazirmatn-FD-ExtraBold.ttf"); }
+:root { --green:#22e07a; --red:#ff3b4f; --amber:#ffc21a; --ink:#0b1020; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1080px; height: 1920px; overflow: clip; background: #0b1020; font-family: V, sans-serif; color: #fff; }
+#stage { position: fixed; inset: 0; overflow: clip; transform-origin: 50% 50%; }
+.layer { overflow: clip; }
+canvas { position: absolute; inset: 0; }
+.layer { position: absolute; inset: 0; }
+/* header */
+#hdr { position: absolute; top: 90px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 22px; }
+#brand { font-size: 40px; padding: 10px 34px; border-radius: 40px; background: linear-gradient(90deg,#ffc21a,#ff7a1a); color: #1a1100; box-shadow: 0 8px 30px rgba(255,160,20,.45); }
+#prog { display: flex; gap: 14px; direction: rtl; }
+.seg { width: 150px; height: 16px; border-radius: 10px; background: rgba(255,255,255,.16); overflow: hidden; position: relative; }
+.seg i { position: absolute; inset: 0; background: var(--green); transform-origin: right; }
+#qnum { font-size: 38px; opacity: .85; }
+/* card */
+#card { position: absolute; left: 230px; top: 330px; width: 620px; height: 620px; border-radius: 60px;
+  background: linear-gradient(160deg, rgba(255,255,255,.16), rgba(255,255,255,.04));
+  border: 3px solid rgba(255,255,255,.22); box-shadow: 0 30px 80px rgba(0,0,0,.5), inset 0 2px 0 rgba(255,255,255,.25);
+  display: flex; align-items: center; justify-content: center; overflow: hidden; }
+#card svg { width: 520px; height: 520px; }
+#shine { position: absolute; top: -50%; width: 160px; height: 200%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent); transform: rotate(20deg); }
+/* timer */
+#timer { position: absolute; left: 150px; top: 270px; width: 190px; height: 190px; }
+#timer svg { width: 190px; height: 190px; }
+#tnum { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 92px; text-shadow: 0 4px 14px rgba(0,0,0,.5); }
+/* question */
+#qtext { position: absolute; top: 1000px; left: 60px; right: 60px; text-align: center; font-size: 68px; line-height: 1.45; text-shadow: 0 6px 24px rgba(0,0,0,.55); }
+#qtext span { display: inline-block; margin: 0 9px; }
+/* options */
+#opts { position: absolute; top: 1210px; left: 90px; right: 90px; display: flex; flex-direction: column; gap: 26px; }
+.opt { height: 118px; border-radius: 30px; display: flex; align-items: center; gap: 26px; padding: 0 22px; font-size: 50px;
+  background: rgba(255,255,255,.95); color: #141a2e; box-shadow: 0 12px 30px rgba(0,0,0,.35); position: relative; }
+.opt b { width: 78px; height: 78px; border-radius: 22px; display: flex; align-items: center; justify-content: center; font-size: 40px; color: #fff; background: #2b3354; flex: none; }
+.opt .mark { position: absolute; left: 26px; width: 70px; height: 70px; }
+.opt.ok { background: linear-gradient(90deg,#1fd873,#11b85c); color: #fff; }
+.opt.ok b { background: rgba(0,0,0,.22); }
+/* explain */
+#exp { position: absolute; top: 1790px; left: 70px; right: 70px; display: flex; justify-content: center; }
+#exp div { font-size: 44px; padding: 16px 36px; border-radius: 26px; background: rgba(255,194,26,.16); border: 3px solid rgba(255,194,26,.7); color: #ffe08a; }
+/* intro */
+#intro { display: flex; flex-direction: column; align-items: center; }
+#ititle { position: absolute; top: 560px; width: 100%; text-align: center; font-size: 190px; line-height: 1.15; text-shadow: 0 14px 40px rgba(0,0,0,.6); }
+#ititle .l2 { display: block; font-size: 150px; background: linear-gradient(90deg,#ffd24a,#ff7a1a); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 10px 30px rgba(255,140,20,.45)); }
+#isub { position: absolute; top: 1040px; width: 100%; text-align: center; font-size: 64px; }
+#ibadge { position: absolute; top: 1180px; left: 50%; font-size: 52px; padding: 18px 44px; border-radius: 50px; background: var(--red); box-shadow: 0 10px 40px rgba(255,59,79,.6); white-space: nowrap; }
+#icar { position: absolute; top: 1380px; width: 420px; }
+/* outro */
+#otitle { position: absolute; top: 520px; left: 60px; right: 60px; text-align: center; font-size: 110px; line-height: 1.3; text-shadow: 0 10px 30px rgba(0,0,0,.6); }
+#onums { position: absolute; top: 900px; left: 0; right: 0; display: flex; justify-content: center; gap: 22px; direction: ltr; }
+#onums div { width: 140px; height: 140px; border-radius: 40px; display: flex; align-items: center; justify-content: center; font-size: 84px; background: rgba(255,255,255,.95); color: #141a2e; box-shadow: 0 12px 30px rgba(0,0,0,.4); }
+#onums div.top { background: linear-gradient(160deg,#ffd24a,#ff8a1a); color: #fff; }
+#osub { position: absolute; top: 1160px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 24px; font-size: 62px; }
+#oicon { width: 110px; height: 110px; }
+#flash { position: absolute; inset: 0; background: #fff; pointer-events: none; }
+#vig { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(0,0,0,.55) 100%); pointer-events: none; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="bg" width="1080" height="1920"></canvas>
+  <div class="layer" id="quiz">
+    <div id="card"><div id="vis"></div><div id="shine"></div></div>
+    <div id="timer"><svg viewBox="0 0 190 190"><circle cx="95" cy="95" r="82" fill="#141a2e" stroke="rgba(255,255,255,.18)" stroke-width="14"/><circle id="tring" cx="95" cy="95" r="82" fill="none" stroke="#ffc21a" stroke-width="14" stroke-linecap="round" transform="rotate(-90 95 95)" stroke-dasharray="515.2" stroke-dashoffset="0"/></svg><div id="tnum">۳</div></div>
+    <div id="qtext"></div>
+    <div id="opts"></div>
+    <div id="exp"><div></div></div>
+  </div>
+  <div class="layer" id="intro">
+    <div id="ititle"><span class="l1">کوییز</span><span class="l2">رانندگی</span></div>
+    <div id="isub"></div>
+    <div id="ibadge">فقط ۵ سوال!</div>
+    <div id="icar"></div>
+  </div>
+  <div class="layer" id="outro">
+    <div id="otitle"></div>
+    <div id="onums"></div>
+    <div id="osub"><svg id="oicon" viewBox="0 0 100 100"><path d="M14 20 h72 a8 8 0 0 1 8 8 v40 a8 8 0 0 1 -8 8 h-40 l-18 16 v-16 h-14 a8 8 0 0 1 -8 -8 v-40 a8 8 0 0 1 8 -8z" fill="#ffc21a"/><circle cx="32" cy="48" r="6" fill="#1a1100"/><circle cx="50" cy="48" r="6" fill="#1a1100"/><circle cx="68" cy="48" r="6" fill="#1a1100"/></svg><span></span></div>
+  </div>
+  <div id="hdr"><div id="brand">کوییز رانندگی</div><div id="prog"></div><div id="qnum"></div></div>
+  <canvas id="fx" width="1080" height="1920"></canvas>
+  <div id="vig"></div>
+  <div id="flash"></div>
+</div>
+<script>
+const FA = d => String(d).replace(/[0-9]/g, c => '۰۱۲۳۴۵۶۷۸۹'[c]);
+const LET = ['الف','ب','ج','د'];
+const clamp = (x,a=0,b=1) => Math.max(a, Math.min(b, x));
+const lin = (t,a,b) => clamp((t-a)/(b-a));
+const eOut = x => 1 - Math.pow(1-x, 3);
+const eIn = x => x*x*x;
+const eInOut = x => x<.5 ? 4*x*x*x : 1-Math.pow(-2*x+2,3)/2;
+const eBack = x => { const c1=1.9, c3=c1+1; return 1 + c3*Math.pow(x-1,3) + c1*Math.pow(x-1,2); };
+const spring = x => x<=0?0: 1 - Math.exp(-6*x)*Math.cos(14*x);
+function rnd(seed){ let s = seed>>>0 || 1; return () => (s = (s*1664525 + 1013904223)>>>0) / 4294967296; }
+const $ = id => document.getElementById(id);
+
+let EP, TL;
+const ACC = ['#ff3b4f','#ffc21a','#ff5a36','#3b8bff','#22d3c5'];
+
+/* ---------------- visuals (SVG, 520x520 viewBox) ---------------- */
+function oct(cx,cy,r){ let p=[]; for(let i=0;i<8;i++){ const a=Math.PI/8+i*Math.PI/4; p.push((cx+r*Math.cos(a)).toFixed(1)+','+(cy+r*Math.sin(a)).toFixed(1)); } return p.join(' '); }
+function carSide(x,y,s,body,flip){ // simple car side view, nose to the left
+  return `<g transform="translate(${x},${y}) scale(${flip?-s:s},${s})">
+   <path d="M-110 10 q0-30 30-34 l30-34 q8-8 22-8 h70 q14 0 24 10 l34 32 q30 4 30 34 v14 h-240z" fill="${body}"/>
+   <path d="M-44 -54 h40 v32 h-68z M8 -54 h38 l30 32 h-68z" fill="#bfe3ff" opacity=".9"/>
+   <circle cx="-62" cy="26" r="24" fill="#111"/><circle cx="-62" cy="26" r="10" fill="#888"/>
+   <circle cx="66" cy="26" r="24" fill="#111"/><circle cx="66" cy="26" r="10" fill="#888"/>
+   <rect x="-112" y="0" width="12" height="8" rx="3" fill="#ffe27a"/></g>`;
+}
+function visual(kind, lt){
+  if(kind==='sign_octagon'){
+    return `<svg viewBox="0 0 520 520"><rect x="248" y="380" width="24" height="140" fill="#9aa3b5"/>
+      <polygon points="${oct(260,230,205)}" fill="#fff"/><polygon points="${oct(260,230,188)}" fill="#d8142b"/>
+      <polygon points="${oct(260,230,170)}" fill="none" stroke="#fff" stroke-width="6" opacity=".9"/>
+      <text x="260" y="270" text-anchor="middle" font-size="130" fill="#fff" font-family="V">؟</text></svg>`;
+  }
+  if(kind==='light_flashing_yellow'){
+    const on = (Math.floor(lt*2.2)%2)===0;
+    const y = on? '#ffc21a' : '#5a4a12';
+    return `<svg viewBox="0 0 520 520"><defs><radialGradient id="gl"><stop offset="0" stop-color="#ffd84a" stop-opacity=".9"/><stop offset="1" stop-color="#ffd84a" stop-opacity="0"/></radialGradient></defs>
+      <rect x="244" y="440" width="32" height="80" fill="#5d6478"/>
+      <rect x="160" y="20" width="200" height="430" rx="40" fill="#1d2233" stroke="#3a4260" stroke-width="8"/>
+      <circle cx="260" cy="100" r="58" fill="#3a1418"/>
+      ${on?'<circle cx="260" cy="235" r="150" fill="url(#gl)"/>':''}
+      <circle cx="260" cy="235" r="58" fill="${y}"/>
+      <circle cx="260" cy="370" r="58" fill="#0f3a22"/>
+      <circle cx="240" cy="215" r="16" fill="#fff" opacity="${on?.6:.1}"/></svg>`;
+  }
+  if(kind==='sign_no_entry'){
+    return `<svg viewBox="0 0 520 520"><rect x="248" y="400" width="24" height="120" fill="#9aa3b5"/>
+      <circle cx="260" cy="230" r="205" fill="#fff"/><circle cx="260" cy="230" r="190" fill="#d8142b"/>
+      <rect x="110" y="196" width="300" height="68" rx="8" fill="#fff"/></svg>`;
+  }
+  if(kind==='ambulance'){
+    const ph = Math.floor(lt*6)%2;
+    const wob = Math.sin(lt*30)*2;
+    let waves=''; for(let i=0;i<3;i++){ const k=((lt*1.4)+i/3)%1; waves+=`<path d="M${330+k*140} ${120-k*60} q${30+k*30} ${50+k*30} 0 ${110+k*110}" fill="none" stroke="#ffc21a" stroke-width="10" stroke-linecap="round" opacity="${1-k}"/>`; }
+    return `<svg viewBox="0 0 520 520">
+      <rect x="0" y="380" width="520" height="140" fill="#2a2f40"/>
+      ${[0,1,2,3].map(i=>`<rect x="${((i*170 - lt*500)%680+680)%680-120}" y="440" width="90" height="14" rx="6" fill="#fff" opacity=".8"/>`).join('')}
+      <g transform="translate(0,${wob})">
+      <path d="M40 360 v-170 q0-20 20-20 h190 q20 0 34 14 l60 70 q10 12 10 28 v78z" fill="#f4f6fb"/>
+      <path d="M250 180 h22 l56 66 h-78z" fill="#9fd2ff"/>
+      <rect x="40" y="290" width="314" height="26" fill="#ff3b4f"/>
+      <rect x="110" y="150" width="90" height="24" rx="8" fill="${ph?'#ff2a40':'#2a6bff'}"/>
+      <circle cx="${ph?130:180}" cy="150" r="60" fill="${ph?'#ff2a40':'#2a6bff'}" opacity=".35"/>
+      <circle cx="110" cy="366" r="36" fill="#111"/><circle cx="110" cy="366" r="15" fill="#999"/>
+      <circle cx="290" cy="366" r="36" fill="#111"/><circle cx="290" cy="366" r="15" fill="#999"/></g>
+      ${waves}</svg>`;
+  }
+  if(kind==='rain_distance'){
+    const r = rnd(7); let drops='';
+    for(let i=0;i<46;i++){ const x=r()*560-20, sp=380+r()*200, y=((r()*520 + lt*sp)%560)-40; drops+=`<line x1="${x}" y1="${y}" x2="${x-10}" y2="${y+34}" stroke="#9fd2ff" stroke-width="4" opacity=".7"/>`; }
+    const g = 0.5+0.5*Math.sin(lt*4);
+    return `<svg viewBox="0 0 520 520"><rect x="0" y="330" width="520" height="190" fill="#2a2f40"/>
+      <rect x="0" y="330" width="520" height="190" fill="#9fd2ff" opacity=".08"/>
+      ${carSide(120,330,0.75,'#3b8bff',false)}
+      ${carSide(405,330,0.75,'#ff5a36',false)}
+      <line x1="200" y1="250" x2="320" y2="250" stroke="#ffc21a" stroke-width="10"/>
+      <path d="M190 250 l26 -18 v36z M330 250 l-26 -18 v36z" fill="#ffc21a"/>
+      <text x="260" y="225" text-anchor="middle" font-size="64" fill="#ffc21a" font-family="V" opacity="${.6+.4*g}">؟</text>
+      ${drops}</svg>`;
+  }
+  return '';
+}
+function introCar(lt){ return `<svg viewBox="-130 -80 260 120">${carSide(0,0,1,'#ff3b4f',false)}</svg>`; }
+
+/* ---------------- background ---------------- */
+const bg = $('bg').getContext('2d'), fx = $('fx').getContext('2d');
+function hex2rgb(h){ const n=parseInt(h.slice(1),16); return [n>>16&255,n>>8&255,n&255]; }
+function mix(a,b,k){ return a.map((v,i)=>Math.round(v+(b[i]-v)*k)); }
+function drawBg(t, accent, speed){
+  const W=1080,H=1920;
+  const g = bg.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#0d1330'); g.addColorStop(.55,'#141a3d'); g.addColorStop(1,'#07091a');
+  bg.fillStyle=g; bg.fillRect(0,0,W,H);
+  // accent glow
+  const a = hex2rgb(accent);
+  const rg = bg.createRadialGradient(540,640,40,540,640,900);
+  rg.addColorStop(0,`rgba(${a},.42)`); rg.addColorStop(1,'rgba(0,0,0,0)');
+  bg.fillStyle=rg; bg.fillRect(0,0,W,H);
+  // rotating light rays
+  bg.save(); bg.translate(540,640); bg.rotate(t*0.12);
+  for(let i=0;i<12;i++){ bg.rotate(Math.PI/6); bg.fillStyle=`rgba(${a},.05)`; bg.beginPath(); bg.moveTo(0,0); bg.lineTo(1400,-120); bg.lineTo(1400,120); bg.closePath(); bg.fill(); }
+  bg.restore();
+  // perspective road
+  const hy=1480, vx=540;
+  bg.fillStyle='rgba(20,24,44,.95)';
+  bg.beginPath(); bg.moveTo(vx-60,hy); bg.lineTo(vx+60,hy); bg.lineTo(W+500,H); bg.lineTo(-500,H); bg.closePath(); bg.fill();
+  bg.strokeStyle='rgba(255,255,255,.55)'; bg.lineWidth=6;
+  bg.beginPath(); bg.moveTo(vx-60,hy); bg.lineTo(-500,H); bg.moveTo(vx+60,hy); bg.lineTo(W+500,H); bg.stroke();
+  // moving dashes
+  for(let i=0;i<10;i++){
+    let z = ((i/10) + t*speed) % 1; // 0 far .. 1 near
+    const z2 = Math.min(1, z+0.045);
+    const y1 = hy + (H-hy)*z*z, y2 = hy + (H-hy)*z2*z2;
+    const w1 = 4 + 30*z*z, w2 = 4+30*z2*z2;
+    bg.fillStyle=`rgba(255,210,74,${.35+.6*z})`;
+    bg.beginPath(); bg.moveTo(vx-w1,y1); bg.lineTo(vx+w1,y1); bg.lineTo(vx+w2,y2); bg.lineTo(vx-w2,y2); bg.closePath(); bg.fill();
+  }
+  // horizon glow
+  const hg = bg.createLinearGradient(0,hy-120,0,hy+40);
+  hg.addColorStop(0,'rgba(0,0,0,0)'); hg.addColorStop(.75,`rgba(${a},.35)`); hg.addColorStop(1,'rgba(0,0,0,0)');
+  bg.fillStyle=hg; bg.fillRect(0,hy-120,W,160);
+  // bokeh
+  const r = rnd(42);
+  for(let i=0;i<26;i++){
+    const x=r()*W, y0=r()*H, s=8+r()*34, sp=20+r()*60;
+    const y = ((y0 - t*sp) % H + H) % H;
+    bg.fillStyle=`rgba(255,255,255,${.03+r()*.07})`;
+    bg.beginPath(); bg.arc(x + Math.sin(t+i)*20, y, s, 0, 7); bg.fill();
+  }
+}
+/* ---------------- confetti / particles ---------------- */
+function confetti(t, t0, ox, oy, seed, n=90){
+  const dt = t - t0; if(dt<0 || dt>2.2) return;
+  const r = rnd(seed); const cols=['#22e07a','#ffc21a','#ffffff','#3b8bff','#ff3b4f','#b06bff'];
+  for(let i=0;i<n;i++){
+    const ang = r()*Math.PI*2, sp = 500+r()*1100, vx=Math.cos(ang)*sp, vy=Math.sin(ang)*sp-700;
+    const x = ox + vx*dt*0.8, y = oy + vy*dt*0.8 + 1300*dt*dt;
+    const rot = r()*6 + dt*(r()*14-7), w=10+r()*14, h=6+r()*10;
+    fx.save(); fx.globalAlpha = clamp(1.6-dt*0.8); fx.translate(x,y); fx.rotate(rot); fx.fillStyle=cols[i%cols.length]; fx.fillRect(-w/2,-h/2,w,h*Math.abs(Math.cos(dt*8+i))); fx.restore();
+  }
+}
+function sparks(t, ox, oy, rad, seed, n=24){
+  const r=rnd(seed);
+  for(let i=0;i<n;i++){ const a=r()*7, k=((t*0.6)+r())%1, rr=rad*(0.6+k*0.8);
+    fx.globalAlpha = Math.sin(k*Math.PI)*.8; fx.fillStyle='#ffe08a';
+    fx.beginPath(); fx.arc(ox+Math.cos(a)*rr, oy+Math.sin(a)*rr, 3+4*(1-k), 0, 7); fx.fill(); }
+  fx.globalAlpha=1;
+}
+
+/* ---------------- build ---------------- */
+let curQ = -1;
+function setupQ(i){
+  curQ = i; const q = EP.questions[i];
+  $('qtext').innerHTML = q.text.split(' ').map(w=>`<span>${w}</span>`).join('');
+  $('opts').innerHTML = q.options.map((o,k)=>`<div class="opt"><b>${LET[k]}</b><span>${o}</span><svg class="mark" viewBox="0 0 70 70"></svg></div>`).join('');
+  $('exp').firstChild.textContent = q.explain;
+}
+function init(ep, tl){
+  EP = ep; TL = tl;
+  $('prog').innerHTML = EP.questions.map(()=>'<div class="seg"><i></i></div>').join('');
+  $('isub').textContent = EP.subtitle;
+  $('icar').innerHTML = introCar(0);
+  $('otitle').textContent = EP.outro.text;
+  $('osub').querySelector('span').textContent = EP.outro.sub;
+  $('onums').innerHTML = [0,1,2,3,4,5].map(n=>`<div class="${n===5?'top':''}">${FA(n)}</div>`).join('');
+}
+
+/* ---------------- render one frame ---------------- */
+function renderAt(t){
+  window.scrollTo(0,0); document.documentElement.scrollLeft = 0; document.body.scrollLeft = 0;
+  fx.clearRect(0,0,1080,1920);
+  const qs = TL.q;
+  let mode='intro', qi=-1;
+  if(t >= TL.outro.start) mode='outro';
+  else for(let i=0;i<qs.length;i++) if(t>=qs[i].start && t<qs[i].end){ mode='quiz'; qi=i; }
+  const accent = mode==='quiz' ? ACC[qi%ACC.length] : (mode==='intro' ? '#ff7a1a' : '#b06bff');
+  drawBg(t, accent, mode==='quiz' ? 0.35 : 0.9);
+  let shake = 0, flash = 0;
+
+  // whip transitions: x offset for the active layer
+  function whip(s, e){ const inK = eOut(lin(t, s, s+0.4)), outK = eIn(lin(t, e-0.4, e));
+    return { x: (1-inK)*1100 - outK*1100, blur: (1-inK)*18 + outK*18, op: 1 }; }
+
+  $('intro').style.display = mode==='intro'?'block':'none';
+  $('quiz').style.display = mode==='quiz'?'block':'none';
+  $('outro').style.display = mode==='outro'?'block':'none';
+  $('hdr').style.opacity = mode==='quiz' ? 1 : 0;
+
+  if(mode==='intro'){
+    const I = TL.intro, w = whip(-1, I.end);
+    const L = $('intro'); L.style.transform=`translateX(${w.x}px)`; L.style.filter=`blur(${w.blur}px)`;
+    const s1 = lin(t, .15, .55), s2 = lin(t, .45, .85);
+    const l1 = $('ititle').querySelector('.l1'), l2=$('ititle').querySelector('.l2');
+    l1.style.display='block'; l1.style.transform=`scale(${3-2*eOut(s1)})`; l1.style.opacity=s1>0?1:0;
+    l2.style.transform=`scale(${2.6-1.6*eOut(s2)}) rotate(${(1-eOut(s2))*-8}deg)`; l2.style.opacity=s2>0?1:0;
+    if(t>.55) shake = Math.max(shake, 26*clamp(1-(t-.55)/.35));
+    if(t>.85) shake = Math.max(shake, 18*clamp(1-(t-.85)/.3));
+    flash = Math.max(flash, .7*clamp(1-Math.abs(t-.57)/.12));
+    const s3 = lin(t, 1.1, 1.5); $('isub').style.opacity=s3; $('isub').style.transform=`translateY(${(1-eOut(s3))*60}px)`;
+    const s4 = lin(t, 1.6, 2.0); $('ibadge').style.transform=`translateX(-50%) scale(${eBack(s4)}) rotate(${-4+Math.sin(t*5)*2}deg)`; $('ibadge').style.opacity=s4>0?1:0;
+    const cx = -500 + (t-1.0)*900; $('icar').style.left = (Math.min(cx, 330 + Math.sin(t*3)*8))+'px';
+    $('icar').style.transform = `translateY(${Math.sin(t*22)*3}px)`;
+    if(t>.6) sparks(t, 540, 760, 360, 3);
+  }
+
+  if(mode==='quiz'){
+    if(qi!==curQ) setupQ(qi);
+    const Q = qs[qi], lt = t - Q.start, w = whip(Q.start, Q.end);
+    const L = $('quiz'); L.style.transform=`translateX(${w.x}px)`; L.style.filter = w.blur>0.3?`blur(${w.blur}px)`:'none';
+    // header
+    $('qnum').textContent = `سوال ${FA(qi+1)} از ${FA(qs.length)}`;
+    [...document.querySelectorAll('.seg i')].forEach((el,k)=>{
+      const f = k<qi ? 1 : (k===qi ? eOut(lin(t, qs[k].reveal, qs[k].reveal+.5)) : 0);
+      el.style.transform=`scaleX(${f})`; });
+    // card
+    const cs = lin(t, Q.start+.15, Q.start+.75);
+    const card = $('card'); const fl = Math.sin(lt*2)*10;
+    const rv = lin(t, Q.reveal, Q.reveal+.6);
+    card.style.transform = `translateY(${fl}px) scale(${eBack(cs)*(1+0.06*Math.sin(rv*Math.PI))}) rotate(${(1-eOut(cs))*-12 + Math.sin(lt*1.3)*1.5}deg)`;
+    card.style.opacity = cs>0?1:0;
+    card.style.borderColor = t>Q.reveal ? 'rgba(34,224,122,.9)' : 'rgba(255,255,255,.22)';
+    card.style.boxShadow = t>Q.reveal ? '0 0 70px rgba(34,224,122,.55), 0 30px 80px rgba(0,0,0,.5)' : '';
+    $('vis').innerHTML = visual(EP.questions[qi].visual, lt);
+    $('shine').style.left = (-300 + ((lt*700)%2200))+'px';
+    // question words
+    const words = $('qtext').children, n = words.length;
+    const wd = (Q.qv[1]-Q.qv[0])*0.7/n;
+    for(let k=0;k<n;k++){ const s = lin(t, Q.qv[0]+k*wd, Q.qv[0]+k*wd+.3);
+      words[k].style.opacity = s; words[k].style.transform = `translateY(${(1-eOut(s))*50}px) scale(${.6+.4*eBack(s)})`; }
+    // options
+    const opts = $('opts').children;
+    for(let k=0;k<opts.length;k++){
+      const o = opts[k], s = lin(t, Q.opts[k], Q.opts[k]+.4);
+      const ok = k===EP.questions[qi].answer;
+      let tr = `translateX(${(1-eOut(s))*-1100}px)`, op = s>0?1:0;
+      o.classList.toggle('ok', ok && t>=Q.reveal);
+      if(t>=Q.reveal){
+        const r = lin(t, Q.reveal, Q.reveal+.5);
+        if(ok){ tr += ` scale(${1+0.08*spring(r)*(1-r*.6)})`; }
+        else { op = 1-0.6*r; tr += ` scale(${1-0.05*r})`; }
+      } else if(t>Q.cd[0]){ tr += ` scale(${1+0.012*Math.sin(t*12+k)})`; }
+      o.style.transform = tr; o.style.opacity = op;
+      const m = o.querySelector('.mark');
+      if(t>=Q.reveal){ const r = eOut(lin(t, Q.reveal+.05, Q.reveal+.45));
+        m.innerHTML = ok ? `<circle cx="35" cy="35" r="32" fill="#fff"/><path d="M19 36 l11 11 l22 -24" fill="none" stroke="#11b85c" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="60" stroke-dashoffset="${60*(1-r)}"/>`
+                         : `<path d="M22 22 L48 48 M48 22 L22 48" stroke="#ff3b4f" stroke-width="8" stroke-linecap="round" opacity="${r}"/>`;
+      } else m.innerHTML='';
+    }
+    // timer
+    const tm = $('timer'), C = Q.cd[1]-Q.cd[0];
+    const ts = lin(t, Q.cd[0]-.3, Q.cd[0]), te = lin(t, Q.reveal, Q.reveal+.3);
+    tm.style.opacity = ts*(1-te); tm.style.transform = `scale(${eBack(ts)*(1-te*.5)})`;
+    const rem = clamp(1 - (t-Q.cd[0])/C);
+    $('tring').setAttribute('stroke-dashoffset', (515.2*(1-rem)).toFixed(1));
+    const step = C/3, idx = clamp(Math.floor((t-Q.cd[0])/step), 0, 2);
+    $('tnum').textContent = FA(3-idx);
+    const ph = ((t-Q.cd[0])/step)%1;
+    const ring = ['#22e07a','#ffc21a','#ff3b4f'][idx];
+    $('tring').setAttribute('stroke', ring);
+    if(t>=Q.cd[0] && t<Q.reveal) { $('tnum').style.transform = `scale(${1+0.35*clamp(1-ph*4)})`; shake = Math.max(shake, idx===2? 5*clamp(1-ph*3):0); }
+    // reveal fx
+    if(t>=Q.reveal){
+      flash = Math.max(flash, .45*clamp(1-(t-Q.reveal)/.18));
+      shake = Math.max(shake, 14*clamp(1-(t-Q.reveal)/.3));
+      const oy = 1210 + EP.questions[qi].answer*144 + 59;
+      confetti(t, Q.reveal, 540, oy, 100+qi);
+    }
+    // explain chip
+    const es = lin(t, Q.av[0]+.2, Q.av[0]+.6);
+    const ex = $('exp'); ex.style.opacity = es; ex.style.transform = `translateY(${(1-eOut(es))*40}px) scale(${.8+.2*eBack(es)})`;
+  }
+
+  if(mode==='outro'){
+    const O = TL.outro, w = whip(O.start, 999);
+    const L = $('outro'); L.style.transform=`translateX(${w.x}px)`; L.style.filter = w.blur>0.3?`blur(${w.blur}px)`:'none';
+    const s1 = lin(t, O.start+.2, O.start+.7);
+    $('otitle').style.transform = `scale(${eBack(s1)})`; $('otitle').style.opacity = s1>0?1:0;
+    const nums = $('onums').children;
+    for(let k=0;k<nums.length;k++){ const s = lin(t, O.start+.9+k*.18, O.start+1.25+k*.18);
+      nums[k].style.transform = `translateY(${Math.sin(t*4+k)*10}px) scale(${eBack(s)})`; nums[k].style.opacity = s>0?1:0; }
+    const s3 = lin(t, O.start+2.2, O.start+2.6);
+    $('osub').style.opacity = s3; $('osub').style.transform = `translateY(${(1-eOut(s3))*50}px)`;
+    $('oicon').style.transform = `translateY(${-Math.abs(Math.sin(t*5))*24}px) rotate(${Math.sin(t*5)*6}deg)`;
+    sparks(t, 540, 975, 520, 9, 30);
+    // fade to black on the last 0.4 s
+    flash = 0;
+    $('flash').style.background = '#000';
+    $('flash').style.opacity = lin(t, TL.duration-.35, TL.duration);
+  } else { $('flash').style.background='#fff'; $('flash').style.opacity = flash; }
+
+  const r = rnd(Math.floor(t*30)+1);
+  $('stage').style.transform = shake>0.2 ? `translate(${(r()-.5)*shake}px, ${(r()-.5)*shake}px)` : 'none';
+  return true;
+}
+</script>
+</body>
+</html>
