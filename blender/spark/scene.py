@@ -239,10 +239,10 @@ for ix in range(-4, 6):
         if abs(x - OTHER_WIN.x) < 0.1 and abs(z - OTHER_WIN.z) < 0.1:
             continue
         P.box((x, 8.49, z), (0.9, 0.02, 1.2), win_warm if (ix * 7 + iz * 3) % 5 == 0 else win_dark, "Window across")
-P.box((OTHER_WIN.x, 8.9, OTHER_WIN.z), (0.9, 0.02, 1.2), P.emit("Room across", (0.16, 0.2, 0.35), 1.0),
+P.box((OTHER_WIN.x, 8.47, OTHER_WIN.z), (0.9, 0.02, 1.2), P.emit("Room across", (0.16, 0.2, 0.35), 1.0),
       "Room across")
 for dx in (-0.47, 0.47):
-    P.box((OTHER_WIN.x + dx, 8.47, OTHER_WIN.z), (0.05, 0.06, 1.25), P.mat("Frame across", (0.2, 0.2, 0.22), 0.6),
+    P.box((OTHER_WIN.x + dx, 8.3, OTHER_WIN.z), (0.05, 0.06, 1.25), P.mat("Frame across", (0.2, 0.2, 0.22), 0.6),
           "Frame across")
 sky = P.emit("Night sky", (0.05, 0.07, 0.12), 1.0)
 P.plane((0.9, 14, 6), (40, 30), sky, (math.pi / 2, 0, 0), "Sky")
@@ -403,7 +403,7 @@ play(ar, CL["breathing_idle"], T(45.6), N - T(45.6) + 1, blend=12, offset=at_win
      loop=True)
 MC.flush(ar)
 # the kid across the street: still at the window, then raises a hand
-OTH = Vector((OTHER_WIN.x, 8.75, OTHER_WIN.z - 1.3 + 0.0))
+OTH = Vector((OTHER_WIN.x, 8.38, OTHER_WIN.z - 1.3 + 0.0))
 play(other, CL["breathing_idle"], 1, T(49.0), offset=OTH, facing=180, in_place=True, loop=True)
 play(other, CL["hands_forward_gesture"], T(49.0), N - T(49.0) + 1, blend=12, offset=OTH, facing=180,
      in_place=True, speed=0.7)
@@ -576,8 +576,8 @@ SHOTS = [
     (8.0, 10.4, 28, lambda f, u: Vector((1.0, 1.6, 1.45)), lambda f, u: Vector((0.9, 2.6, 1.5)) + (head(f) - Vector((0.9, 2.6, 1.5))) * 0.0),
     (10.4, 15.0, 45, lambda f, u: head(f) + Vector((0.7, 0.35, -0.05)), lambda f, u: head(f) + Vector((0, 0, 0.03))),
     (15.0, 19.0, 35, lambda f, u: Vector((0.6, -0.9, 1.4)), lambda f, u: (head(f) + LAMP) / 2),
-    (19.0, 23.0, 28, lambda f, u: Vector((2.3, -1.35 + 0.1 * u, 1.45)), lambda f, u: head(f) - Vector((0, 0, 0.3))),
-    (23.0, 27.0, 40, lambda f, u: hand(f) + Vector((0.55, -0.45, 0.2)), lambda f, u: (hand(f) * 2 + head(f)) / 3),
+    (19.0, 23.0, 28, lambda f, u: Vector((2.2, -1.7 + 0.1 * u, 1.55)), lambda f, u: head(f) - Vector((0.1, 0, 0.35))),
+    (23.0, 27.0, 40, lambda f, u: hand(f) + Vector((0.05, -0.7, 0.25)), lambda f, u: (hand(f) * 2 + head(f)) / 3),
     (27.0, 34.0, 28, lambda f, u: Vector((0.3, 1.9, 1.5)), lambda f, u: head(f) + Vector((0, -0.4, -0.15))),
     (34.0, 40.0, 26, lambda f, u: Vector((0.2, -1.3 + 0.2 * u, 1.45)), lambda f, u: (head(f) + LAMP) / 2),
     (40.0, 43.0, 50, lambda f, u: head(f) + Vector((0.65, 0.3, 0.0)), lambda f, u: head(f) + Vector((0, 0, 0.03))),
