@@ -291,3 +291,157 @@ def window(center, width, height, axis, sky, frame_m, depth=0.06, bars=2):
             box((cx, cy, cz + dz), (width, depth, 0.06), frame_m, "Window frame")
         for k in range(1, bars):
             box((cx - width / 2 + k * width / bars, cy, cz), (0.04, depth, height), frame_m, "Window bar")
+
+
+# ------------------------------------------------------------------ cel-shaded comic look (Cycles)
+def _mean_color(img):
+    import numpy as np
+    px = np.array(img.pixels[:], dtype=np.float32).reshape(-1, 4)[::97]
+    a = px[:, 3] > 0.5
+    c = px[a, :3].mean(0) if a.any() else px[:, :3].mean(0)
+    return tuple(float(v) for v in c) + (1.0,)
+
+
+def flatten_textures(skip=("eye",), skip_objects=(), colors=None):
+    """Replace every colour texture by its average colour (solid cartoon paint); keeps alpha links.
+    skip_objects: keep their textures (eyes). colors: {material name part: sRGB colour} overrides."""
+    keep = {ms.material.name for o in skip_objects for ms in o.material_slots if ms.material}
+    for m in bpy.data.materials:
+        trees = [m.node_tree] if m.node_tree else []
+        trees += [n.node_tree for n in (m.node_tree.nodes if m.node_tree else []) if n.type == "GROUP" and n.node_tree]
+        if m.name in keep or any(k in m.name.lower() for k in skip):
+            continue
+        over = next((c for k, c in (colors or {}).items() if k in m.name), None)
+        for nt in trees:
+            for n in list(nt.nodes):
+                if n.type != "TEX_IMAGE" or not n.image:
+                    continue
+                nm = n.image.name.lower()
+                if any(k in nm for k in ("normal", "nrm", "norm", "bump", "rough", "spec", "sss", "_ao", "displ")):
+                    continue
+                links = [l for l in nt.links if l.from_node == n and l.from_socket.name == "Color"]
+                if not links:
+                    continue
+                rgb = nt.nodes.new("ShaderNodeRGB")
+                rgb.outputs[0].default_value = (lin(over) + (1,)) if over else _mean_color(n.image)
+                for l in links:
+                    to = l.to_socket
+                    nt.links.remove(l)
+                    nt.links.new(rgb.outputs[0], to)
+
+
+def toonify(sat=0.55, lift=0.08, size=0.75, ambient=0.28):
+    """Turn every material in the file into a flat cel-shaded paint (Toon BSDF + soft ambient),
+    muted towards grey; keeps alpha (hair cards). Pair it with enable_outlines()."""
+    done = set()
+    trees = []
+    for m in bpy.data.materials:
+        if m.node_tree:
+            trees.append(m.node_tree)
+    for g in bpy.data.node_groups:
+        if g.type == "SHADER":
+            trees.append(g)
+    for nt in trees:
+        if nt.name in done:
+            continue
+        done.add(nt.name)
+        skin = nt.name.endswith(".body")          # MPFB skin: flatter, brighter, fewer face shadows
+        for b in [n for n in nt.nodes if n.type == "BSDF_PRINCIPLED"]:
+            outs = [l for l in nt.links if l.from_node == b]
+            if not outs:
+                continue
+            bc = b.inputs["Base Color"]
+            if bc.is_linked:
+                col = bc.links[0].from_socket
+            else:
+                rgb = nt.nodes.new("ShaderNodeRGB")
+                rgb.outputs[0].default_value = bc.default_value
+                col = rgb.outputs[0]
+            hsv = nt.nodes.new("ShaderNodeHueSaturation")
+            hsv.inputs["Saturation"].default_value = sat
+            hsv.inputs["Value"].default_value = 1.0 + (0.0 if skin else lift)
+            nt.links.new(col, hsv.inputs["Color"])
+            toon = nt.nodes.new("ShaderNodeBsdfToon")
+            toon.component = "DIFFUSE"
+            toon.inputs["Size"].default_value = 0.92 if skin else size
+            toon.inputs["Smooth"].default_value = 0.04
+            nt.links.new(hsv.outputs[0], toon.inputs["Color"])
+            em = nt.nodes.new("ShaderNodeEmission")
+            em.inputs["Strength"].default_value = ambient * (1.15 if skin else 1.0)
+            nt.links.new(hsv.outputs[0], em.inputs["Color"])
+            add = nt.nodes.new("ShaderNodeAddShader")
+            nt.links.new(toon.outputs[0], add.inputs[0])
+            nt.links.new(em.outputs[0], add.inputs[1])
+            out = add.outputs[0]
+            al = b.inputs["Alpha"]
+            if al.is_linked or al.default_value < 1:
+                tr = nt.nodes.new("ShaderNodeBsdfTransparent")
+                mx = nt.nodes.new("ShaderNodeMixShader")
+                if al.is_linked:
+                    nt.links.new(al.links[0].from_socket, mx.inputs[0])
+                else:
+                    mx.inputs[0].default_value = al.default_value
+                nt.links.new(tr.outputs[0], mx.inputs[1])
+                nt.links.new(out, mx.inputs[2])
+                out = mx.outputs[0]
+            for l in outs:
+                to = l.to_socket
+                nt.links.remove(l)
+                nt.links.new(out, to)
+
+
+def enable_outlines(scene, thickness=1.6, exclude=(), contour_only=(), bold=()):
+    """Thick black comic outlines (Freestyle). exclude: objects that get no lines (eyes, lashes...).
+    contour_only: objects (characters) that only get their outer outline, so faces stay clean."""
+    scene.render.use_freestyle = True
+    scene.render.line_thickness_mode = "ABSOLUTE"
+    scene.render.line_thickness = thickness
+    vl = scene.view_layers[0]
+    vl.use_freestyle = True
+    fs = vl.freestyle_settings
+    fs.crease_angle = math.radians(125)
+    ls = fs.linesets[0] if fs.linesets else fs.linesets.new("Lines")
+    ls.select_by_visibility = True
+    ls.select_silhouette = ls.select_border = True
+    ls.select_crease = False
+    if exclude or contour_only or bold:
+        col = bpy.data.collections.new("No outline")
+        scene.collection.children.link(col)
+        for o in list(exclude) + list(contour_only) + list(bold):
+            if col not in o.users_collection:
+                col.objects.link(o)
+        ls.select_by_collection = True
+        ls.collection = col
+        ls.collection_negation = "EXCLUSIVE"
+    if ls.linestyle is None:
+        ls.linestyle = bpy.data.linestyles.new("Comic")
+    ls.linestyle.color = (0.02, 0.02, 0.02)
+    ls.linestyle.thickness = thickness
+    if contour_only:
+        cc = bpy.data.collections.new("Contour only")
+        scene.collection.children.link(cc)
+        for o in contour_only:
+            cc.objects.link(o)
+        l2 = fs.linesets.new("Characters")
+        l2.select_by_visibility = True
+        l2.select_silhouette = True
+        l2.select_border = l2.select_crease = False
+        l2.select_by_collection = True
+        l2.collection = cc
+        l2.linestyle = bpy.data.linestyles.new("People lines")
+        l2.linestyle.color = (0.03, 0.02, 0.02)
+        l2.linestyle.thickness = thickness * 0.55     # thinner on people so faces stay clean
+    if bold:   # eyebrows drawn as bold strokes
+        bc = bpy.data.collections.new("Bold lines")
+        scene.collection.children.link(bc)
+        for o in bold:
+            bc.objects.link(o)
+        l3 = fs.linesets.new("Brows")
+        l3.select_by_visibility = True
+        l3.select_silhouette = l3.select_border = True
+        l3.select_crease = False
+        l3.select_by_collection = True
+        l3.collection = bc
+        l3.linestyle = bpy.data.linestyles.new("Brow lines")
+        l3.linestyle.color = (0.02, 0.015, 0.01)
+        l3.linestyle.thickness = thickness * 1.1

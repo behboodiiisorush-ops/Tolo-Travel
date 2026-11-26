@@ -146,6 +146,9 @@ class Character:
         spec = anim.pose_spec(st)
         ext = anim.leg_extent(spec, self.thigh_len, self.calf_len)
         drop = (ext - (self.thigh_len + self.calf_len)) * scale
+        cr = st.get("crawl", 0.0)
+        if cr:   # on hands and knees the hips sit about a thigh-length above the floor
+            drop = drop * (1 - cr) + cr * (-(self.calf_len + 0.02))
         loc = Vector(pos) + Vector((0, 0, drop + z_extra))
         rz = math.radians(facing) + math.pi
         rig = self.rig
@@ -430,14 +433,63 @@ def _zombie_cloth(o, mouth, level, r):
     M.surface_wrap(o, holes)
 
 
+# ---------------------------------------------------------------------------- cartoon faces
+def cartoon_face(ch):
+    """Readable comic faces: solid dark bold brows, dark lashes, high-contrast eyes."""
+    for o in ch.parts.get("Eyebrows", []) + ch.parts.get("Eyelashes", []):
+        M.recolor_bsdf(o, lambda nt, bsdf, c: M.mix(nt, c, (0.025, 0.018, 0.015), 0.92))
+    def eyes(nt, bsdf, c):
+        bc = nt.nodes.new("ShaderNodeBrightContrast")
+        bc.inputs["Contrast"].default_value = 0.55
+        nt.links.new(c, bc.inputs["Color"])
+        return bc.outputs[0]
+    for o in ch.parts.get("Eyes", []):
+        M.recolor_bsdf(o, eyes)
+
+
+def comic_eyes(ch):
+    """Flat comic eyes: white sclera with a big solid black pupil (from the iris of the eye texture)."""
+    def eyes(nt, bsdf, c):
+        bw = nt.nodes.new("ShaderNodeRGBToBW")
+        nt.links.new(c, bw.inputs["Color"])
+        r = nt.nodes.new("ShaderNodeMapRange")
+        r.inputs["From Min"].default_value = 0.33
+        r.inputs["From Max"].default_value = 0.4
+        nt.links.new(bw.outputs[0], r.inputs["Value"])
+        return M.mix(nt, (0.02, 0.02, 0.025), (0.97, 0.97, 0.95), r.outputs["Result"])
+    for o in ch.parts.get("Eyes", []):
+        M.recolor_bsdf(o, eyes)
+    def bold(nt, bsdf, c):   # solid, opaque brows
+        al = bsdf.inputs["Alpha"]
+        if al.is_linked:
+            src = al.links[0].from_socket
+            m = nt.nodes.new("ShaderNodeMath")
+            m.operation = "MULTIPLY"
+            m.use_clamp = True
+            m.inputs[1].default_value = 5.0
+            nt.links.new(src, m.inputs[0])
+            nt.links.new(m.outputs[0], al)
+        return M.mix(nt, c, (0.035, 0.025, 0.02), 1.0)
+    for o in ch.parts.get("Eyebrows", []) + ch.parts.get("Eyelashes", []):
+        M.recolor_bsdf(o, bold)
+
+
 # ---------------------------------------------------------------------------- spawn
+CARTOON = {  # MakeHuman targets that push a realistic face towards a cartoon one
+    "l-eye-scale-incr": 1.0, "r-eye-scale-incr": 1.0, "head-round": 0.4, "head-scale-vert-incr": 0.15,
+    "nose-scale-horiz-decr": 0.6, "nose-scale-vert-decr": 0.5, "nose-scale-depth-decr": 0.6,
+    "mouth-scale-horiz-decr": 0.3, "head-age-decr": 0.6,
+}
+STYLE = None   # set to CARTOON (before spawning) for the cartoon films
+
+
 def _build(key, d, quality):
     hero = quality == "hero"
     clothes = list(d["clothes"].keys())
     body, rig, parts = M.build_human(
         key.capitalize(), gender=d["gender"], age=d["age"], height=d["height"], weight=d["weight"],
         muscle=d["muscle"], skin=d["skin"], skin_type="ENHANCED_SSS" if hero else "MAKESKIN",
-        hair=d.get("hair"), brow=d.get("brow", "eyebrow001"), clothes=clothes, subdiv=1 if hero else 0)
+        hair=d.get("hair"), brow=d.get("brow", "eyebrow001"), clothes=clothes, subdiv=1 if hero else 0, style=STYLE)
     ch = Character(key, d, body, rig, parts, quality)
     M.tint(body, d.get("skin_tint", WARM))
     for o in parts.get("Hair", []) + parts.get("Eyebrows", []):

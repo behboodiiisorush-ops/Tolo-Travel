@@ -7,6 +7,12 @@
 - Setup on a fresh machine: `blender/cast/setup.sh`, then run scripts with `blender/cast/bpy.sh script.py`.
 - Example of a full film built on the cast: `blender/last_bell_real/` (render in parts, `run_all.sh`).
 - The whole workflow is the project skill `/film-3d` (`.claude/skills/film-3d/SKILL.md`).
+- **Comic look + Mixamo motion (newest style, the user's favourite):** `blender/wall/` («دیوار») is the full example.
+  Cast with `cast.STYLE = cast.CARTOON`, cel shading + ink outlines from `blender/studio/toon_look.py`,
+  body motion from the Mixamo FBX clips in `blender/mocap/` via `blender/cast/mocap.py`
+  (read `blender/mocap/CLIPS.md` — clips are described by what they really show, not their file names).
+  EEVEE render with auto-restart (`chain.sh` + `render.py`), then `sound.py` and `post.py`.
+  Use this style for new episodes and series (e.g. «زنگ آخر») unless the user asks otherwise.
 - Older cartoon (toon) films: `blender/school_pov/`, `blender/train_pov/` — workflow skill `/film-toon`.
 
 ## Rules the user set
@@ -14,4 +20,8 @@
 - The story never depends on the audience; a film may end with one question to the viewer.
 - The user records the voices (ElevenLabs); deliver a version without sound, and keep `talking=True`
   lip movement on the lines in `captions.py` so their voices fit.
+- Voice scripts: give each line in its own copyable block, per speaker. Put the delivery (how to say it)
+  inside the line as ElevenLabs v3 audio tags in square brackets, in English, e.g. `[whispers]`, `[shouting]`,
+  `[scared]`, `[sighs]` — ElevenLabs performs these and does not read them aloud. Never write the delivery
+  as plain text, and never put Persian words in brackets.
 - Persian captions: Vazirmatn font in `blender/fonts/`, Pillow with raqm.

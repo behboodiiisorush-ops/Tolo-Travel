@@ -151,6 +151,9 @@ def main():
     mix = sfx * duck[:, None] * 0.8 + np.stack([track, track], 1) * 0.95
     mix /= max(1.0, np.max(np.abs(mix)) / 0.95)
     write(os.path.join(HERE, "out", "mix.wav"), mix)
+    import json
+    json.dump([dict(line=p[0], start=p[1], end=p[2], who=p[3], text=p[4]) for p in placed],
+              open(os.path.join(HERE, "out", "voice_times.json"), "w"), ensure_ascii=False, indent=1)
     for p in placed:
         print(f"{p[0]:2d} {p[1]:5.2f}-{p[2]:5.2f} {p[3]} {p[4]}")
 
