@@ -868,4 +868,4 @@ if "--still" in args:
         sc.render.filepath = os.path.join(HERE, "test", f"{LOOK}_{f:04d}.png")
         bpy.ops.render.render(write_still=True)
 if "--save" in args:
-    bpy.ops.wm.save_as_mainfile(filepath=os.path.join(HERE, "sleeve.blend"))
+    bpy.ops.wm.save_as_mainfile(filepath=os.path.join(HERE, os.environ.get("SAVE_AS", "sleeve.blend")))
