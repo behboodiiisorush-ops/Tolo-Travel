@@ -17,7 +17,7 @@ CH03_SC001
 15:55
 
 **DURATION:**
-55 s = dialogue 20 s (4 lines, 28 words, all whispered ≈1.8 w/s, 3 pauses) + action beats 30 s (Sara climbs down 4 · CU tape on strike plate 5 · door pushed, soft crunch, they listen 5 · Sam turns over and mumbles, they freeze 6 · Arin tightens his palm bandage, looks up at the vent 5 · they slip out, Sara re-presses the tape 5) + held reaction 5 s (motivated: frozen while Sam moves)
+55 s = dialogue 22 s (4 lines, 37 words, all whispered ≈1.8 w/s, 3 pauses) + action beats 30 s (Sara climbs down 4 · CU tape on strike plate 5 · door pushed, soft crunch, they listen 5 · Sam turns over and mumbles, they freeze 6 · Arin tightens his palm bandage, looks up at the vent 5 · they slip out, Sara re-presses the tape 5) + held reaction 3 s (motivated: frozen while Sam moves)
 
 **LOCATION:**
 INT. SURVIVOR ROOM (B1) — NIGHT — story clock 01:30. Lock engaged from outside since 01:00.
@@ -619,7 +619,7 @@ CH04_SC001
 23:40
 
 **DURATION:**
-70 s = dialogue 33 s (7 lines, 52 words + 5 pauses) + action beats 28 s (Mark marches them up the stairs, rifle low 8 · at the B1 junction Arin turns toward reception, Mark steers him to the door "کنترل" 5 · control room reveal 6 · Mark locks the door, lowers the rifle, rubs his face 5 · he sits on the console edge 4) + motivated silence 4 s (after Arin's accusation) + Arin's reaction 5 s (backs into the archive drawers) = 33+28+4+5
+70 s = dialogue 33 s (7 lines, 59 words, emotional/slow + 5 pauses) + action beats 28 s (Mark marches them up the stairs, rifle low 8 · at the B1 junction Arin turns toward reception, Mark steers him to the door "کنترل" 5 · control room reveal 6 · Mark locks the door, lowers the rifle, rubs his face 5 · he sits on the console edge 4) + motivated silence 4 s (after Arin's accusation) + Arin's reaction 5 s (backs into the archive drawers) = 33+28+4+5
 
 **LOCATION:**
 INT. STAIRWELL B3→B1 / CONTROL ROOM (B1) — NIGHT — 02:05.
@@ -850,7 +850,7 @@ CH04_SC004
 27:05
 
 **DURATION:**
-80 s = dialogue 43 s (9 lines, 67 words, 9 pauses) + action beats 34 s (master-card beep, door unlocks 3 · Elena enters, sees the file, Mark half-raises the rifle and lowers it 7 · she sits very straight 4 · Arin slams the file on the console 3 · Elena takes the file from his hands and closes it, palm flat on top 5 · Arin turns to the monitors to hide his face; the B3 lab window on screen is dark 5 · Mark lights a cigarette 5 · Arin's shout beat, chair rolls back 2) + motivated silence 3 s (Elena and Mark exchange a look)
+80 s = dialogue 43 s (8 lines, 78 words, measured/emotional + 9 pauses) + action beats 34 s (master-card beep, door unlocks 3 · Elena enters, sees the file, Mark half-raises the rifle and lowers it 7 · she sits very straight 4 · Arin slams the file on the console 3 · Elena takes the file from his hands and closes it, palm flat on top 5 · Arin turns to the monitors to hide his face; the B3 lab window on screen is dark 5 · Mark lights a cigarette 5 · Arin's shout beat, chair rolls back 2) + motivated silence 3 s (Elena and Mark exchange a look)
 
 **LOCATION:**
 INT. CONTROL ROOM — NIGHT — 02:14.
