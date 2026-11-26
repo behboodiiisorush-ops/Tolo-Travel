@@ -40,3 +40,8 @@ blender/wall_toon/post_tmp/
 blender/wall_toon/*.blend
 blender/wall_toon/out/*.wav
 blender/wall_toon/out/preview/
+blender/bird/frames/
+blender/bird/test/
+blender/bird/post_tmp/
+blender/bird/*.blend
+blender/bird/out/*.wav
