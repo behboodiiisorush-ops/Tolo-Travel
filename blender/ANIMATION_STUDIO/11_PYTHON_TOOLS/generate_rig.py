@@ -199,9 +199,36 @@ def build(char_key):
         if c.name.startswith("WGTS"):
             for o in c.objects:
                 o.hide_render = True
+    hide_under_layers(rig)
     rig["uhas_character"] = char_key
     rig["uhas_version"] = 1
     return dict(rig=rig, src=src, body=body, clothes=clothes, ch=ch, collection=root_c, cols=cols)
+
+
+def hide_under_layers(rig, margin=0.04):
+    """Clothes layering: trouser / shirt vertices that sit under a jacket (higher than the jacket's lowest hem point
+    by `margin`, inside its reach) are masked, so they can never poke through it when the body bends (the jeans'
+    waistband showed through the hoodie at the hip in walk tests)."""
+    outer = [o for o in rig.children if o.type == "MESH" and any(k in o.name for k in ("jacket", "sweater", "hoodie"))]
+    inner = [o for o in rig.children if o.type == "MESH" and any(k in o.name for k in ("jeans", "pants", "trousers"))
+             and o not in outer]
+    done = []
+    for top in outer:
+        hem = min((top.matrix_world @ v.co).z for v in top.data.vertices)
+        for o in inner:
+            vg = o.vertex_groups.get("UHAS_under_jacket") or o.vertex_groups.new(name="UHAS_under_jacket")
+            idx = [v.index for v in o.data.vertices if (o.matrix_world @ v.co).z > hem + margin]
+            if not idx:
+                continue
+            vg.add(idx, 1.0, "REPLACE")
+            if not any(m.type == "MASK" and m.vertex_group == vg.name for m in o.modifiers):
+                m = o.modifiers.new("Under jacket", "MASK")
+                m.vertex_group = vg.name
+                m.invert_vertex_group = True
+                while o.modifiers.find(m.name) > 0:   # mask first (before armature / outline) — cheapest, cleanest
+                    o.modifiers.move(o.modifiers.find(m.name), o.modifiers.find(m.name) - 1)
+            done.append((o.name, len(idx)))
+    return done
 
 
 # ------------------------------------------------------------------ checks used by QC and after building

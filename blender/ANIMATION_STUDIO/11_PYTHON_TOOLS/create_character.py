@@ -225,8 +225,8 @@ def stage_tests(key, which=("refs", "walk", "run", "expressions")):
         eye = (rig.matrix_world @ rig.pose.bones["eye_l"].head + rig.matrix_world @ rig.pose.bones["eye_r"].head) / 2
         cam.animation_data_clear()
         cam.data.lens = 70
-        from mathutils import Vector
-        RS.aim(cam, eye + Vector((0.3, -1.6, -0.05)), eye + Vector((0, 0, -0.12)))
+        # the idle sways the body ~15 cm: the face camera follows the head (smoothed), or the face leaves the frame
+        RS.follow(cam, rig, 1, f, offset=(0.3, -1.6, 0.07), look_h=eye.z - 0.12, bone="head", smooth=8)
         RS.setup_engine(sc, "CYCLES", (432, 768), samples=6)
         o = os.path.join(tests, "EXPRESSIONS")
         mp4 = RS.render(sc, o, 1, f)

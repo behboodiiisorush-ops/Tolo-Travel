@@ -69,8 +69,10 @@ def joint_conventions(rig):
         for sgn in (1, -1):
             pb.rotation_euler = (math.radians(40 * sgn), 0, 0)
             bpy.context.view_layer.update()
-            end = _pt(rig, lo, tail=True)
-            natural = end.y > _pt(rig, lo).y if joint.startswith("knee") else end.y < _pt(rig, lo).y
+            inv = rig.matrix_world.inverted()          # character space: rest faces -Y whatever the scene turn
+            end = inv @ _pt(rig, lo, tail=True)
+            start = inv @ _pt(rig, lo)
+            natural = end.y > start.y if joint.startswith("knee") else end.y < start.y
             if natural:
                 u = (_pt(rig, up, True) - _pt(rig, up)).normalized()
                 l_ = (_pt(rig, lo, True) - _pt(rig, lo)).normalized()

@@ -28,14 +28,17 @@
 
 ## Actions
 - reusable library: `UHS_<CATEGORY>_<Name>` (category = folder in `05_MOTION_LIBRARY`), on the Rigify controls only,
-  in place: forward travel lives on the `root` bone of *episode* actions, the library action stores it as the custom
-  property `root_curve` (forward metres per frame). Library actions have a fake user and are marked as assets.
-- character-specific bake of a library action: `<CHAR>__<library name>` (IK targets fitted to that body)
+  in place: travel lives on the `root` bone of *episode* actions; the library action stores it as the custom
+  properties `root_x` / `root_y` (metres per frame from frame 1, character space). Other properties: `loop`,
+  `frames`, `speed`, `raw_slip_cm`, `character`. Library actions have a fake user and are marked as assets.
+- each character's `Animation_Library.blend` holds the library baked onto *its* rig (same names, IK targets and
+  root curves fitted to that body; the custom property `character` says which)
 - episode-specific: `EP###_<CHAR>_<what>` (e.g. `EP001_ARIAN_ROOT`, `EP001_ARIAN_FOOTLOCK`)
 - facial: `UHS_FACE_<Expression>` (keys only on `FACE_CTRL` properties)
 
 ## NLA tracks (per character, bottom to top)
-1. `BODY` — library strips in sequence, blend in/out for transitions (Replace)
+1. `BODY_00`, `BODY_01`, … — one library strip per track, each fading in over the ones below (Replace)
 2. `ROOT` — episode root path (Replace, root bone only)
-3. `FOOTLOCK` — additive correction from the foot-lock pass (Add)
-4. `FACE` — facial actions / lip sync (Replace, FACE_CTRL only)
+3. `FACE` — facial actions / lip sync (Replace, FACE_CTRL + EYES_TARGET only)
+4. `FOOTLOCK`, `FOOTLOCK_2` — additive corrections from the foot-lock passes, computed last (Add)
+5. `SECONDARY`, `HEAD_STABILIZE` — optional follow-through layers (Combine)

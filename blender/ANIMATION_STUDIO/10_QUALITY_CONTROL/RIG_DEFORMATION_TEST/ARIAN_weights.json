@@ -85,6 +85,6 @@
    "unweighted": 0
   }
  },
- "body_unweighted_visible": 16,
- "pass_": false
+ "body_unweighted_visible": 0,
+ "pass_": true
 }

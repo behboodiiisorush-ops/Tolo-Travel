@@ -16,12 +16,16 @@ from mathutils import Quaternion
 import project_config as PC
 
 
-def _world_rot(rig, bone, f0, f1):
+def _world_rot(rig, bone, f0, f1, local=None):
+    """World rotations of a bone, f0..f1 (and, if local is a list, its local rotation values in its own mode)."""
     sc = bpy.context.scene
     out = []
+    pb = rig.pose.bones[bone]
     for f in range(f0, f1 + 1):
         sc.frame_set(f)
-        out.append((rig.matrix_world @ rig.pose.bones[bone].matrix).to_quaternion())
+        out.append((rig.matrix_world @ pb.matrix).to_quaternion())
+        if local is not None:
+            local.append(pb.rotation_quaternion.copy() if pb.rotation_mode == "QUATERNION" else pb.rotation_euler.copy())
     return out
 
 
@@ -53,53 +57,71 @@ def _lowpass(a, width=5):
     return out / np.linalg.norm(out, axis=1, keepdims=True)
 
 
-def _write_layer(rig, track, action_name, per_bone, f0):
-    """per_bone: {bone: [(world_now, world_wanted)]} -> local delta rotations keyed in a COMBINE strip."""
+def _write_layer(rig, track, action_name, per_bone, f0, locals_=None):
+    """per_bone: {bone: [(world_now, world_wanted)]} -> COMBINE strip that turns the evaluated rotation into the
+    wanted one. Quaternion bones: local delta multiplied on (exact). Euler bones (Rigify hands are ZXY): COMBINE adds
+    angles, so the exact target Euler (compatible with the current one) minus the current Euler is keyed."""
     ad = rig.animation_data or rig.animation_data_create()
     act = bpy.data.actions.get(action_name) or bpy.data.actions.new(action_name)
     keep = ad.action
     ad.action = act
-    sc = bpy.context.scene
     for bone, seq in per_bone.items():
         pb = rig.pose.bones[bone]
-        pb.rotation_mode = "QUATERNION"
+        loc = (locals_ or {}).get(bone)
         for i, (now, want) in enumerate(seq):
             f = f0 + i
-            # COMBINE right-multiplies the local rotation: world' = world @ d  ->  d = world^-1 @ wanted
-            d_local = Quaternion(now).inverted() @ Quaternion(want)
-            pb.rotation_quaternion = d_local
-            pb.keyframe_insert("rotation_quaternion", frame=f, group=f"secondary {bone}")
+            d_local = Quaternion(now).inverted() @ Quaternion(want)       # world' = world @ d
+            if pb.rotation_mode == "QUATERNION":
+                pb.rotation_quaternion = d_local
+                pb.keyframe_insert("rotation_quaternion", frame=f, group=f"secondary {bone}")
+            else:
+                if loc is None:
+                    raise ValueError(f"{bone} is Euler: pass its local rotations")
+                cur = loc[i]
+                tgt = (cur.to_quaternion() @ d_local).to_euler(pb.rotation_mode, cur)
+                pb.rotation_euler = (tgt.x - cur.x, tgt.y - cur.y, tgt.z - cur.z)
+                pb.keyframe_insert("rotation_euler", frame=f, group=f"secondary {bone}")
     ad.action = keep
     tr = ad.nla_tracks.get(track) or ad.nla_tracks.new()
     tr.name = track
-    for s in list(tr.strips):
-        tr.strips.remove(s)
+    for s_ in list(tr.strips):
+        tr.strips.remove(s_)
     st = tr.strips.new(act.name, f0, act)
     st.blend_type = "COMBINE"
     st.extrapolation = "NOTHING"
     return act
 
 
-def follow_through(rig, f0, f1, bones=("hand_fk.L", "hand_fk.R"), prefix="SECONDARY", stiffness=0.32, damping=0.62):
-    per = {}
+def follow_through(rig, f0, f1, bones=("hand_fk.L", "hand_fk.R"), prefix="SECONDARY", stiffness=0.32, damping=0.62,
+                   amount=0.5):
+    """amount: how much of the spring's lag is used (1.0 lagged the wrists up to 20° in a walk — too floppy)."""
+    per, locs = {}, {}
     for b in bones:
-        now = _as_array(_world_rot(rig, b, f0, f1))
-        want = _spring(now, stiffness, damping)
+        locs[b] = []
+        now = _as_array(_world_rot(rig, b, f0, f1, locs[b]))
+        spring = _spring(now, stiffness, damping)
+        want = [tuple(Quaternion(a).slerp(Quaternion(w), amount)) for a, w in zip(now, spring)]
         per[b] = list(zip(now, want))
-    return _write_layer(rig, "SECONDARY", f"{prefix}_FOLLOW", per, f0)
+    _write_layer(rig, "SECONDARY", f"{prefix}_FOLLOW", per, f0, locs)
+    return {b: [w for _, w in seq] for b, seq in per.items()}
 
 
 def stabilize_head(rig, f0, f1, amount=0.6, width=4, prefix="SECONDARY"):
-    now = _as_array(_world_rot(rig, "head", f0, f1))
+    loc = []
+    now = _as_array(_world_rot(rig, "head", f0, f1, loc))
     smooth = _lowpass(now, width)
     want = []
     for a, b in zip(now, smooth):
         qa, qb = Quaternion(a), Quaternion(b)
         want.append(tuple(qa.slerp(qb, amount)))
-    return _write_layer(rig, "HEAD_STABILIZE", f"{prefix}_HEAD", {"head": list(zip(now, want))}, f0)
+    return _write_layer(rig, "HEAD_STABILIZE", f"{prefix}_HEAD", {"head": list(zip(now, want))}, f0, {"head": loc})
 
 
 def check(rig, bone, f0, f1, wanted):
     """Max angle (deg) between the evaluated world rotation and the wanted one — proves the layer does what it says."""
     got = _as_array(_world_rot(rig, bone, f0, f1))
-    return max(math.degrees(Quaternion(g).rotation_difference(Quaternion(w)).angle) for g, w in zip(got, wanted))
+    worst = 0.0
+    for g, w in zip(got, wanted):
+        a = math.degrees(Quaternion(g).rotation_difference(Quaternion(w)).angle)
+        worst = max(worst, min(a, 360.0 - a))           # q and -q are the same rotation
+    return worst

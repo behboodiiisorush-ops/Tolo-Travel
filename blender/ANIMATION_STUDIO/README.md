@@ -41,8 +41,8 @@ Headless renders of Workbench/EEVEE need Mesa's software OpenGL: `apt-get instal
 | Balance (centre of mass over planted soles, standing clips) | done, tested |
 | Facial system (FACE_CTRL sliders, 5 expression presets, blinks, brows, jaw, eyes, lip sync) | done, tested (11/11 presets move the right parts) — lip sync is loudness/brightness based, not phoneme-accurate |
 | Action library (17 actions, assets, fake users) + `Animation_Library.blend` | done |
-| NLA organisation (BODY_A/B cross-fades, ROOT, additive FOOTLOCK, FACE) | done — demo in `12_EPISODES/EP_001` |
-| Secondary motion (spring follow-through, head stabilisation, COMBINE layers) | implemented; not yet used in a rendered shot |
+| NLA organisation (BODY_00..n cross-fades, ROOT, additive FOOTLOCK ×2, FACE) | done, tested on `12_EPISODES/EP_001` (295 frames, 6 strips, 5 transitions): 0 pops, 0 reverse bends / flips, ground OK; foot slip 12 cm (not passing yet — mostly the idle→walk start) |
+| Secondary motion (spring follow-through on hands, head stabilisation, COMBINE layers) | done, tested (`test_secondary.py`: layers hit their target rotation with 0.0° error, 0 new pops, hand lag ≤ 10°) |
 | Environments: bedroom, living room, kitchen, street | done (previews) |
 
 **Not passing yet (honest list):**
@@ -63,5 +63,13 @@ CHAR_001 passes — their designs are ready in `project_config.EXTRA_PUPPETS` an
 4. Retargeted feet stood 13–19° toe-down → calibration on a standing clip.
 5. Loops didn't close on whole frames; Blender clamps negative frames (padding broke) → time-scaled loops, positive padding.
 6. NLA strips of cyclic actions were one frame short per cycle (8 cm jump at every loop) → frame range 1..n+1.
-7. Test bugs too: quaternion angles of 359° counted as pops; heel->ball roll counted as slip; driven values read
+7. Every FBX import left its action behind (115 of them tripled the file size) → removed after use.
+8. The jeans' waistband poked through the hoodie when the body bent → trouser vertices under the jacket are masked.
+9. The secondary layer forced quaternions on Rigify's Euler (ZXY) hands and wiped their animation → per-mode deltas.
+10. Episode cross-fades never happened: `use_auto_blend = False` set after `blend_in` zeroed it → order fixed + check.
+11. Two alternating body tracks put every other strip *under* the previous one (hard cut at its end, 100°/frame
+    pops) → one track per strip, stacked upwards.
+12. The episode foot lock ran before the stack was complete and came out empty → it runs last, in two passes
+    (slip 69 cm → 12 cm).
+13. Test bugs too: quaternion angles of 359° counted as pops; heel->ball roll counted as slip; driven values read
    from the original instead of the evaluated data; masked helper vertices counted as unweighted.

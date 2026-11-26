@@ -4,7 +4,7 @@
  "passed": 12,
  "failed_imports": {},
  "face": true,
- "weights": false,
+ "weights": true,
  "per_action": {
   "UHS_IDLE_Breathing": true,
   "UHS_IDLE_Nervous": true,

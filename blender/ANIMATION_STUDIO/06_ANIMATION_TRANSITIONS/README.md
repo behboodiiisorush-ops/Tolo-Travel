@@ -1,6 +1,7 @@
 # 06_ANIMATION_TRANSITIONS — `11_PYTHON_TOOLS/nla_sequencer.py`
 
-Library strips alternate between NLA tracks `BODY_A` / `BODY_B`; each one fades in (`blend_in`) over the one below.
+Library strips sit on NLA tracks `BODY_00`, `BODY_01`, … stacked upwards; each one fades in (`blend_in`) over the
+one below (alternating two tracks was tried: every other strip ended up underneath -> hard cuts, found by QC).
 The root travel is blended with the same weights and integrated (a walk blending into a run speeds up smoothly), and
 the foot-lock pass runs on the evaluated stack, so blends don't slide the feet. QC (`validate_range`) checks pops.
 

@@ -40,9 +40,9 @@ Every number below is measured on the baked animation (frames evaluated in Blend
 
 Eye tracking constraints: PASS
 
-## Weights — **FAIL**
+## Weights — PASS
 
-Visible unweighted body vertices: 16
+Visible unweighted body vertices: 0
 - ARIAN_BODY: 16 of 19158 vertices unweighted
 
 Thresholds: `00_CORE_SYSTEM/motion_config.py` (QC).

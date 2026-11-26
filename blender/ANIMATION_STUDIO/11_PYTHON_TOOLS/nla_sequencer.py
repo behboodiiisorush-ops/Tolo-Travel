@@ -1,7 +1,7 @@
 """Episode animation from the reusable library, organised in the NLA editor.
 
 sequence(rig, items, prefix) builds, bottom to top:
-  BODY_A / BODY_B   library strips, alternating between two tracks so each one can cross-fade (blend_in) over the
+  BODY_00, 01, ...  library strips, one track each, stacked upwards so each one cross-fades (blend_in) over the
                     previous one — transitions between compatible actions without hand-made in-betweens
   ROOT              episode action on the `root` bone: the travel of every strip, weighted by the same cross-fades
                     and integrated, turned by the heading of each item (so a walk that blends into a run speeds up
@@ -35,8 +35,6 @@ def sequence(rig, items, prefix, start=1, heading0=0.0):
     for t in list(ad.nla_tracks):
         ad.nla_tracks.remove(t)
     ad.action = None
-    tracks = [ad.nla_tracks.new(), ad.nla_tracks.new()]
-    tracks[0].name, tracks[1].name = "BODY_A", "BODY_B"
     spans = []                       # (start, end, blend_in, action, length_one_cycle, loop, heading)
     f = start
     for i, it in enumerate(items):
@@ -50,14 +48,19 @@ def sequence(rig, items, prefix, start=1, heading0=0.0):
             length = min(length, n - 1)
         blend = it.get("blend", 8) if i else 0
         s = f - blend if i else f
-        tr = tracks[i % 2]
+        # one track per strip, each above the previous: a strip can only fade in over what lies BELOW it (two
+        # alternating tracks put every other strip underneath -> a hard cut where the upper one ended — QC pops)
+        tr = ad.nla_tracks.new()
+        tr.name = f"BODY_{i:02d}"
         st = tr.strips.new(f"{i:02d}_{act.name}", int(s), act)
         st.action_frame_start, st.action_frame_end = 1, (n + 1 if loop else n)
         st.repeat = length / n if loop else 1.0
-        st.blend_in = blend
-        st.extrapolation = "NOTHING"
-        st.use_auto_blend = False
+        st.use_auto_blend = False                 # first: switching auto-blend off afterwards zeroes blend_in
         st.blend_type = "REPLACE"
+        st.extrapolation = "NOTHING"
+        st.blend_in = blend
+        if blend and abs(st.blend_in - blend) > 1e-6:
+            raise SequenceError(f"strip {st.name}: blend_in did not stick ({st.blend_in} != {blend})")
         spans.append(dict(s=s, e=s + length, blend=blend, act=act, n=n, loop=loop,
                           heading=math.radians(it.get("heading", 0.0)) + heading0))
         f = s + length
@@ -89,7 +92,7 @@ def sequence(rig, items, prefix, start=1, heading0=0.0):
             a, b = Vector(r(local)), Vector(r(local + 1))
             d = b - a
             c, s_ = math.cos(sp["heading"]), math.sin(sp["heading"])
-            step += W[i, j] * Vector((c * d.x - s_ * d.y, s_ * d.x + c * d.y))
+            step += float(W[i, j]) * Vector((c * d.x - s_ * d.y, s_ * d.x + c * d.y))
         pos = pos + step
     root_act = IM.key_root(rig, start, end, lambda fr: path[fr], f"{prefix}_ROOT")
     # heading: rotate the root bone too (same weights)
@@ -98,7 +101,7 @@ def sequence(rig, items, prefix, start=1, heading0=0.0):
     ad.action = root_act
     pb.rotation_mode = "XYZ"
     for j, fr in enumerate(frames):
-        h = sum(W[i, j] * sp["heading"] for i, sp in enumerate(spans))
+        h = float(sum(W[i, j] * sp["heading"] for i, sp in enumerate(spans)))
         R = pb.bone.matrix_local.to_3x3().inverted() @ Matrix.Rotation(h, 3, "Z") @ pb.bone.matrix_local.to_3x3()
         pb.rotation_euler = R.to_euler("XYZ")
         pb.keyframe_insert("rotation_euler", frame=fr, group="root")
@@ -111,12 +114,13 @@ def sequence(rig, items, prefix, start=1, heading0=0.0):
     return dict(start=start, end=end, weights=W, spans=spans)
 
 
-def footlock_track(rig, f0, f1, prefix):
-    """Additive foot-lock correction on top of the evaluated stack."""
+def footlock_track(rig, f0, f1, prefix, name="FOOTLOCK"):
+    """Additive foot-lock correction on top of the evaluated stack (call it last: it measures what plays now).
+    A second call adds a second layer that catches what the first could not (reach limits, overlapping contacts)."""
     ad = rig.animation_data
     ad.use_nla = True
     deltas, iv, pts = IM.foot_lock_deltas(rig, f0, f1, None)
-    act = bpy.data.actions.new(f"{prefix}_FOOTLOCK")
+    act = bpy.data.actions.new(f"{prefix}_{name}")
     keep = ad.action
     ad.action = act
     for s in IM.SIDES:
@@ -126,9 +130,11 @@ def footlock_track(rig, f0, f1, prefix):
             pb.keyframe_insert("location", frame=fr, group=f"footlock {s}")
     ad.action = keep
     tr = ad.nla_tracks.new()
-    tr.name = "FOOTLOCK"
+    tr.name = name
     st = tr.strips.new(act.name, f0, act)
+    st.use_auto_blend = False
     st.blend_type = "ADD"
+    st.influence = 1.0
     st.extrapolation = "NOTHING"
     IKFK.set_interpolation(act)
     return act, iv

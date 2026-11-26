@@ -42,7 +42,6 @@ def build():
     # body + root + foot lock
     seq = SEQ.sequence(rig, ITEMS, PREFIX)
     f0, f1 = seq["start"], seq["end"]
-    lock, iv = SEQ.footlock_track(rig, f0, f1, PREFIX)
     # face: blinks, smile on the way, big grin running, then talks
     ad = rig.animation_data
     face = bpy.data.actions.new(f"{PREFIX}_FACE")
@@ -71,6 +70,13 @@ def build():
     eyes.location = (0.25, 0.0, 0.0)
     eyes.keyframe_insert("location", frame=talk)
     ad.action = None
+    # foot locking last, on the complete stack; two additive passes
+    for o in rig.children:
+        o.hide_viewport = True
+    SEQ.footlock_track(rig, f0, f1, PREFIX, "FOOTLOCK")
+    SEQ.footlock_track(rig, f0, f1, PREFIX, "FOOTLOCK_2")
+    for o in rig.children:
+        o.hide_viewport = False
     # QC of the whole episode (transitions included)
     qc = V.validate_range(rig, f0, f1, PREFIX)
     out = PC.path("10_QUALITY_CONTROL", "FINAL_REVIEW", f"{PREFIX}_episode_qc.json")
@@ -89,9 +95,10 @@ def render(engine="CYCLES"):
     sc = bpy.context.scene
     rig = bpy.data.objects[KEY + "_RIG"]
     f0, f1 = sc.frame_start, sc.frame_end
-    cam = RS.camera(sc, lens=32)
-    RS.follow(cam, rig, f0, f1, offset=(0.0, -5.6, 0.45), look_h=1.0, smooth=10)
-    RS.setup_engine(sc, engine, (540, 960), samples=8)
+    RS.stage(sc, ground=False, sky=(0.62, 0.78, 0.95), sun=3.0)   # the street comes without its sky and sun
+    cam = RS.camera(sc, lens=35)
+    RS.follow(cam, rig, f0, f1, offset=(0.0, -3.9, 0.25), look_h=1.0, smooth=10)
+    RS.setup_engine(sc, engine, (432, 768), samples=6)
     out = os.path.join(HERE, "Renders", "EP_001_demo")
     mp4 = RS.render(sc, out, f0, f1)
     qc = json.load(open(PC.path("10_QUALITY_CONTROL", "FINAL_REVIEW", f"{PREFIX}_episode_qc.json")))

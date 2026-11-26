@@ -43,6 +43,32 @@ def drop_locations(action):
                             bag.fcurves.remove(fc)
 
 
+def canonical_quaternions(action):
+    """w >= 0 on every rotation_quaternion key. The NLA blends quaternions component by component: two actions
+    holding the same rotation as q and -q blend through nonsense (100°/frame pops at walk->run cross-fades — QC).
+    Local bone rotations stay well under 180°, so the canonical sign never flips inside an action."""
+    by = {}
+    for fc in fcurves(action):
+        if fc.data_path.endswith("rotation_quaternion"):
+            by.setdefault(fc.data_path, {})[fc.array_index] = fc
+    flipped = 0
+    for path, comps in by.items():
+        if len(comps) != 4:
+            continue
+        w = comps[0]
+        for i, kp in enumerate(w.keyframe_points):
+            if kp.co.y < 0:
+                for c in range(4):
+                    k = comps[c].keyframe_points[i]
+                    k.co.y = -k.co.y
+                    k.handle_left.y = -k.handle_left.y
+                    k.handle_right.y = -k.handle_right.y
+                flipped += 1
+        for c in comps.values():
+            c.update()
+    return flipped
+
+
 def make_cyclic(action):
     for fc in fcurves(action):
         if not any(m.type == "CYCLES" for m in fc.modifiers):
@@ -160,6 +186,7 @@ def bake(rig, src, f0, f1, action_name, mapping=None):
     correct_feet(rig, f0, f1)
     ik_from_fk(rig, f0, f1)
     drop_locations(act)
+    canonical_quaternions(act)
     act.name = action_name
     sc.frame_set(f0)
     return act

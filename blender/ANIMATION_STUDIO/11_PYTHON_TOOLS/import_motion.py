@@ -366,7 +366,10 @@ def _import_action(rig, src, entry, char_key):
         mocap.apply(holder, clip, start=f0, length=f1 - f0 + 1, src_from=entry["start"], facing=180.0,
                     in_place=False, loop=entry["loop"], speed=speed)
     finally:
+        fbx_act = clip.arm.animation_data.action if clip.arm.animation_data else None
         bpy.data.objects.remove(clip.arm)
+        if fbx_act is not None and fbx_act.users == 0:   # the FBX's own action (115 of them bloated the file 3x)
+            bpy.data.actions.remove(fbx_act)
         for a in list(bpy.data.armatures):
             if a.users == 0:
                 bpy.data.armatures.remove(a)
@@ -508,10 +511,10 @@ def nla_strip(rig, track_name, action, start, repeat=1.0, blend_in=0, blend_out=
     if action.get("loop"):
         st.action_frame_start, st.action_frame_end = 1, int(action["frames"]) + 1
     st.repeat = repeat
-    st.blend_in, st.blend_out = blend_in, blend_out
+    st.use_auto_blend = False                     # before the blend values (it resets them)
     st.blend_type = blend_type
     st.extrapolation = "NOTHING"
-    st.use_auto_blend = False
+    st.blend_in, st.blend_out = blend_in, blend_out
     return st
 
 

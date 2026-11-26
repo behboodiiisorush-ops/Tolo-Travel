@@ -16,6 +16,10 @@
 - **Project folder layout `blender/BLENDER_ANIMATION/`** (CHARACTERS, ENVIRONMENTS, ASSETS/Props|Materials|Effects,
   ANIMATIONS, SHORTS/Renders): every .blend there is rebuilt by `_build/build_all.sh` from `_build/lib.py`
   (props, sets, palette, puppets). New shorts: copy `_build/build_shorts.py`; render with `_build/render_shorts.sh`.
+- **Universal Human Animation System `blender/ANIMATION_STUDIO/`**: Rigify rig on the puppet body, Mixamo motion
+  library with foot locking, FACE_CTRL face rig, NLA sequencer, numeric QC. Read its README (honest status table)
+  first. One character end to end: `create_character.py ARIAN`; episodes in `12_EPISODES/` (`build_ep001.py`).
+  Headless Workbench/EEVEE renders need `apt-get install -y libegl1 libgl1-mesa-dri`.
 - Older cartoon (toon) films: `blender/school_pov/`, `blender/train_pov/` — workflow skill `/film-toon`.
 
 ## Rules the user set
