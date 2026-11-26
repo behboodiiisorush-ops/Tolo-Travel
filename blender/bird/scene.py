@@ -194,7 +194,6 @@ for x in (-3.6, 0, 3.6):
 for x in (DX0, DX1):
     box((x, KY + 0.1, (F + DZ1) / 2), (0.08, 0.24, DZ1 - F), "wframe")
 box((0, KY + 0.1, DZ1), (1.28, 0.24, 0.08), "wframe")
-box((DX1 + 0.05, KY + 0.62, (F + DZ1) / 2), (0.05, 0.9, DZ1 - F - 0.05), "wframe")
 # entrance door (ground floor, x 3.0) + step + outside intercom panel
 ENT = (3.0, KY)
 box((3.0, KY - 0.01, SW + 1.15), (1.2, 0.06, 2.3), "door")
@@ -284,8 +283,8 @@ for x, y, m in ((-9.5, 3.0, "car1"), (13.0, 3.0, "car3"), (21.5, 3.0, "car2"), (
 build_boxes()
 
 # crumbs on the rail (they vanish when they are pecked)
-CRUMBS = [Vector((0.42 + 0.07 * k, BY0 + 0.05 + 0.01 * (k % 2 - 0.5), RAIL_Z + 0.035)) for k in range(5)]
-crumb_objs = [sph(tuple(c), 0.012 + 0.003 * (k % 2), "bread", f"Crumb {k}") for k, c in enumerate(CRUMBS)]
+CRUMBS = [Vector((0.42 + 0.07 * k, BY0 + 0.05 + 0.01 * (k % 2 - 0.5), RAIL_Z + 0.03)) for k in range(5)]
+crumb_objs = [sph(tuple(c), 0.006 + 0.002 * (k % 2), "bread", f"Crumb {k}") for k, c in enumerate(CRUMBS)]
 
 # light: low morning sun, sky, the flat's ceiling lamp
 sun = bpy.data.objects.new("Sun", bpy.data.lights.new("Sun", "SUN"))
@@ -297,6 +296,10 @@ lamp_in = P.area_light((0, 8.6, IZ1 - 0.05), (0, 8.6, 0), 60, 3.0, (1.0, 0.9, 0.
 w = bpy.data.worlds.new("W")
 sc.world = w
 w.color = (0.55, 0.72, 0.92)
+w.use_nodes = True
+_bg = [n for n in w.node_tree.nodes if n.type == "BACKGROUND"][0]
+_bg.inputs[0].default_value = (0.42, 0.62, 0.88, 1)
+_bg.inputs[1].default_value = 1.0
 
 # ------------------------------------------------------------------ cast
 KEYS = ["kian", "mom", "rezaei"]
@@ -448,12 +451,12 @@ SOFA = (2.1, 9.25, F + 0.02)
 KI = (-1.7, IY0 + 0.55, F)          # in front of the intercom
 act("kian", "breathing_idle", 0.0, 0.6, (0.0, 7.6, F), 180)
 act("kian", "reloading", 0.6, 3.0, KB, 175, walk_t=1.2)                   # crumbling the bread
-act("kian", "hands_forward_gesture", 3.0, 6.0, KB, 170, src_from=0.2, speed=0.9)   # "come, little bird"
-act("kian", "breathing_idle", 6.0, 12.8, KB, 155, src_from=2.0)
+act("kian", "hands_forward_gesture", 3.0, 6.0, KB, 185, src_from=0.2, speed=0.9)   # "come, little bird"
+act("kian", "breathing_idle", 6.0, 12.8, KB, 215, src_from=2.0)
 act("kian", "sitting_idle", 12.8, 41.4, SOFA, 180, via=[(0.0, 6.9), (2.1, 8.0)], walk_t=2.6, loop=True)
 act("kian", "breathing_idle", 41.4, 48.8, KI, 180, via=[(1.0, 8.6), (-1.4, 7.4)], walk_t=2.4)
 act("kian", "hands_forward_gesture", 48.8, 49.7, KI, 180, src_from=0.0, speed=1.0)  # reaching for the button
-act("kian", "terrified", 49.7, 53.6, (KI[0] + 0.05, KI[1] + 0.25, F), 175, src_from=8.0, speed=1.1)
+act("kian", "terrified", 49.7, 53.6, (KI[0] + 0.05, KI[1] + 0.25, F), 175, src_from=3.0, speed=1.0)
 act("kian", "breathing_idle", 53.6, 61.0, (0.15, 5.32, F), 185, via=[(-0.4, 6.9), (0.0, 6.0)], walk_t=2.3)
 # ---- mom in the kitchen (her back to the door; she turns to answer)
 act("mom", "reloading", 0.0, 10.6, (-2.2, 10.15, F), 0, loop=True)
@@ -488,6 +491,10 @@ for _ch in CH.values():
             for kp in fc.keyframe_points:
                 kp.interpolation = "CONSTANT"
 
+for _t in (5, 15, 18, 22, 28, 34, 38, 43, 50, 58):
+    sc.frame_set(fr(_t))
+    print("POS", _t, {k: tuple(round(v, 2) for v in (c.rig.matrix_world @ c.rig.pose.bones["pelvis"].matrix).translation)
+                     for k, c in CH.items()})
 # who is where (hidden when the bird can't see them: saves render time)
 PRESENT = {"kian": [(0, 61)], "mom": [(24.5, 61)], "rezaei": [(0, 61)], "passerby": [(0, 41.5)]}
 WORRY = {"kian": [(0, 0.0), (13.6, 0.3), (44, 0.6), (49.7, 2.0), (55, 1.6), (56.5, 2.0)],
@@ -555,8 +562,8 @@ for k, c in enumerate(crumb_objs):
 # ------------------------------------------------------------------ the bird: camera = its eyes
 EYE_H = 0.07                     # eye above the feet
 RAILP = Vector((0.85, BY0 + 0.05, RAIL_Z + 0.025 + EYE_H))
-ROOFP = Vector((-1.0, -6.12, 9.4 + EYE_H))
-LAMPP = LAMP_TOP + Vector((0, 0, EYE_H))
+ROOFP = Vector((-1.0, -5.92, 9.4 + EYE_H))
+LAMPP = LAMP_TOP + Vector((0.11, 0, EYE_H))
 DOORS = Vector((0.0, KY + 0.08, F + EYE_H))          # on the door sill
 KFACE = lambda: head_of("kian")  # noqa: E731
 
@@ -719,8 +726,8 @@ for k, c in enumerate(crumb_objs):
 # beak (bottom centre of the view) and wings (sweep into the lower corners on every downstroke)
 mats()
 bm = bmesh.new()
-bmesh.ops.create_cone(bm, cap_ends=True, segments=10, radius1=0.011, radius2=0.0, depth=0.035,
-                      matrix=Matrix.Translation((0, 0, -0.0175)) @ Matrix.Rotation(math.pi, 4, "X"))
+bmesh.ops.create_cone(bm, cap_ends=True, segments=10, radius1=0.006, radius2=0.0, depth=0.022,
+                      matrix=Matrix.Translation((0, 0, -0.011)) @ Matrix.Rotation(math.pi, 4, "X"))
 me_ = bpy.data.meshes.new("Beak")
 bm.to_mesh(me_)
 bm.free()
@@ -728,8 +735,8 @@ beak = bpy.data.objects.new("Beak", me_)
 sc.collection.objects.link(beak)
 me_.materials.append(M_["beak"])
 beak.parent = cam
-beak.location = (0, -0.024, -0.014)
-beak.rotation_euler = (math.radians(-8), 0, 0)
+beak.location = (0, -0.021, -0.011)
+beak.rotation_euler = (math.radians(-12), 0, 0)
 
 
 def wing_mesh(side):
@@ -759,7 +766,7 @@ def wing_mesh(side):
     o.location = (side * 0.035, -0.035, -0.01)
     o.rotation_mode = "XYZ"
     sd = o.modifiers.new("thick", "SOLIDIFY")
-    sd.thickness = 0.003
+    sd.thickness = 0.0012
     return o
 
 
