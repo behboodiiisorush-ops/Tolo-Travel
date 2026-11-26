@@ -29,6 +29,9 @@ sit = MC.load(os.path.join(HERE, "..", "mocap", "sitting_idle.fbx")) if PART == 
 
 # ------------------------------------------------------------------ the new Arian
 STYLE = dict(LK.STYLE)
+for k_ in list(STYLE):
+    if "eye-height" in k_:
+        STYLE.pop(k_)          # lids not pulled wide open: less "staring"
 STYLE.update({"l-eye-scale-incr": 1.0, "r-eye-scale-incr": 1.0, "head-scale-vert-incr": 0.2,
               "nose-scale-horiz-decr": 0.7, "mouth-scale-horiz-decr": 0.2})
 cast.STYLE = STYLE
@@ -91,6 +94,54 @@ for o in ar.parts.get("Eyes", []):
 for kb in ar.keys.values():
     kb.slider_max = 2.0
 
+
+def big_iris(m, k=1.45):
+    """Scale the eye texture around each iris centre (the texture holds two eyes) so the iris looks bigger."""
+    nt = m.node_tree
+    tex = next((n for n in nt.nodes if n.type == "TEX_IMAGE"), None)
+    if not tex or m.get("big_iris"):
+        return
+    m["big_iris"] = 1
+    uv = nt.nodes.new("ShaderNodeTexCoord")
+    sep = nt.nodes.new("ShaderNodeSeparateXYZ")
+    nt.links.new(uv.outputs["UV"], sep.inputs[0])
+    gt = nt.nodes.new("ShaderNodeMath")
+    gt.operation = "GREATER_THAN"
+    gt.inputs[1].default_value = 0.5
+    nt.links.new(sep.outputs[0], gt.inputs[0])
+    mixc = nt.nodes.new("ShaderNodeMix")
+    mixc.data_type = "VECTOR"
+    mixc.inputs["A"].default_value = (0.293, 0.297, 0)
+    mixc.inputs["B"].default_value = (0.703, 0.715, 0)
+    nt.links.new(gt.outputs[0], mixc.inputs["Factor"])
+    sub = nt.nodes.new("ShaderNodeVectorMath")
+    sub.operation = "SUBTRACT"
+    nt.links.new(uv.outputs["UV"], sub.inputs[0])
+    nt.links.new(mixc.outputs["Result"], sub.inputs[1])
+    sc_ = nt.nodes.new("ShaderNodeVectorMath")
+    sc_.operation = "SCALE"
+    sc_.inputs["Scale"].default_value = 1.0 / k
+    nt.links.new(sub.outputs[0], sc_.inputs[0])
+    add = nt.nodes.new("ShaderNodeVectorMath")
+    add.operation = "ADD"
+    nt.links.new(sc_.outputs[0], add.inputs[0])
+    nt.links.new(mixc.outputs["Result"], add.inputs[1])
+    nt.links.new(add.outputs[0], tex.inputs["Vector"])
+
+
+# warmer, slightly darker skin (the MakeHuman skin reads pale under the soft lights)
+for slot in ar.body.material_slots:
+    m = slot.material
+    b = next((n for n in m.node_tree.nodes if n.type == "BSDF_PRINCIPLED"), None)
+    s_ = b.inputs["Base Color"] if b else None
+    if s_ is not None and s_.is_linked:
+        mul = m.node_tree.nodes.new("ShaderNodeMix")
+        mul.data_type, mul.blend_type = "RGBA", "MULTIPLY"
+        mul.inputs["Factor"].default_value = 1.0
+        mul.inputs["B"].default_value = (0.92, 0.66, 0.5, 1)
+        m.node_tree.links.new(s_.links[0].from_socket, mul.inputs["A"])
+        m.node_tree.links.new(mul.outputs["Result"], s_)
+
 # ------------------------------------------------------------------ render setup
 sc.render.engine = "BLENDER_EEVEE"
 sc.eevee.taa_render_samples = 48
@@ -143,7 +194,7 @@ if PART == "char":
     hz = head.z
     cam_d.dof.use_dof = False
     # turnaround: the character turns, the camera stays
-    for i, ang in enumerate((0, 35, 90, 180)):
+    for i, ang in enumerate(() if "--faces" in argv else (0, 35, 90, 180)):
         ar.rig.rotation_euler.z = math.radians(ang)
         ar.rig.keyframe_insert("rotation_euler", index=2, frame=20)
         sc.frame_set(20)
