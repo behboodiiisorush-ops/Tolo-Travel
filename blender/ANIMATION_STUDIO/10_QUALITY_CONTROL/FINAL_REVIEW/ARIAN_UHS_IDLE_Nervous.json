@@ -1,0 +1,54 @@
+{
+ "action": "UHS_IDLE_Nervous",
+ "frames": 144,
+ "loop": false,
+ "played": 144,
+ "root_mode": "none",
+ "speed_m_s": 0.0,
+ "raw_slip_cm": 2.46,
+ "foot_slip": {
+  "max_cm": 1.33,
+  "contacts": 2,
+  "pass_": true
+ },
+ "ground": {
+  "lowest_cm": -0.0,
+  "floating_contacts": 0,
+  "pass_": true
+ },
+ "limb_stretch": {
+  "max_dev": {
+   "knee.L": 0.0,
+   "knee.R": 0.0,
+   "elbow.L": 0.0,
+   "elbow.R": 0.0
+  },
+  "pass_": true
+ },
+ "joints": {
+  "max_deg": {
+   "knee.L": 43.0,
+   "knee.R": 43.3,
+   "elbow.L": 99.6,
+   "elbow.R": 102.7
+  },
+  "reverse_bend_frames": {},
+  "flips": {},
+  "pass_": true
+ },
+ "pops": {
+  "count": 0,
+  "worst": [],
+  "pass_": true
+ },
+ "ik_fk": {
+  "max_cm": 0.0,
+  "pass_": true
+ },
+ "balance": {
+  "frames": 144,
+  "com_outside_frac": 0.0,
+  "pass_": true
+ },
+ "pass": true
+}

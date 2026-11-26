@@ -1,0 +1,49 @@
+{
+ "action": "UHS_WALK_Sneak",
+ "frames": 26,
+ "loop": true,
+ "played": 52,
+ "root_mode": "clip",
+ "speed_m_s": 2.262,
+ "raw_slip_cm": 3.56,
+ "foot_slip": {
+  "max_cm": 0.19,
+  "contacts": 5,
+  "pass_": true
+ },
+ "ground": {
+  "lowest_cm": -0.0,
+  "floating_contacts": 0,
+  "pass_": true
+ },
+ "limb_stretch": {
+  "max_dev": {
+   "knee.L": 0.0,
+   "knee.R": 0.0,
+   "elbow.L": 0.0,
+   "elbow.R": 0.0
+  },
+  "pass_": true
+ },
+ "joints": {
+  "max_deg": {
+   "knee.L": 113.1,
+   "knee.R": 123.4,
+   "elbow.L": 30.9,
+   "elbow.R": 69.9
+  },
+  "reverse_bend_frames": {},
+  "flips": {},
+  "pass_": true
+ },
+ "pops": {
+  "count": 0,
+  "worst": [],
+  "pass_": true
+ },
+ "ik_fk": {
+  "max_cm": 0.01,
+  "pass_": true
+ },
+ "pass": true
+}

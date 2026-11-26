@@ -1,0 +1,54 @@
+{
+ "action": "UHS_IDLE_Breathing",
+ "frames": 238,
+ "loop": true,
+ "played": 476,
+ "root_mode": "none",
+ "speed_m_s": 0.0,
+ "raw_slip_cm": 1.44,
+ "foot_slip": {
+  "max_cm": 0.3,
+  "contacts": 2,
+  "pass_": true
+ },
+ "ground": {
+  "lowest_cm": -0.0,
+  "floating_contacts": 0,
+  "pass_": true
+ },
+ "limb_stretch": {
+  "max_dev": {
+   "knee.L": 0.0,
+   "knee.R": 0.0,
+   "elbow.L": 0.0,
+   "elbow.R": 0.0
+  },
+  "pass_": true
+ },
+ "joints": {
+  "max_deg": {
+   "knee.L": 37.9,
+   "knee.R": 37.3,
+   "elbow.L": 31.5,
+   "elbow.R": 31.0
+  },
+  "reverse_bend_frames": {},
+  "flips": {},
+  "pass_": true
+ },
+ "pops": {
+  "count": 0,
+  "worst": [],
+  "pass_": true
+ },
+ "ik_fk": {
+  "max_cm": 0.0,
+  "pass_": true
+ },
+ "balance": {
+  "frames": 476,
+  "com_outside_frac": 0.0,
+  "pass_": true
+ },
+ "pass": true
+}
