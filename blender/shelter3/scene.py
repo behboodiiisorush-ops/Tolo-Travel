@@ -21,7 +21,7 @@ import props as P          # noqa: E402
 import toon_look as T      # noqa: E402
 import look as LK          # noqa: E402
 import mocap2 as MC        # noqa: E402
-from captions import LINES, END, at, end_of, speaking, TITLE  # noqa: E402
+from captions import LINES, END, at, end_of, speaking, TITLE, CAST_KEY  # noqa: E402
 
 cast.STYLE = LK.STYLE
 FPS = 24
@@ -1072,12 +1072,14 @@ def face(a, b):
 
 
 FWD = -90.0                         # facing the front of the bus (+X)
+A_, E_ = at, end_of
 FL = FLOOR                          # bus floor height in the world
 # ---- seats in the bus (world)
 S = {k: WB(*SEATS[v]) for k, v in {
-    "lena": (5, "R", "win"), "mom": (5, "R", "aisle"), "me": (4, "R", "win"), "guard": (5, "L", "aisle"),
-    "oldman": (4, "L", "aisle"), "p1": (1, "L", "win"), "p2": (2, "R", "aisle"), "p3": (6, "L", "win"),
-    "p4": (7, "L", "win"), "p5": (2, "L", "win")}.items()}
+    "lena": (8, "R", "win"), "mom": (8, "R", "aisle"), "me": (8, "L", "aisle"), "guard": (8, "L", "win"),
+    "oldman": (7, "L", "aisle"), "p1": (1, "L", "win"), "p2": (2, "R", "aisle"), "p3": (5, "L", "win"),
+    "p4": (6, "R", "aisle"), "p5": (3, "L", "win")}.items()}
+OLD_ST = WB(ROWS[7] + 0.35, AISLE_Y)          # the old man stands in the aisle, holding on
 BUS_DOOR_OUT = WB((DOOR0 + DOOR1) / 2, YR - 0.7)
 BUS_DOOR_IN = WB((DOOR0 + DOOR1) / 2 - 0.3, AISLE_Y)
 SH_DOOR_IN = (DOOR_X, SY1 - 0.9)
@@ -1088,7 +1090,13 @@ T_WALK_OUT = T_DOOR + 1.6
 # ---- the people already on the bus: seated from the start
 for i, p in enumerate(PASSENGERS):
     sit(p, 0, END, S[p][:2], FWD, SEAT_TOP, src_from=i * 0.7, speed=0.8)
-sit("oldman", 0, END, S["oldman"][:2], FWD, SEAT_TOP, speed=0.8)
+act("oldman", "breathing_idle", 0, A_("old1") - 0.2, OLD_ST, FWD, loop=True, speed=0.8)
+act("oldman", "head_nod_yes", A_("old1") - 0.2, E_("old1") + 0.4, OLD_ST, face(OLD_ST, BUS_DOOR_IN), speed=0.9)
+act("oldman", "breathing_idle", E_("old1") + 0.4, A_("old2") - 0.2, OLD_ST, FWD, loop=True, speed=0.8)
+act("oldman", "thinking", A_("old2") - 0.2, E_("old2") + 0.6, OLD_ST, FWD + 15, speed=0.9)
+act("oldman", "breathing_idle", E_("old2") + 0.6, A_("old3") - 0.4, OLD_ST, FWD, loop=True, speed=0.8)
+act("oldman", "nervously_look_around", A_("old3") - 0.4, T_BANG, OLD_ST, FWD - 30, speed=0.9, in_place=True)
+act("oldman", "terrified", T_BANG, END, OLD_ST, FWD, speed=1.0, src_from=3.0, loop=True, in_place=True)
 
 # ---- me: at the table with the radio; to the door; out; on the bus
 CR = CRATES["me"]
@@ -1102,13 +1110,13 @@ walk("me", T_WALK_OUT, T_BOARD + 2.4, [(DOOR_X + 0.3, SY1 - 0.4), (DOOR_X + 0.3,
                                        BUS_DOOR_OUT[:2]], end_face=0)
 walk("me", T_IN, T_SIT, [BUS_DOOR_IN[:2], (S["me"][0] + 0.1, AISLE_Y)], z=FL, end_face=FWD)
 sit("me", T_SIT, at("me4") - 0.2, S["me"][:2], FWD, SEAT_TOP)
-ME_AISLE = (S["me"][0] - 0.86, AISLE_Y + 0.05, FL)
-act("me", "talking_phone_pacing", at("me4") - 0.2, at("resc5") + 0.3, ME_AISLE, FWD,
-    speed=1.0, src_from=4.0, in_place=True)
+ME_AISLE = WB(ROWS[8] + 1.25, AISLE_Y + 0.05, FL)
+act("me", "talking_phone_pacing", at("me4") - 0.2, at("resc5") + 0.3, ME_AISLE, 90,
+    speed=1.0, src_from=8.0, in_place=True)
 sit("me", at("resc5") + 0.3, at("me5") - 0.6, S["me"][:2], FWD, SEAT_TOP)
 act("me", "nervously_look_around", at("me5") - 0.6, T_STOP, ME_AISLE, FWD - 70, speed=1.2, in_place=True)
 act("me", "male_action_pose", T_STOP, at("radio2") + 0.5, ME_AISLE, FWD + 60)
-act("me", "talking_phone_pacing", at("radio2") + 0.5, END, ME_AISLE, FWD, speed=0.9, src_from=8.0, in_place=True)
+act("me", "talking_phone_pacing", at("radio2") + 0.5, END, ME_AISLE, 90, speed=0.9, src_from=8.0, in_place=True)
 
 # ---- Lena: on the bottom bunk; up; holding on to Mom; on the bus by the window
 BUNK_SEAT = (BX + 0.4, -9.0)
@@ -1154,7 +1162,7 @@ walk("guard", T_WALK_OUT + 1.0, T_BOARD + 3.3, [GS, (DOOR_X, SY1 - 0.4), (DOOR_X
                                                 (BUS_DOOR_OUT[0] + 0.9, BUS_DOOR_OUT[1] - 0.8)], end_face=10)
 walk("guard", T_IN + 1.2, T_SIT, [BUS_DOOR_IN[:2], (S["guard"][0] + 0.3, AISLE_Y + 0.05)], z=FL)
 sit("guard", T_SIT, T_BANG, S["guard"][:2], FWD, SEAT_TOP)
-act("guard", "male_action_pose", T_BANG, END, (S["guard"][0] - 0.1, AISLE_Y, FL), FWD + 90)
+act("guard", "male_action_pose", T_BANG, END, WB(ROWS[8] + 1.95, AISLE_Y - 0.1, FL), 180)
 # his hand trembles (n2, lena1): noise on the right forearm and hand while he sits
 _trem = [(at("n2") - 0.3, end_of("guard1") + 0.3)]
 
@@ -1322,31 +1330,32 @@ shot(A("me2") - 0.2, T_OUT, (3.7, -7.9, 1.6), (2.2, -5.6, 1.25), 24)
 shot(T_OUT, A("resc3") - 0.2, (DOOR_X + 9.0, 3.6, 1.8), (DOOR_X, -5.2, 1.2), 22, c1=(DOOR_X + 8.0, 3.2, 1.7))
 shot(A("resc3") - 0.2, T_IN, (BUS_DOOR_OUT[0] + 4.5, -5.8, 1.6), H("rescuer", A("resc3")), 26,
      a1=add(BUS_DOOR_OUT, (-0.3, 0, 1.2)))
-shot(T_IN, A("lena3") - 0.2, WB(-4.6, AISLE_Y, FL + 1.65), H("oldman", T_IN + 1.0), 24, a1=H("oldman", A("lena3") - 1))
-shot(A("lena3") - 0.2, A("resc4") - 0.2, (SL[0] + 0.72, SL[1] + 0.12, FL + 1.32), H("lena", A("lena3")), 30)
+shot(T_IN, A("lena3") - 0.2, (OLD_ST[0] + 1.3, YL - 0.35, FL + 1.65), H("oldman", T_IN + 1.0), 26,
+     a1=H("oldman", A("lena3") - 1))
+shot(A("lena3") - 0.2, A("resc4") - 0.2, (SL[0] + 1.0, (SL[1] + SG[1]) / 2, FL + 1.2), H("lena", A("lena3")), 32)
 shot(A("resc4") - 0.2, T_GO + 0.4, WB(BUS_X1 - 2.5, AISLE_Y - 0.35, FL + 1.35), H("rescuer", A("resc4")), 26)
 shot(T_GO + 0.4, A("n4") + 1.6, WB(16, -5.5, 3.5), WB(0, 0, 1.4), 22, c1=WB(11, -7.0, 2.6))
 shot(A("n4") + 1.6, A("mom3") - 0.2, WB(-9, YR - 3.2, 1.2), WB(2, BY, 1.6), 22, c1=WB(-7.5, YR - 3.4, 1.4))
 shot(A("mom3") - 0.2, A("me3") - 0.1, (SG[0] + 0.3, AISLE_Y + 0.15, FL + 1.3), (SG[0] - 3.0, YR - 9.0, 2.6), 26)
-shot(A("me3") - 0.1, A("old2") - 0.2, (SM[0] + 0.72, SM[1] + 0.15, FL + 1.38), H("me", A("me3")), 30)
-shot(A("old2") - 0.2, A("lena4") - 0.2, (SO[0] + 0.95, AISLE_Y - 0.05, FL + 1.5), H("oldman", A("old2")), 32)
-shot(A("lena4") - 0.2, A("mom4") - 0.1, (SL[0] + 0.72, SL[1] + 0.12, FL + 1.32), H("lena", A("lena4")), 30)
-shot(A("mom4") - 0.1, A("radio1") - 2.9, (SG[0] + 0.74, (SG[1] + SL[1]) / 2, FL + 1.38), mid(H("mom", A("mom4")), H("lena", A("mom4"))), 24)
+shot(A("me3") - 0.1, A("old2") - 0.2, (SM[0] + 1.1, SM[1] - 0.1, FL + 1.22), H("me", A("me3")), 32)
+shot(A("old2") - 0.2, A("lena4") - 0.2, (OLD_ST[0] + 1.6, AISLE_Y + 0.05, FL + 1.6), H("oldman", A("old2")), 32)
+shot(A("lena4") - 0.2, A("mom4") - 0.1, (SL[0] + 1.0, (SL[1] + SG[1]) / 2, FL + 1.2), H("lena", A("lena4")), 32)
+shot(A("mom4") - 0.1, A("radio1") - 2.9, (SG[0] + 1.25, (SG[1] + SL[1]) / 2, FL + 1.25), mid(H("mom", A("mom4")), H("lena", A("mom4"))), 28)
 shot(A("radio1") - 2.9, A("radio1") - 0.3, WB(-14, YL + 3.5, 4.5), WB(0, BY, 1.4), 24, c1=WB(-11, YL + 4.5, 3.5))
-shot(A("radio1") - 0.3, A("me4") - 0.2, (SM[0] + 0.35, AISLE_Y + 0.4, FL + 1.4), hand("me", A("radio1")), 34)
-shot(A("me4") - 0.2, A("resc5") - 0.1, (ME_AISLE[0] + 2.3, AISLE_Y, FL + 1.55), H("me", A("me4") + 0.5), 28)
+shot(A("radio1") - 0.3, A("me4") - 0.2, (SM[0] + 0.7, AISLE_Y - 0.25, FL + 1.35), hand("me", A("radio1")), 34)
+shot(A("me4") - 0.2, A("resc5") - 0.1, (ME_AISLE[0] - 1.0, AISLE_Y - 0.05, FL + 1.55), H("me", A("me4") + 0.5), 28)
 shot(A("resc5") - 0.1, T_FOREST, WB(BUS_X1 - 2.9, AISLE_Y + 0.2, FL + 1.4), WB(BUS_X1 + 12, BY, 1.0), 24)
 shot(T_FOREST, A("lena5") - 0.2, WB(26, 4.5, 3.4), WB(0, BY, 1.3), 24, c1=WB(18, 3.6, 2.2))
 shot(A("lena5") - 0.2, A("old3") - 0.3, (SL[0] + 0.45, AISLE_Y, FL + 1.35), (SL[0] + 4.0, YR - 9.0, 0.7), 28)
-shot(A("old3") - 0.3, T_DOGS, (SO[0] + 0.95, AISLE_Y - 0.05, FL + 1.5), H("oldman", A("old3")), 32)
+shot(A("old3") - 0.3, T_DOGS, (OLD_ST[0] + 1.6, AISLE_Y + 0.05, FL + 1.6), H("oldman", A("old3")), 32)
 shot(T_DOGS, A("resc6"), WB(-9.5, YR - 6.5, 1.0), WB(-1.0, YR - 1.0, 0.8), 22)
 shot(A("resc6"), A("me5") - 0.2, WB(BUS_X1 - 0.45, AISLE_Y - 0.6, FL + 1.45), H("rescuer", A("resc6")), 26)
 shot(A("me5") - 0.2, T_BANG, WB(-0.6, YR - 2.3, 0.45), WB(-3.4, YR - 0.4, 0.55), 22)
-shot(T_BANG, A("mom5") - 0.2, WB(BUS_X1 - 1.7, AISLE_Y - 0.2, FL + 1.9), WB(-1.0, AISLE_Y, FL + 0.9), 20)
-shot(A("mom5") - 0.2, T_STOP + 0.3, (SG[0] + 0.3, YL - 0.35, FL + 1.9), mid(H("mom", A("mom5")), H("lena", A("mom5"))), 24)
+shot(T_BANG, A("mom5") - 0.2, WB(ROWS[5], AISLE_Y - 0.1, FL + 1.75), WB(BUS_X1, AISLE_Y, FL + 1.0), 22)
+shot(A("mom5") - 0.2, T_STOP + 0.3, (SG[0] + 1.2, YL - 0.5, FL + 1.9), mid(H("mom", A("mom5")), H("lena", A("mom5"))), 24)
 shot(T_STOP + 0.3, A("radio2") - 0.3, WB(10, 10, 6.5), WB(0, BY, 0.8), 20, c1=WB(9, 9.5, 5.8))
-shot(A("radio2") - 0.3, A("me6") - 0.2, (ME_AISLE[0] + 0.7, AISLE_Y - 0.35, FL + 1.55), H("me", A("radio2")), 40)
-shot(A("me6") - 0.2, A("n7") - 0.2, (ME_AISLE[0] + 2.3, AISLE_Y, FL + 1.55), H("me", A("me6")), 28)
+shot(A("radio2") - 0.3, A("me6") - 0.2, (ME_AISLE[0] - 0.7, AISLE_Y - 0.3, FL + 1.55), H("me", A("radio2")), 40)
+shot(A("me6") - 0.2, A("n7") - 0.2, (ME_AISLE[0] - 1.0, AISLE_Y - 0.05, FL + 1.55), H("me", A("me6")), 28)
 shot(A("n7") - 0.2, END, WB(BUS_X1 - 2.3, AISLE_Y + 0.35, FL + 1.5), WB(BUS_X1 + 60, BY - 0.5, 1.0), 30,
      c1=WB(BUS_X1 - 1.7, AISLE_Y + 0.3, FL + 1.45))
 
@@ -1410,6 +1419,39 @@ PRESENT = {k: [(max(a, c), min(b, d)) for a, b in VIS[k] for c, d in PRESENT[k] 
 def present(who, t):
     return any(a <= t < b for a, b in PRESENT[who])
 
+
+# ---- heads turn to whoever is talking (else: straight ahead, level), on top of the mocap
+sync()
+LOOK = {}
+for who, ch in CH.items():
+    e_ = P.empty(f"Look {who}")
+    LOOK[who] = e_
+    for bn, inf in (("head", 0.75), ("neck_01", 0.3)):
+        c_ = ch.rig.pose.bones[bn].constraints.new("DAMPED_TRACK")
+        c_.target, c_.track_axis, c_.influence = e_, "TRACK_Z", inf
+SPEAKER_KEY = {k: CAST_KEY.get(w) for k, w, _ in LINES}
+DOOR_LOOK = (DOOR_X, SY1, 2.0)
+for f in range(1, N + 1, 4):
+    t = (f - 1) / FPS
+    sc.frame_set(f)
+    heads = {w: c.rig.matrix_world @ c.rig.pose.bones["head"].head for w, c in CH.items()}
+    spk = [SPEAKER_KEY[k] for k, *_ in LINES if at(k) - 0.2 <= t <= end_of(k) + 0.3 and SPEAKER_KEY.get(k)]
+    for who, ch in CH.items():
+        h = heads[who]
+        fz = ch.rig.rotation_euler.z - math.pi
+        fwd = Vector((-math.sin(fz), math.cos(fz), 0))
+        tgt = h + fwd * 2.0 + Vector((0, 0, 0.08))
+        if T_LOUD <= t < at("lena2") - 0.4 and who in ("me", "mom", "lena", "guard"):
+            tgt = Vector(DOOR_LOOK)
+        else:
+            for sp in spk:
+                if sp and sp != who and sp in heads and (heads[sp] - h).length < 6.0 and fwd.dot(heads[sp] - h) > -0.2:
+                    tgt = heads[sp] + Vector((0, 0, 0.05))
+                    break
+        LOOK[who].location = tgt
+        LOOK[who].keyframe_insert("location", frame=f)
+for e_ in LOOK.values():
+    interp(e_, "LINEAR")
 
 TALK_ON = {"rescuer": lambda t: speaking("rescuer", t) and (t > T_BOARD)}   # the loudspeaker lines: no lips
 for who, ch in CH.items():
