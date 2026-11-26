@@ -275,7 +275,7 @@ for hinge, sgn in HALL_LEAVES:
         hinge.keyframe_insert("rotation_euler", index=2, frame=fr(t))
 
 # camp beds: long along X, kids sit on the front edge facing -Y
-COTS = {"arian": 3.0, "me": 5.2, "kian": 7.4, "mahsa": 9.6}
+COTS = {"arian": 2.6, "me": 5.2, "kian": 7.8, "mahsa": 10.4}   # 0.7 m gaps to walk through
 COT_Y = 3.6
 for who, cx in COTS.items():
     box((cx, COT_Y, 0.52), (1.9, 0.72, 0.08), "canvas", "Cot")
@@ -283,13 +283,13 @@ for who, cx in COTS.items():
         for dy in (-0.3, 0.3):
             box((cx + dx, COT_Y + dy, 0.25), (0.04, 0.04, 0.5), "steel", "Cot leg")
     box((cx + 0.55, COT_Y + 0.05, 0.6), (0.7, 0.6, 0.06), "blanket", "Folded blanket")
-box((12.6, 3.3, 0.52), (1.9, 0.72, 0.08), "canvas", "Cot")                 # the soldier's cot (empty)
+box((12.95, 3.3, 0.52), (1.9, 0.72, 0.08), "canvas", "Cot")                 # the soldier's cot (empty)
 for dx in (-0.85, 0.85):
     for dy in (-0.3, 0.3):
-        box((12.6 + dx, 3.3 + dy, 0.25), (0.04, 0.04, 0.5), "steel", "Cot leg")
+        box((12.95 + dx, 3.3 + dy, 0.25), (0.04, 0.04, 0.5), "steel", "Cot leg")
 box((13.2, 3.5, 0.68), (0.5, 0.35, 0.25), "bag", "Kit bag")
 # Kian's green backpack on the floor by his cot
-box((7.95, 3.0, 0.13), (0.32, 0.18, 0.26), P.mat("Kian backpack", (0.18, 0.42, 0.16), 0.7), "Backpack on floor")
+box((8.45, 2.95, 0.13), (0.32, 0.18, 0.26), P.mat("Kian backpack", (0.18, 0.42, 0.16), 0.7), "Backpack on floor")
 # Kazemi's seat: an upturned crate by the radio table
 KZ_SEAT = (7.6, 7.75)
 box((KZ_SEAT[0], KZ_SEAT[1], 0.24), (0.55, 0.45, 0.48), "crate", "Seat crate")
@@ -457,13 +457,15 @@ def facing_at(who, t):
     return math.degrees(CH[who].rig.rotation_euler.z - math.pi)
 
 
-def walk(who, t0, t1, pts, clipname="walking", back=False, end_face=None, turn=0.35):
+def walk(who, t0, t1, pts, clipname="walking", back=False, end_face=None, turn=0.35, avoid=True):
     """`who` walks along the polyline pts (first point None = from where he stands) from t0 to t1.
     Feet keep their real stride: the clip speed follows the path speed. back=True: steps backwards,
     facing against the direction of travel. Turns smoothly into the path and (end_face) at the end."""
     pts = list(pts)
     if pts[0] is None:
         pts[0] = pos_at(who, t0 - 1.0 / FPS)
+    if avoid and not back:
+        pts = route(who, t0, t1, pts[0], pts[-1])
     P_ = [Vector((p[0], p[1], 0.0)) for p in pts]
     d0 = P_[1] - P_[0]
     f_prev = math.degrees(math.atan2(-d0.x, d0.y)) + (180 if back else 0)
@@ -550,6 +552,159 @@ def face(a, b):
     return math.degrees(math.atan2(-(b[0] - a[0]), b[1] - a[1]))
 
 
+# ------------------------------------------------------------------ obstacles: people walk AROUND things
+OBST_NAMES = ("Cot", "Table", "Seat crate", "Gym mat", "Backpack on floor")
+BODY_R = 0.3                                  # half a body width + a little room
+GRID = 0.05
+
+
+def obstacle_boxes(who, t0, t1):
+    """floor rectangles (x0, y0, x1, y1) nobody may walk through: furniture, plus anyone else standing or
+    sitting still during this walk (seated people with their knees out in front)."""
+    bs = []
+    for o in bpy.data.objects:
+        if o.type != "MESH" or not o.name.startswith(OBST_NAMES) or "leg" in o.name.lower() or o.hide_render:
+            continue
+        cs = [o.matrix_world @ Vector(c) for c in o.bound_box]
+        if min(c.z for c in cs) > 1.2:
+            continue
+        bs.append((min(c.x for c in cs), min(c.y for c in cs), max(c.x for c in cs), max(c.y for c in cs)))
+    for k in CH:
+        if k == who or k == "soldierZ":
+            continue
+        a, b = Vector(pos_at(k, t0) + (0.0,)), Vector(pos_at(k, t1) + (0.0,))
+        if (a - b).length > 0.1:
+            continue                             # moving too: not a fixed obstacle
+        r = 0.22
+        sit = k in UP and t1 <= UP[k] + 0.05
+        bs.append((a.x - r, a.y - (0.5 if sit else r), a.x + r, a.y + r))
+    return bs
+
+
+def _free(p, bs, R=BODY_R):
+    if not (0.25 <= p.x <= W - 0.25 and 0.25 <= p.y <= D - 0.25):
+        return False
+    return not any(x0 - R < p.x < x1 + R and y0 - R < p.y < y1 + R for x0, y0, x1, y1 in bs)
+
+
+def _clear(a, b, bs):
+    n = max(2, int((b - a).length / 0.04))
+    return all(_free(a.lerp(b, i / n), bs) for i in range(n + 1))
+
+
+def route(who, t0, t1, a, b):
+    """shortest smooth path from a to b around the obstacles (A* on a 5 cm grid, then pulled tight
+    and rounded at the corners). If a is inside an obstacle's margin (sitting on a cot) he first steps
+    straight out the way he faces."""
+    import heapq
+    bs = obstacle_boxes(who, t0, t1)
+    a, b = Vector((a[0], a[1], 0)), Vector((b[0], b[1], 0))
+    head = [a]
+    if not _free(a, bs):
+        f = math.radians(facing_at(who, max(0.0, t0 - 1.0 / FPS)))
+        fw = Vector((-math.sin(f), math.cos(f), 0))
+        for i in range(1, 40):
+            q = a + fw * (0.05 * i)
+            if _free(q, bs):
+                head.append(q + fw * 0.08)
+                break
+    s = head[-1]
+    tail = [b]
+    if not _free(b, bs):                         # the goal itself is tight (e.g. at a wall): allow it
+        bs_goal = [bb for bb in bs if not (bb[0] - BODY_R < b.x < bb[2] + BODY_R and bb[1] - BODY_R < b.y < bb[3] + BODY_R)]
+        bs = bs_goal
+    cell = lambda p: (int(round(p.x / GRID)), int(round(p.y / GRID)))
+    pt = lambda c: Vector((c[0] * GRID, c[1] * GRID, 0))
+    free_c = {}
+
+    def ok(c):
+        if c not in free_c:
+            free_c[c] = _free(pt(c), bs)
+        return free_c[c]
+    cs, cg = cell(s), cell(b)
+    openq = [(0.0, cs)]
+    g = {cs: 0.0}
+    came = {}
+    nb = [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)]
+    while openq:
+        _, c = heapq.heappop(openq)
+        if c == cg:
+            break
+        for dx, dy in nb:
+            n_ = (c[0] + dx, c[1] + dy)
+            if n_ != cg and not ok(n_):
+                continue
+            ng = g[c] + math.hypot(dx, dy)
+            if ng < g.get(n_, 1e9):
+                g[n_] = ng
+                came[n_] = c
+                heapq.heappush(openq, (ng + math.hypot(cg[0] - n_[0], cg[1] - n_[1]), n_))
+    path = [b]
+    c = cg
+    while c in came:
+        c = came[c]
+        path.append(pt(c))
+    path[-1] = s
+    path.reverse()
+    tight = [path[0]]                            # string pulling: keep only the corners
+    i = 0
+    while i < len(path) - 1:
+        j = len(path) - 1
+        while j > i + 1 and not _clear(path[i], path[j], bs):
+            j -= 1
+        tight.append(path[j])
+        i = j
+    pts = tight
+    for _ in range(3):                           # round the corners (Chaikin), only where it stays clear
+        if len(pts) < 3:
+            break
+        new = [pts[0]]
+        for p, q in zip(pts, pts[1:]):
+            new += [p.lerp(q, 0.25), p.lerp(q, 0.75)]
+        new.append(pts[-1])
+        new = [new[0]] + new[2:-2] + [new[-1]] if len(new) > 4 else new
+        if all(_clear(u, v, bs) for u, v in zip(new, new[1:])):
+            pts = new
+        else:
+            break
+    full = head[:-1] + pts
+    print("ROUTE", who, t0, "len %.2f" % sum((v - u).length for u, v in zip(full, full[1:])),
+          [(round(p.x, 2), round(p.y, 2)) for p in tight], flush=True)
+    return [(p.x, p.y) for p in full]
+
+
+def stand_up(who, t, dur=0.6):
+    """smooth sit -> stand: the body pose blends from the last seated frame into the walk over `dur` s."""
+    rig = CH[who].rig
+    f0, n = fr(t) - 1, max(2, int(dur * FPS))
+    by = {}
+    for fc in fcurves_of(rig):
+        if fc.data_path.startswith("pose.bones"):
+            by.setdefault(fc.data_path, {})[fc.array_index] = fc
+    for path, comps in by.items():
+        kp = {}
+        for i, fc in comps.items():
+            kp[i] = {int(round(k.co.x)): k for k in fc.keyframe_points}
+        if any(f0 not in kp[i] for i in kp):
+            continue
+        base = {i: kp[i][f0].co.y for i in kp}
+        for j in range(1, n + 1):
+            f = f0 + j
+            if any(f not in kp[i] for i in kp):
+                continue
+            w = smooth(j / n) if "smooth" in globals() else (j / n) ** 2 * (3 - 2 * j / n)
+            cur = {i: kp[i][f].co.y for i in kp}
+            sgn = 1.0
+            if path.endswith("rotation_quaternion") and sum(base[i] * cur[i] for i in kp) < 0:
+                sgn = -1.0
+            for i in kp:
+                k = kp[i][f]
+                k.co.y = base[i] * sgn * (1 - w) + cur[i] * w
+                k.handle_left.y = k.handle_right.y = k.co.y
+    for fc in fcurves_of(rig):
+        fc.update()
+
+
 # ------------------------------------------------------------------ blocking
 SIT = {k: (x - 0.25, COT_Y - 0.3, 0.0) for k, x in COTS.items()}
 KZ_SIT = (KZ_SEAT[0], KZ_SEAT[1] - 0.3, 0.0)
@@ -569,13 +724,13 @@ def asleep(who, t):
 
 
 # everyone dozes on the cots (Kazemi on his crate) until they get up
-UP = {"me": 10.5, "mahsa": 20.5, "kian": 49.5, "arian": 55.5, "kazemi": 62.5}
+UP = {"me": 10.5, "mahsa": 20.5, "kian": 49.2, "arian": 55.5, "kazemi": 62.5}
 for k, off in (("arian", 0.0), ("me", 1.3), ("kian", 2.6), ("mahsa", 3.1)):
     act(k, "sitting_idle", 0.0, UP[k], SIT[k], 180, loop=True, src_from=off, speed=0.55)
 act("kazemi", "sitting_idle", 0.0, UP["kazemi"], KZ_SIT, 180, loop=True, src_from=2.0, speed=0.5)
 # ---- me: across the dark hall to the storeroom door
-walk("me", 10.5, 16.0, [SIT["me"][:2], (7.2, 4.6), (9.6, 6.6), ME_DOOR], end_face=0)
-act("me", "breathing_idle", 16.0, 17.2, ME_DOOR + (0,), 0, speed=1.0)
+walk("me", 10.5, 16.6, [SIT["me"][:2], (7.2, 4.6), (9.6, 6.6), ME_DOOR], end_face=0)
+act("me", "breathing_idle", 16.6, 17.2, ME_DOOR + (0,), 0, speed=1.0)
 walk("me", 17.2, 17.9, [ME_DOOR, ME_BACK[:2]], back=True)
 act("me", "nervously_look_around", 17.9, 30.2, ME_BACK, face(ME_BACK, WINDOW), loop=True, speed=0.9)
 act("me", "breathing_idle", 30.2, 37.0, ME_BACK, face(ME_BACK, WINDOW), loop=True)
@@ -602,7 +757,7 @@ for _ in range(2):                         # stand him where the clip's hands me
     KIAN_CHAIN = (KIAN_CHAIN[0] + CHAIN_AT[0] + 0.03 - hm.x, KIAN_CHAIN[1] + CHAIN_AT[1] - hm.y, 0)
 act("kian", "reloading", 55.0, 58.4, KIAN_CHAIN, 90, speed=1.0, in_place=True)   # pulls at the chain
 print("KIAN AT CHAIN", [round(v, 3) for v in KIAN_CHAIN], "hands", [round(v, 3) for v in hands_mid("kian", 55.3, 58.2)])
-walk("kian", 49.5, 55.0, [SIT["kian"][:2], (5.0, 4.4), KIAN_CHAIN[:2]], end_face=90)
+walk("kian", 49.2, 55.0, [SIT["kian"][:2], (5.0, 4.4), KIAN_CHAIN[:2]], end_face=90)
 rc = random.Random(5)
 t = 55.0
 CHAIN_RIG.keyframe_insert("location", frame=fr(t))
@@ -623,6 +778,8 @@ act("arian", "nervously_look_around", 62.5, END, ARIAN_GRAB, face(ARIAN_GRAB, (6
 walk("kazemi", 62.5, 64.2, [KZ_SIT[:2], KZ_MID[:2]], end_face=face(KZ_MID, (2.0, 4.6)))
 act("kazemi", "hands_forward_gesture", 64.2, 67.0, KZ_MID, face(KZ_MID, (2.0, 4.6)), speed=1.0)
 act("kazemi", "breathing_idle", 67.0, END, KZ_MID, face(KZ_MID, (2.0, 4.6)), loop=True)
+for k, t in UP.items():                       # nobody pops up off the cot: a real stand-up
+    stand_up(k, t)
 # ---- the soldier behind the window
 S_WIN = (WINDOW[0] + 0.02, D + 0.5, 0)
 act("soldierZ", "breathing_idle", 16.8, 30.2, S_WIN, 180, loop=True, speed=0.8)
@@ -669,9 +826,9 @@ SHOTS = [
     (30.2, 37.0, (11.25, 7.55, 1.56), (11.28, 8.15, 1.6), (11.38, 9.45, 1.6), (11.38, 9.45, 1.62), 32),
     (37.0, 41.0, (11.45, 8.35, 1.62), (11.4, 8.3, 1.62), (0.0, 4.9, 1.2), (0.0, 4.9, 1.2), 30),
     (41.0, 49.0, (2.9, 5.9, 1.45), (1.9, 5.3, 1.5), (0.0, 4.9, 1.2), (0.0, 4.9, 1.2), 24),
-    (49.0, 53.0, (4.3, 1.3, 1.5), (4.0, 1.4, 1.5), (6.6, 3.9, 1.0), (3.4, 4.6, 1.1), 22),
+    (49.0, 53.0, (4.3, 1.3, 1.5), (4.0, 1.4, 1.5), (7.3, 3.7, 1.0), (3.4, 4.6, 1.1), 22),
     (53.0, 56.0, (11.24, 7.9, 1.58), (11.3, 8.2, 1.6), (11.38, 9.45, 1.6), (11.38, 9.45, 1.6), 30),
-    (56.0, 59.2, (2.7, 2.5, 1.5), (2.6, 2.6, 1.5), (0.8, 4.7, 1.0), (0.9, 4.6, 1.05), 24),
+    (56.0, 59.2, (3.7, 2.1, 1.5), (3.6, 2.2, 1.5), (0.8, 4.7, 1.0), (0.9, 4.6, 1.05), 24),
     (59.2, 62.5, (0.45, 5.75, 1.45), (0.5, 5.7, 1.45), (1.35, 4.4, 1.25), (1.35, 4.4, 1.25), 26),
     (62.5, 67.5, (4.6, 3.7, 1.6), (4.8, 3.9, 1.6), (7.2, 7.0, 1.2), (6.2, 6.0, 1.45), 26),
     (67.5, 70.0, (11.3, 6.4, 1.45), (11.3, 6.9, 1.5), (11.3, 9.0, 1.4), (11.3, 9.0, 1.42), 28),

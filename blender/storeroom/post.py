@@ -10,7 +10,7 @@ sys.path.insert(0, HERE)
 from captions import LINES, NAMES, END, QUESTION  # noqa: E402
 FONT = os.path.join(HERE, "..", "fonts", "Vazirmatn-FD-ExtraBold.ttf")
 FPS, W, H = 24, 1080, 1920
-CARD = 4.0
+CARD = 5.6
 SRC = os.path.join(HERE, "frames")
 TMP, OUT = os.path.join(HERE, "post_tmp"), os.path.join(HERE, "out")
 COL = {"mom": (255, 150, 170), "kazemi": (255, 210, 120), "arian": (140, 220, 120), "mahsa": (150, 200, 255),

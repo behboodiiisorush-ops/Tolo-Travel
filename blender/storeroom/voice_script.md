@@ -19,3 +19,19 @@
 
 ## کارت آخر (اختیاری، صدای راوی)
 [softly] [mysterious] به کی اعتماد می‌کردی؟ [short pause] سرباز... یا صدای مامان؟
+
+## صداهای ساخته‌شده (ElevenLabs، مدل v4) — `voices/`
+| فایل | صدا | متن فرستاده‌شده |
+|---|---|---|
+| 01_me | Danesh (کمی زیرتر در میکس) | [whispers] نصفه‌شب بود... [short pause] که صدای تق‌تق اومد. |
+| 02_soldier | خشن (+ لایه‌ی خرخر زامبی در میکس) | [raspy] [heavy breathing] نترس... [low growl] هنوز خودمم. [wheezing] وقت زیادی ندارم. |
+| 03_mahsa | Amitis | [whispers] [scared] چی می‌خوای از ما؟ |
+| 04_soldier | خشن | [raspy] [urgent] امروز که بیرون بودم دیدمشون. [heavy breathing] اونایی که پشت درِ سالن‌ان... [low growl] [whispers] دیگه آدم نیستن. |
+| 05_mom | Mitra (خفه، پشت در) | [softly] [tired] پسرم؟... [short pause] بیا درو باز کن. [shivering] سردمه. |
+| 06_kian | Farshad (زیرتر) | [sleepy] [hopeful] مامان؟ |
+| 07_soldier | خشن | [growling] [shouting] بازش نکنید! |
+| 08_arian | Amin.GS (کمی زیرتر) | [whispers] [nervous] حالا حرف کیو باور کنیم؟ |
+| 09_kazemi | mohsen | [firm] [quietly] هیچ‌کس به هیچ دری دست نمی‌زنه. |
+| 11_card | Danesh | [softly] [mysterious] به کی اعتماد می‌کردی؟ [short pause] سرباز... یا صدای مامان؟ |
+
+میکس: `python3 mix_voices.py` → `out/storeroom_voices.wav` و (بعد از `post.py`) `out/storeroom_voices.mp4`.
