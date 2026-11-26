@@ -456,7 +456,7 @@ act("kian", "breathing_idle", 6.0, 12.8, KB, 215, src_from=2.0)
 act("kian", "sitting_idle", 12.8, 41.4, SOFA, 180, via=[(0.0, 6.9), (2.1, 8.0)], walk_t=2.6, loop=True)
 act("kian", "breathing_idle", 41.4, 48.8, KI, 180, via=[(1.0, 8.6), (-1.4, 7.4)], walk_t=2.4)
 act("kian", "hands_forward_gesture", 48.8, 49.7, KI, 180, src_from=0.0, speed=1.0)  # reaching for the button
-act("kian", "pushing_2", 49.7, 53.6, (KI[0] + 0.05, KI[1] + 0.3, F), 180, src_from=0.0, speed=0.7)
+act("kian", "hands_forward_gesture", 49.7, 53.6, (KI[0] + 0.05, KI[1] + 0.3, F), 180, src_from=0.0, speed=0.8)
 act("kian", "breathing_idle", 53.6, 61.0, (0.15, 5.32, F), 185, via=[(-0.4, 6.9), (0.0, 6.0)], walk_t=2.3)
 # ---- mom in the kitchen (her back to the door; she turns to answer)
 act("mom", "reloading", 0.0, 10.6, (-2.2, 10.15, F), 0, loop=True, in_place=True)
@@ -599,9 +599,9 @@ PLAN = [
     ("fly", 41.0, 41.7, [RAILP, V(0.5, 5.4, 4.0), DOORS], V(-0.8, 9.0, 3.8)),
     ("perch", 41.7, 49.0, DOORS, [(41.7, ("head", "kian")), (44.0, ("head", "kian")), (45.8, ("head", "mom")),
                                   (47.0, ("head", "mom")), (48.4, ("head", "kian"))], []),
-    ("fly", 49.0, 49.8, [DOORS, V(-0.7, 6.4, 3.8), V(-1.6, IY0 + 0.2, F + 1.15)], ("head", "kian")),
-    ("hover", 49.8, 52.6, V(-1.62, IY0 + 0.2, F + 1.12), ("head", "kian")),
-    ("fly", 52.6, 54.0, [V(-1.62, IY0 + 0.2, F + 1.12), V(-1.0, 7.0, 4.6), V(0.0, 6.0, 4.7), V(0.6, 5.2, 4.5), RAILP],
+    ("fly", 49.0, 49.8, [DOORS, V(-0.7, 6.4, 3.8), V(-1.6, IY0 + 0.2, F + 1.36)], ("head", "kian")),
+    ("hover", 49.8, 52.6, V(-1.62, IY0 + 0.2, F + 1.36), ("head", "kian")),
+    ("fly", 52.6, 54.0, [V(-1.62, IY0 + 0.2, F + 1.36), V(-1.0, 7.0, 4.6), V(0.0, 6.0, 4.7), V(0.6, 5.2, 4.5), RAILP],
      None),
     ("perch", 54.0, 61.0, RAILP, [(54.0, V(0.0, 7.0, 4.2)), (55.0, ("head", "kian")), (56.4, ("head", "rezaei")),
                                   (58.6, ("head", "kian")), (59.6, ("head", "rezaei"))], []),
