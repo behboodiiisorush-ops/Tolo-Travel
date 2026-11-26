@@ -310,7 +310,7 @@ def lamp(name, loc, energy, col, radius=0.15):
 L_desk = lamp("Desk lamp", LAMP + Vector((-0.08, 0, -0.05)), 45, (1.0, 0.72, 0.45))
 L_bed = lamp("Bed lamp", (-0.45, 2.15, 0.95), 30, (1.0, 0.7, 0.42))
 L_ceiling = P.area_light((0.3, 0.3, 2.7), (0.3, 0.3, 0), 140, 1.2, (1.0, 0.85, 0.7), name="Ceiling")
-L_moon = P.area_light((0.9, 3.2, 2.0), (0.6, 0.0, 0.6), 60, 1.6, (0.55, 0.65, 1.0), name="Moon")
+L_moon = P.area_light((0.9, 3.2, 2.0), (0.6, 0.0, 0.6), 170, 1.6, (0.55, 0.65, 1.0), name="Moon")
 L_flash = P.area_light((0.9, 3.6, 2.6), (0.5, 0.0, 0.5), 0, 2.5, (0.8, 0.85, 1.0), name="Lightning")
 L_screen = lamp("Screen glow", (2.15, DESK.y + 0.1, 1.06), 8, (0.4, 0.6, 1.0), 0.3)
 emit_nodes = []
@@ -428,8 +428,10 @@ for f in range(1, N + 1, 2):
     hand = ar.rig.matrix_world @ ar.rig.pose.bones["hand_r"].head
     if t < 9.0:
         tgt = Vector((1.9, DESK.y - 0.15, 0.78))                    # notebook
-    elif t < 15.0:
+    elif t < 10.4:
         tgt = Vector((1.0, 2.5, 1.6))                               # the window (lightning)
+    elif t < 15.0:
+        tgt = Vector((2.4, 0.9, 2.3))                               # up at the dead lights
     elif t < 19.0:
         tgt = LAMP
     elif t < 26.5:
@@ -568,7 +570,7 @@ def head(f):
 SHOTS = [
     (0.0, 8.0, 24, lambda f, u: Vector((-0.2 + 0.35 * u, -1.6 + 0.3 * u, 1.75)), lambda f, u: head(f) - Vector((0, 0, 0.35))),
     (8.0, 10.4, 28, lambda f, u: Vector((1.0, 1.6, 1.45)), lambda f, u: Vector((0.9, 2.6, 1.5)) + (head(f) - Vector((0.9, 2.6, 1.5))) * 0.0),
-    (10.4, 15.0, 50, lambda f, u: head(f) + Vector((0.75, -0.45, 0.02)), lambda f, u: head(f) + Vector((0, 0, 0.03))),
+    (10.4, 15.0, 45, lambda f, u: head(f) + Vector((0.7, 0.35, -0.05)), lambda f, u: head(f) + Vector((0, 0, 0.03))),
     (15.0, 19.0, 35, lambda f, u: Vector((0.6, -0.9, 1.4)), lambda f, u: (head(f) + LAMP) / 2),
     (19.0, 23.0, 30, lambda f, u: Vector((0.5 - 0.1 * u, -1.1, 1.35)), lambda f, u: head(f) - Vector((0, 0, 0.25))),
     (23.0, 27.0, 50, lambda f, u: head(f) + Vector((-0.55, -0.4, -0.15)), lambda f, u: (ar.rig.matrix_world @ ar.rig.pose.bones["hand_r"].head + head(f)) / 2),
