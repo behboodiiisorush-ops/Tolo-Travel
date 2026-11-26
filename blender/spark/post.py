@@ -59,6 +59,19 @@ def badge(img):
     d.text((W - 130, 110), "جرقه", font=f, fill=(255, 255, 255), anchor="mm", direction="rtl", language="fa")
 
 
+CREDIT = "ساخته شده توسط بلندر"
+CHANNEL = "agetobudi"
+
+
+def corner(img):
+    """small credit in the bottom corner of every frame (every version)"""
+    d = ImageDraw.Draw(img)
+    d.text((W - 40, H - 70), CREDIT, font=font(30), fill=(235, 235, 235), anchor="rm", direction="rtl",
+           language="fa", stroke_width=3, stroke_fill=(0, 0, 0))
+    d.text((W - 40, H - 32), CHANNEL, font=font(30), fill=(255, 210, 90), anchor="rm",
+           stroke_width=3, stroke_fill=(0, 0, 0))
+
+
 def card(t):
     img = Image.new("RGB", (W, H), (0, 0, 0))
     d = ImageDraw.Draw(img)
@@ -69,6 +82,9 @@ def card(t):
     c = int(255 * a)
     for k, ln in enumerate(lines):
         d.text((W // 2, y0 + k * 120), ln, font=f, fill=(c, c, c), anchor="mm", direction="rtl", language="fa")
+    d.text((W // 2, H - 330), CREDIT, font=font(52), fill=(int(200 * a),) * 3, anchor="mm", direction="rtl",
+           language="fa")
+    d.text((W // 2, H - 250), CHANNEL, font=font(60), fill=(int(255 * a), int(210 * a), int(90 * a)), anchor="mm")
     d.text((W // 2, y0 - 190), "؟", font=font(140), fill=(int(230 * a), int(40 * a), int(50 * a)), anchor="mm")
     return img
 
@@ -94,7 +110,7 @@ def main():
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-framerate", str(FPS), "-i", os.path.join(seq, "s_%04d.png"),
                     "-frames:v", str(n_pic),
                     "-vf", f"scale={W}:{H}:flags=lanczos,"
-                           "vignette=PI/6",
+                           "hqdn3d=2:1.5:3:3,vignette=PI/6",
                     "-q:v", "2", os.path.join(TMP, "u_%04d.jpg")], check=True)
     names = sorted(n for n in os.listdir(TMP) if n.startswith("u_"))
     total = len(names) + int(CARD * FPS)
@@ -108,6 +124,8 @@ def main():
                 img = Image.blend(Image.new("RGB", img.size), img, fade)
         else:
             img = card(t - len(names) / FPS)
+        if i < len(names):
+            corner(img)
         img.save(os.path.join(TMP, f"n_{i:04d}.jpg"), quality=95)
         badge(img)
         for a, b, who, text in LINES:
