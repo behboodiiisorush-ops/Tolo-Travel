@@ -8,3 +8,14 @@
 - Arin: left palm cut in stained gauze; cotton patch right inner elbow. Vial «۰۰۱» in Elena's right coat pocket (only «۰۰» seen). Sara palms uninjured; tape roll in jacket pocket. Mop alcove near red door established. Arin's grey car outside, headlights on, on reception monitors. Driver = Z6, plain short-sleeved shirt.
 - New: Z5 grey tracksuit at pharmacy; radio "quarantine gate… until six"; carrier motif = single high violin harmonic when an infected spares Arin; Centre hum = sound in Nika's video.
 - CHECK vs CH07-08: CH08 recording says "driver of the night bus you took every night" — CH01 hint needed.
+
+## Fork notes CH05-06 (for merge)
+- Mark 2 rounds at fire door; throws flashlight to Arin (Arin carries it from CH05_SC007). Mark LOST.
+- Sara takes fire axe CH05_SC004, keeps to end CH06 (drops it in CH07 when taking pistol).
+- Arin palm reopened for blood lock CH06_SC001, rewrapped fresh gauze, bleeds through.
+- NO blood contact Sara–Arin / Sara–Nika before CH07 lift (Sara gloved when bandaging Nika).
+- Nika end CH06: self-bite LEFT forearm bandaged, bracelet LEFT wrist, straps broken, white eyes, can speak.
+- New clue: contract folder ends with surveillance photo of Arin on the night bus (pay off in CH08 recording).
+- Elena end CH06: unbitten, case open, hand on sedative syringe; NX/leak admission held for CH07.
+- Sam: "came for the doctor"; Mark links convoy to Elena.
+- Sterilisation deadline "60 min" announced 04:20 (→05:20), separate from gate 06:00. CHECK CH07 "30 min" announcement consistent (~04:50).
