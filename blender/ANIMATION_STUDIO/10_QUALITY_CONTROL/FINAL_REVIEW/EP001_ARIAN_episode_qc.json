@@ -1,0 +1,80 @@
+{
+ "action": "EP001_ARIAN",
+ "frames": 295,
+ "loop": false,
+ "played": 295,
+ "root_mode": "episode",
+ "speed_m_s": 0.0,
+ "raw_slip_cm": -1,
+ "foot_slip": {
+  "max_cm": 12.19,
+  "contacts": 21,
+  "pass_": false
+ },
+ "ground": {
+  "lowest_cm": -0.77,
+  "floating_contacts": 0,
+  "pass_": true
+ },
+ "limb_stretch": {
+  "max_dev": {
+   "knee.L": 0.0,
+   "knee.R": 0.0,
+   "elbow.L": 0.0,
+   "elbow.R": 0.0
+  },
+  "pass_": true
+ },
+ "joints": {
+  "max_deg": {
+   "knee.L": 110.9,
+   "knee.R": 109.2,
+   "elbow.L": 126.9,
+   "elbow.R": 113.1
+  },
+  "reverse_bend_frames": {},
+  "flips": {},
+  "pass_": true
+ },
+ "pops": {
+  "count": 0,
+  "worst": [],
+  "pass_": true
+ },
+ "ik_fk": {
+  "max_cm": 27.03,
+  "pass_": false
+ },
+ "pass": false,
+ "items": [
+  {
+   "action": "UHS_IDLE_Breathing",
+   "frames": 36
+  },
+  {
+   "action": "UHS_TRANS_IdleToWalk",
+   "blend": 6
+  },
+  {
+   "action": "UHS_WALK_Natural",
+   "loops": 2,
+   "blend": 6
+  },
+  {
+   "action": "UHS_RUN_Cartoon",
+   "loops": 4,
+   "blend": 6
+  },
+  {
+   "action": "UHS_WALK_Natural",
+   "loops": 2,
+   "blend": 8
+  },
+  {
+   "action": "UHS_GESTURE_Wait",
+   "blend": 10
+  }
+ ],
+ "talk_frame": 234,
+ "lip_frames": 61
+}
