@@ -409,39 +409,62 @@ def tear(ch, t0, t1, side, size=1.0):
 TEARS = [tear(CH["kian"], 43.6, 47.8, -1, 1.0), tear(CH["kian"], 45.0, 48.6, 1, 0.8)]
 
 # ------------------------------------------------------------------ cameras
-# POV: an 'eye' empty follows my head bone; the camera hangs on it (its local keys = where I look)
-sc.frame_set(fr(30.0))
+# POV: the camera is at my eyes and turns with my head, but stays level (no roll, smoothed): clean, balanced
 hb = rig_me.pose.bones["head"]
+sc.frame_set(fr(30.0))
 pts = eye_points(CH["me"])
 eye_rest = sum(pts, Vector()) / max(1, len(pts))
-eye_rest.y = min(p.y for p in pts) - 0.02                       # just in front of the eyes
-W3 = rig_me.matrix_world.to_3x3()
-pb_m = rig_me.matrix_world @ hb.matrix
-rest_m = rig_me.matrix_world @ hb.bone.matrix_local
-to_pose = pb_m @ rest_m.inverted()
-eye_world = to_pose @ (rig_me.matrix_world @ eye_rest)
-fwd = (to_pose.to_3x3() @ (W3 @ Vector((0, -1, 0)))).normalized()
-up = (to_pose.to_3x3() @ (W3 @ Vector((0, 0, 1)))).normalized()
-eye = P.empty("Me eye", tuple(eye_world))
-eye.matrix_world = Matrix.Translation(eye_world) @ fwd.to_track_quat("-Z", "Y").to_matrix().to_4x4()
-con = eye.constraints.new("CHILD_OF")
-con.target, con.subtarget = rig_me, "head"
-con.inverse_matrix = pb_m.inverted()
+eye_rest.y = min(p.y for p in pts) - 0.02                       # just in front of the eyes (rig space, rest)
 pov = bpy.data.objects.new("POV", bpy.data.cameras.new("POV"))
 sc.collection.objects.link(pov)
-pov.parent = eye
 pov.data.lens = 14
 pov.data.sensor_fit = "VERTICAL"
 pov.data.sensor_height = 36
 pov.data.clip_start = 0.06
 pov.data.clip_end = 800
 pov.rotation_mode = "XYZ"
-LOOK = [  # (t, pitch up deg, yaw left deg) — where I look, on top of the head's own motion
-    (FB0, 4, 0), (12.0, 4, 6), (14.0, 2, -4), (FALL, 0, 0), (26.0, 6, 0), (28.5, 22, 10), (30.5, 10, -15),
-    (31.0, 8, 0), (34.4, 12, 0), (43.0, -2, 0), (45.0, -4, 0), (54.0, 2, 0), (60.0, 6, 8), (63.0, 4, -6)]
-for t, pitch, yaw in LOOK:
-    pov.rotation_euler = (math.radians(pitch), math.radians(yaw), 0)
-    pov.keyframe_insert("rotation_euler", frame=fr(t))
+LOOK = [  # (t, pitch up deg, yaw left deg) — where I look, on top of where my head points
+    (FB0, 2, 0), (12.0, 2, 6), (14.0, 0, -4), (FALL, -4, 0), (26.0, 4, 0), (28.5, 18, 10), (30.5, 8, -15),
+    (31.0, 6, 0), (34.4, 12, 0), (43.0, -6, 0), (45.0, -8, 0), (54.0, 0, 0), (60.0, 4, 8), (63.0, 2, -6)]
+
+
+def look(t):
+    for (a, pa, ya), (b, pb, yb) in zip(LOOK, LOOK[1:] + [(999, LOOK[-1][1], LOOK[-1][2])]):
+        if a <= t < b:
+            u = seg(t, a, min(b, a + 1.2))
+            return pa + (pb - pa) * u, ya + (yb - ya) * u
+    return LOOK[0][1], LOOK[0][2]
+
+
+raw = {}
+for a_, b_ in ((FB0, FB1), (26.0, 65.0)):
+    for f in range(fr(a_), fr(b_) + 1):
+        sc.frame_set(f)
+        W_ = rig_me.matrix_world
+        to_pose = W_ @ hb.matrix @ hb.bone.matrix_local.inverted()      # rest (rig space) -> posed world
+        p = to_pose @ eye_rest
+        fw = to_pose.to_3x3() @ Vector((0, -1, 0))
+        yaw = math.atan2(-fw.x, fw.y)
+        pitch = math.asin(max(-1, min(1, fw.normalized().z)))
+        raw[f] = (p, yaw, pitch)
+rs = random.Random(11)
+frames = sorted(raw)
+for f in frames:
+    nb = [raw[g] for g in range(f - 3, f + 4) if g in raw and abs(g - f) <= 3 and (g < fr(FB1) + 1) == (f < fr(FB1) + 1)]
+    p = sum((q[0] for q in nb), Vector()) / len(nb)
+    y0 = raw[f][1]
+    yaw = y0 + sum(math.atan2(math.sin(q[1] - y0), math.cos(q[1] - y0)) for q in nb) / len(nb)
+    pitch = 0.35 * sum(q[2] for q in nb) / len(nb)                        # a little of the head's nod
+    t = (f - 1) / FPS
+    lp, ly = look(t)
+    if FALL <= t < FB1:                                                      # shake in the fall
+        k = 0.012 * seg(t, FALL + 0.5, FALL + 1.0)
+        p = p + Vector((rs.uniform(-k, k), rs.uniform(-k, k), rs.uniform(-k, k)))
+        lp += rs.uniform(-1.5, 1.5) * seg(t, FALL + 0.5, FALL + 1.0)
+    pov.location = p
+    pov.rotation_euler = (math.radians(90 + lp) + pitch, 0, yaw + math.radians(ly))
+    pov.keyframe_insert("location", frame=f)
+    pov.keyframe_insert("rotation_euler", frame=f)
 # drone / floor camera
 cam = bpy.data.objects.new("Drone", bpy.data.cameras.new("Drone"))
 sc.collection.objects.link(cam)
@@ -468,8 +491,6 @@ KEYS.sort(key=lambda k: k[0])
 for f, c, a, lens in KEYS:
     cam.location = c
     q = (a - c).to_track_quat("-Z", "Y")
-    if fr(WAKE) <= f <= fr(22.0):                          # lying on the floor: the world is tilted
-        q = Matrix.Rotation(math.radians(25), 3, (a - c).normalized()).to_quaternion() @ q
     cam.rotation_euler = q.to_euler()
     cam.keyframe_insert("location", frame=f)
     cam.keyframe_insert("rotation_euler", frame=f)
@@ -483,15 +504,6 @@ for t, c in ((0.0, cam), (FB0, pov), (FB1, cam), (26.0, pov), (65.0, cam)):
     m = sc.timeline_markers.new(f"cam {t}", frame=fr(t))
     m.camera = c
 sc.camera = cam
-rs = random.Random(11)                                   # camera shake in the fall (on top of my head)
-for f in range(fr(FALL), fr(FB1)):
-    t = (f - 1) / FPS
-    k = 0.05 * seg(t, FALL + 0.5, FALL + 1.0)
-    pov.location = (rs.uniform(-k, k) * 0.3, rs.uniform(-k, k) * 0.3, 0)
-    pov.keyframe_insert("location", frame=f)
-pov.location = (0, 0, 0)
-pov.keyframe_insert("location", frame=fr(FB1))
-
 # ------------------------------------------------------------------ look: bright cartoon + Freestyle ink
 sc.frame_set(1)
 T.SAT = 1.3

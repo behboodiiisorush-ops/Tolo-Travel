@@ -110,7 +110,7 @@ def tower(cx, cy, w, d, h, floors_h=3.2, m="conc", strips=False):
                 sx, sy = (0.95, 0.03) if nx == 0 else (0.03, 0.95)
                 glass = R.random() < 0.3
                 cube(bmg if glass else bmd, (px, py, z + 0.8), (sx, sy, 1.6))
-                if R.random() < 0.12:                       # burnt-out window: soot above it
+                if False:                                   # (clean look: no soot)
                     cube(bmb, (px + nx * 0.01, py + ny * 0.01, z + 2.0), (sx * 1.1 + 0.01, sy * 1.1 + 0.01, 0.9))
     INK.append(link("Tower windows", bmd, [M["win"]]))
     INK.append(link("Tower windows glass", bmg, [M["wglass"]]))
@@ -126,13 +126,17 @@ def tower(cx, cy, w, d, h, floors_h=3.2, m="conc", strips=False):
             for sy in (-1, 1):
                 cube(bm, (cx + sx * (w / 2 + 0.05), cy + sy * (d / 2 + 0.05), h / 2), (0.12, 0.12, h))
         INK.append(link("Dead strips", bm, [M["strip_dead"]], RUIN))
-    for shade in ("ivy", "ivy2", "ivy3"):                  # ivy: only after the fall
+    has_ivy = R.random() < 0.55
+    for shade in ("ivy", "ivy2"):                          # ivy: only after the fall, on some towers
         bm = bmesh.new()
+        if not has_ivy:
+            IVY.append(link("Ivy " + shade, bm, [M[shade]], RUIN))
+            continue
         for nx, ny in FACES:
             span = w if nx == 0 else d
             axis = "y" if nx == 0 else "x"
-            for s in range(int(span / 1.5)):
-                if R.random() < 0.35:
+            for s in range(int(span / 4.0)):
+                if R.random() < 0.4:
                     continue
                 u = R.uniform(-span / 2 + 0.5, span / 2 - 0.5)
                 if R.random() < 0.5:
@@ -143,18 +147,17 @@ def tower(cx, cy, w, d, h, floors_h=3.2, m="conc", strips=False):
                 z = z0
                 while z < z1:
                     taper = 1.0 - 0.6 * (z - z0) / max(1, z1 - z0) if z0 == 0 else 0.5 + 0.5 * (z - z0) / max(1, z1 - z0)
-                    r = R.uniform(0.35, 0.8) * taper + 0.2
-                    u2 = u + R.uniform(-0.7, 0.7) * taper
+                    r = R.uniform(0.5, 0.9) * taper + 0.3
+                    u2 = u + R.uniform(-0.35, 0.35) * taper
                     off = 0.05 + {"ivy": 0.0, "ivy2": 0.04, "ivy3": 0.08}[shade]
                     px = cx + (u2 if nx == 0 else nx * (w / 2 + off))
                     py = cy + (u2 if ny == 0 else ny * (d / 2 + off))
                     # keep the big screen clear
                     if not (abs(px - SCREEN_C[0]) < 1.0 and abs(py) < SCREEN_W / 2 + 0.6 and
-                            abs(z - SCREEN_C[2]) < SCREEN_H / 2 + 0.6) and R.random() < 0.8:
+                            abs(z - SCREEN_C[2]) < SCREEN_H / 2 + 0.6):
                         blob(bm, (px, py, z), axis, r)
-                    z += R.uniform(0.35, 0.9)
-        o = link("Ivy " + shade, bm, [M[shade]], RUIN)
-        IVY.append(o)
+                    z += R.uniform(0.6, 1.0)
+        IVY.append(link("Ivy " + shade, bm, [M[shade]], RUIN))
     for j in range(2):
         INK.append(P.sphere((cx + R.uniform(-w / 3, w / 3), cy + R.uniform(-d / 3, d / 3), h + 0.6), R.uniform(1.0, 1.6),
                             M["leaf"], "Roof tree", scale=(1, 1, 0.8)))
@@ -189,15 +192,16 @@ def vault(x0, x1, cy, radius, z0):
             c = Vector((x, cy, z0)) + n * (radius + 0.03)
             q = n.to_track_quat("Z", "X").to_matrix().to_4x4()
             rr = R.random()
-            key = "pane3" if rr < 0.06 else "pane2" if rr < 0.17 else "pane"
-            hole = (math.sin(x * 0.45 + 1.3) * math.cos(a * 3.1 + x * 0.2) > 0.35) or R.random() < 0.08
+            key = "pane3" if rr < 0.02 else "pane2" if rr < 0.08 else "pane"
+            hole = ((x - 6) ** 2 / 9 + (a - 1.2) ** 2 / 0.12 < 1) or ((x + 12) ** 2 / 6 + (a - 2.1) ** 2 / 0.08 < 1) \
+                or ((x - 21) ** 2 / 5 + (a - 0.9) ** 2 / 0.07 < 1)
             cube((lost if hole else keep)[key], c, ((x1 - x0) / nx * 0.86, math.pi * radius / ny * 0.86, 0.015), q)
             quad(shell_lost if hole else shell_keep, Vector((x, cy, z0)) + n * (radius - 0.01),
                  (x1 - x0) / nx * 1.02, math.pi * radius / ny * 1.02, q)
-            if hole and R.random() < 0.5:                # its pieces on the floor below
+            if hole and R.random() < 0.25:               # its pieces on the floor below
                 p = Vector((x + R.uniform(-0.6, 0.6), c.y * 0.9 + R.uniform(-0.6, 0.6), 0.05))
                 if abs(p.y - cy) < radius - 0.6:
-                    for s in range(3):
+                    for s in range(2):
                         cube(shards, p + Vector((R.uniform(-0.3, 0.3), R.uniform(-0.3, 0.3), 0)),
                              (R.uniform(0.08, 0.3), R.uniform(0.06, 0.25), 0.012),
                              Matrix.Rotation(R.uniform(0, 6.3), 4, "Z") @ Matrix.Rotation(R.uniform(-0.2, 0.2), 4, "X"))
@@ -243,9 +247,9 @@ def car(x, y, rz, m, group, wreck=False):
         elif p.center.z > 0.85 and not wreck and abs(p.normal.z) < 0.5:
             p.material_index = 2
     if wreck:
-        o.data.materials[0] = M["soot"] if R.random() < 0.5 else M[m]
+        o.data.materials[0] = M[m]
     o.location = (x, y, 0)
-    o.rotation_euler = (R.uniform(-0.12, 0.12) if wreck else 0, R.uniform(-0.15, 0.15) if wreck else 0, rz)
+    o.rotation_euler = (R.uniform(-0.04, 0.04) if wreck else 0, R.uniform(-0.05, 0.05) if wreck else 0, rz)
     INK.append(o)
     return o
 
@@ -298,11 +302,10 @@ def build(screen_mat):
     for k, (x, y, rz, m) in enumerate([(-22, 12, 0, "car1"), (-9, -12, 3.14, "car2"), (3, 12, 0, "car3"),
                                        (17, -12, 3.14, "car1"), (29, 12, 0.0, "car2"), (-35, -12, 3.14, "car3")]):
         car(x, y, rz, m, INTACT)
-        car(x + R.uniform(-2, 2), y + R.uniform(-1.5, 1.5), rz + R.uniform(-0.8, 0.8), m, RUIN, wreck=True)
+        car(x + R.uniform(-1, 1), y + R.uniform(-0.6, 0.6), rz + R.uniform(-0.3, 0.3), m, RUIN, wreck=True)
     car(-4.0, -4.2, 0.4, "car2", RUIN, wreck=True)          # wrecks inside the arcade
-    car(19.0, 4.1, -0.3, "car1", RUIN, wreck=True)
     bm = bmesh.new()                                       # rubble heaps along the arcade walls
-    for k in range(70):
+    for k in range(16):
         x = R.uniform(-29, 29)
         y = R.choice((-1, 1)) * R.uniform(4.6, 6.0)
         cube(bm, (x, y, R.uniform(0.05, 0.35)), (R.uniform(0.2, 0.9), R.uniform(0.2, 0.7), R.uniform(0.15, 0.5)),
