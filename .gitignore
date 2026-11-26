@@ -40,3 +40,8 @@ blender/wall_toon/post_tmp/
 blender/wall_toon/*.blend
 blender/wall_toon/out/*.wav
 blender/wall_toon/out/preview/
+# BLENDER_ANIMATION: keep the .blend files and scripts, not frames/previews/backups
+*.blend1
+blender/BLENDER_ANIMATION/_preview/
+blender/BLENDER_ANIMATION/SHORTS/Renders/*.png
+blender/BLENDER_ANIMATION/_build/render.log

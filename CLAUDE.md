@@ -13,6 +13,9 @@
   (read `blender/mocap/CLIPS.md` — clips are described by what they really show, not their file names).
   EEVEE render with auto-restart (`chain.sh` + `render.py`), then `sound.py` and `post.py`.
   Use this style for new episodes and series (e.g. «زنگ آخر») unless the user asks otherwise.
+- **Project folder layout `blender/BLENDER_ANIMATION/`** (CHARACTERS, ENVIRONMENTS, ASSETS/Props|Materials|Effects,
+  ANIMATIONS, SHORTS/Renders): every .blend there is rebuilt by `_build/build_all.sh` from `_build/lib.py`
+  (props, sets, palette, puppets). New shorts: copy `_build/build_shorts.py`; render with `_build/render_shorts.sh`.
 - Older cartoon (toon) films: `blender/school_pov/`, `blender/train_pov/` — workflow skill `/film-toon`.
 
 ## Rules the user set
