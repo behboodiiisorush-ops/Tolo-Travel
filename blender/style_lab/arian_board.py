@@ -263,6 +263,13 @@ if PART in ("room", "anim"):
     P.box((0, 2.5, 1.4), (5, 0.1, 2.8), m_wall, "Back")
     P.box((-2.5, 0, 1.4), (0.1, 5, 2.8), m_wall, "Left")
     P.box((2.5, 0, 1.4), (0.1, 5, 2.8), m_wall, "Right")
+    # front wall with the open doorway he walks in through (x 1.1..2.0)
+    P.box((-0.7, -2.5, 1.4), (3.6, 0.1, 2.8), m_wall, "Front L")
+    P.box((2.25, -2.5, 1.4), (0.5, 0.1, 2.8), m_wall, "Front R")
+    P.box((1.55, -2.5, 2.45), (0.9, 0.1, 0.7), m_wall, "Lintel")
+    P.box((1.12, -2.85, 1.05), (0.04, 0.82, 2.1), P.wood("Door", (0.75, 0.55, 0.35), planks=False), "Door")
+    P.box((1.55, -3.3, 1.4), (1.2, 0.1, 2.8), P.mat("Hall", (0.8, 0.75, 0.68), 0.9), "Hall wall")
+    P.box((-1.2, -2.44, 1.6), (0.7, 0.02, 0.9), P.mat("Poster3", (0.95, 0.75, 0.3), 0.7), "Poster")
     P.box((0, 0, 2.85), (5, 5, 0.1), P.mat("Ceil", (0.85, 0.82, 0.8), 0.9), "Ceil")
     P.window((0.9, 2.43, 1.55), 1.5, 1.4, "y", m_sky, P.mat("Frame", (0.9, 0.9, 0.88), 0.5))
     for x in (-0.05, 1.85):
@@ -410,6 +417,7 @@ if PART == "anim":
         cam.location = (0.35 - 0.15 * u, 2.1 - 0.25 * u, 1.55)
         cam.keyframe_insert("location", frame=f)
     sc.render.resolution_x, sc.render.resolution_y = 1280, 720
+    sc.eevee.taa_render_samples = 24
     a, b = [int(v) for v in argv[argv.index("--frames") + 1:argv.index("--frames") + 3]] if "--frames" in argv else (1, N)
     d = os.path.join(HERE, "frames", "arian")
     os.makedirs(d, exist_ok=True)
