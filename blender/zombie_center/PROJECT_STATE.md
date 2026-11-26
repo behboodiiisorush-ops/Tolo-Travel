@@ -55,19 +55,21 @@ Read this file first at the start of every new conversation. Never continue from
 | 17 | Rendering | not started | 11_RENDER_PLAN.md, FINAL_RENDER_SETTINGS.md |
 | 18 | Quality control | not started (brief received) | 12_QC_REPORT.md |
 | 19 | Final export | not started | FINAL.mp4, SUBTITLES.srt, CREDITS.txt |
-| — | Story (runs before 02) | v0.1 written; full per-scene rewrite (20-field format, ≥50 scenes, timed) **in progress** | 00_MASTER_BIBLE.md, 01_FULL_SCREENPLAY.md, 05_SCENE_BREAKDOWN.md, 10_CONTINUITY_LEDGER.md |
+| — | Story (runs before 02) | **v1.0 DONE (awaiting approval)**: 64 scenes, 20-field format, 60:00 validated, no gap | 00_MASTER_BIBLE.md, 01_FULL_SCREENPLAY.md, 05_SCENE_BREAKDOWN.md, 10_CONTINUITY_LEDGER.md |
 
 ## 5. Files that exist (verified on disk)
 | file | what |
 |---|---|
 | `docs/00_MASTER_BIBLE.md` | story bible v0.1 (canon, hidden backstory, reveal order, zombie types, night timeline, feasibility) |
-| `docs/01_FULL_SCREENPLAY.md` | screenplay v0.1: 51 scenes, 60:00, Persian dialogue with v3 tags (structure A) |
+| `docs/01_FULL_SCREENPLAY.md` | screenplay v1.0: 64 scenes, 20 fields each, 60:00 validated (structure A); v0.1 kept in `docs/versions/` |
+| `docs/05_SCENE_BREAKDOWN.md` | one row per scene (64) |
+| `docs/10_CONTINUITY_LEDGER.md` | cross-chapter facts + end state of all 64 scenes |
 | `docs/PROJECT_SETTINGS.json` | project settings |
 | `init_master.py` | script that builds the master project (re-runnable, never overwrites a version) |
 | `blend/THE_ZOMBIE_CENTER_MASTER.blend` | master: 11 collections 00_MASTER…10_RENDER, 1920×1080, 24 fps, Cycles, test scene |
 | `blend/versions/THE_ZOMBIE_CENTER_MASTER_v001.blend` | preserved version |
 | `test/phase4_test_frame.png` | Cycles test frame (64 samples, denoised, 43 s on CPU) — inspected: correct |
-Incomplete / in progress: `docs/build/` (chapter rewrites, being written).
+Incomplete / in progress: none.
 
 ## 6. Technical reality (checked, not guessed)
 **Claude ↔ Blender connection:** there is **no Blender MCP / live Blender session** connected. What does work:
@@ -96,5 +98,4 @@ optional: open the .blend files in desktop Blender to review.
 - (none yet)
 
 ## 8. Next task
-Wait for the user's approval of PHASE 01 and decisions D1–D4. Then: merge the chapter rewrites into the screenplay
-(01, 05, 10), validate timing, and present it for approval before PHASE 02.
+Wait for the user's approval of PHASE 01, screenplay v1.0 and decisions D1–D4 (+ render test question). Then PHASE 02 (character design).
