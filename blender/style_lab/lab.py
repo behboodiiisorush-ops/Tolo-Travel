@@ -263,7 +263,7 @@ if STYLE == "clay":
                     nt.links.remove(l)
                 for l in list(b.inputs["Normal"].links):
                     nt.links.remove(l)
-            b.inputs["Base Color"].default_value = tuple(min(1, c * 1.15) for c in col) + (1,)
+            b.inputs["Base Color"].default_value = tuple(min(1, c * 1.15) for c in col[:3]) + (1,)
             b.inputs["Roughness"].default_value = 0.55
             b.inputs["Specular IOR Level"].default_value = 0.35
             tex = nt.nodes.new("ShaderNodeTexNoise")
