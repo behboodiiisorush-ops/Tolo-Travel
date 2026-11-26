@@ -4,14 +4,39 @@ Read this file first at the start of every new conversation. Never continue from
 
 ---
 
+## 0. PERMANENT PROJECT LAW — quality before speed (set by the user, 2026-11-26)
+**The two-day release rhythm is a production target, not permission to deliver unfinished work.**
+If an episode needs more time to reach this standard, say so honestly and deliver it late. Never trade quality for the date.
+The goal is a professional cinematic horror film, not an ordinary animation.
+
+Every episode is checked before delivery — whole motions frame by frame AND at real speed, never only first/last frame:
+1. **Walking / running** — human gait; no foot sliding; feet never sink into the ground; knees bend naturally;
+   pelvis, shoulders and spine move together; weight shifts between the feet; running has balance and acceleration;
+   stops and turns are never abrupt or artificial.
+2. **Arms / hands** — arm swing matches the gait; natural elbows and wrists; no broken fingers; hands never pass
+   through the body or objects; exact contact when grabbing; logical hands in fear, defence and fights.
+3. **Head / face** — eyes look at the right target; natural blinking; the head is not frozen while walking;
+   expressions match the emotion; lip movement matches the dialogue; fear, shock, anger and pain are readable.
+4. **Physics / contact** — no impossible contact between characters; real weight when sitting, standing up and falling;
+   clothes and hair react to the body; correct contact with walls, doors, tables and props; nothing sinks into objects.
+5. **Animation tests in Blender** — Foot Contact Test · Walk Cycle Test · Run Cycle Test · IK/FK Validation ·
+   Ground Contact · Collision Check · Root Motion · Graph Editor curve inspection · Facial Animation Review ·
+   Motion Continuity Check (done with scripts that measure, plus frame-by-frame contact sheets and a real-speed preview).
+6. **Cinematic QC** — same characters, clothes, faces, proportions in every shot; no unneeded camera shake;
+   lighting fits the scene; sound in sync; no black, broken or incomplete frames; no contradiction with earlier episodes.
+7. **Delivery rule** — every episode ships with a QC report: 1 feet · 2 hands · 3 body/balance · 4 face/eyes ·
+   5 environment contact · 6 camera · 7 light & sound · 8 story continuity · 9 render errors · 10 final verdict.
+   **If even one important problem remains, fix it first, then deliver.**
+
 ## 1. Project identity
 | | |
 |---|---|
 | Title | THE ZOMBIE CENTER — مرکز زامبی‌ها (subtitle PATIENT ZERO / بیمار صفر) |
 | Genre | cinematic horror · zombie thriller · psychological horror · survival |
-| Runtime | 60:00 · 8 chapters × 7:30 · 24 fps · 86,400 frames |
+| Format (current) | **series of 12 episodes × ~5 min**, long-form 16:9, **1280×720**, 24 fps, EEVEE; one episode every 2 days, user publishes on YouTube at **19:00 Berlin** (`docs/SERIES_PLAN.md`) |
+| Story runtime | 60:00 · 8 chapters × 7:30 (screenplay v1.0) |
 | Format | 1920×1080, 16:9, Blender Cycles, photorealistic |
-| Dialogue | Persian; voices recorded by the user in ElevenLabs v3; Persian captions (Vazirmatn) |
+| Dialogue | Persian; the user connected ElevenLabs — Claude generates the voices (one fixed designed voice per character, v3 tags); Persian captions (Vazirmatn) |
 | Project rules | no hijab · no flags/emblems/logos/real places · ends with one question to the viewer · silent version + lip movement on every line · times in Berlin time |
 
 ## 2. Story canon (locked — changes only with the user's approval)
@@ -27,10 +52,10 @@ Read this file first at the start of every new conversation. Never continue from
 ## 3. Open decisions (need the user)
 | # | decision | options | status |
 |---|---|---|---|
-| D1 | **Chapter structure** — two different structures were given | A) first brief: 1 THE LAST MESSAGE · 2 THE SAFE SHELTER · 3 THE RED DOOR · 4 THE LABORATORY TRUTH · 5 THE FALL OF THE CENTER · 6 MY SISTER · 7 THE LAST EXIT · 8 PATIENT ZERO (screenplay v0.1 is written to this) · B) master prompt: 1 THE FACILITY · 2 SUBJECT 001 · 3 THE FIRST OUTBREAK · 4 LOCKDOWN · 5 THE UNDERGROUND · 6 NO WAY OUT · 7 THE LAST EXPERIMENT · 8 THE ZOMBIE CENTER | **OPEN** |
-| D2 | Render engine reality (see §6) | Cycles on a GPU (user's PC / render farm) · EEVEE for most shots + Cycles hero shots · other | **OPEN** |
+| D1 | **Chapter structure** (series uses the screenplay v1.0 scenes; chapter names matter only for titles) — two different structures were given | A) first brief: 1 THE LAST MESSAGE · 2 THE SAFE SHELTER · 3 THE RED DOOR · 4 THE LABORATORY TRUTH · 5 THE FALL OF THE CENTER · 6 MY SISTER · 7 THE LAST EXIT · 8 PATIENT ZERO (screenplay v0.1 is written to this) · B) master prompt: 1 THE FACILITY · 2 SUBJECT 001 · 3 THE FIRST OUTBREAK · 4 LOCKDOWN · 5 THE UNDERGROUND · 6 NO WAY OUT · 7 THE LAST EXPERIMENT · 8 THE ZOMBIE CENTER | **OPEN** |
+| D2 | Render engine | user has only a phone → EEVEE on this server, 720p (measured ~20–37 s/frame) | **DECIDED** |
 | D3 | Folder structure — two trees were given | keep everything under `blender/zombie_center/` using the master-prompt tree (00_PROJECT … 17_BACKUPS) | proposed |
-| D4 | Approve screenplay v0.1 story and ending (Sam, Kaveh, final scene at the gate) | — | **OPEN** |
+| D4 | Screenplay story, ending and v1.0 additions | — | **APPROVED** |
 | D5 | New cast separate from the permanent Tolo cast (keys `zc_arin`, …) | — | proposed |
 
 ## 4. Production phases (master-prompt order) and status
@@ -96,6 +121,7 @@ optional: open the .blend files in desktop Blender to review.
 
 ## 7. Approved changes
 - 2026-11-26 (user): screenplay v1.0 additions approved (drawing in Arin's pocket, second drawing hint for Mark, music motifs, fevered man at the gate, route «۴» bus clue, merge fixes).
+- 2026-11-26 (user): phone only; one episode every 2 days at 720p; YouTube release 19:00 Berlin; ElevenLabs connected for Claude to use; PERMANENT QUALITY LAW (§0).
 - 2026-11-26 (user): format changes to a **series of 12 × ~5 min long-form episodes**, released one by one (`docs/SERIES_PLAN.md`). Release time, pace and visual style still open.
 
 ## 8. Next task
