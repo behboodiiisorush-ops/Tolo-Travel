@@ -32,6 +32,7 @@ Check poses fast: `../cast/bpy.sh test_clips.py --clips a,b,c` -> `test/clips_<n
 | cross_punch | 2.0 | boxer guard, one big straight punch forward with a step, back to guard | one hard punch on the steel door |
 | punching_bag | 3.2 | upright guard, a run of quick short punches | hammering the door with fists |
 | start_walking | 2.9 | standing -> walking | starting to walk |
+| start_walking_2 | 2.9 | the same motion as start_walking, exported from a shorter (custom) Mixamo skeleton (`mixamorig1:`); retargets the same | starting to walk |
 | walking | 1.0 | normal walk (in place) | walking |
 | walking_2 | 1.5 | slouched shuffle, arms dangling (not a normal walk) | exhausted / zombie-like walk |
 | pistol_walk | 0.8 | both hands together at chest height, walking (in place) | walking holding something in front |
