@@ -33,3 +33,4 @@ blender/wall/test/
 blender/wall/post_tmp/
 blender/wall/*.blend
 blender/wall/out/*.wav
+blender/wall/out/preview/
