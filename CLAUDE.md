@@ -36,3 +36,7 @@
   with a QC report; any important problem is fixed before delivery, even if the episode is late.
 - 12 episodes × ~5 min, 16:9 720p, every 2 days, the user publishes at 19:00 Berlin. For this series the user
   connected ElevenLabs and asked Claude to generate the voices (one fixed designed voice per character).
+- Long renders are always split across several chats (the user's wish): render one frame range here and start
+  ~6 worker chats with create_session, each rendering its range (`chain.sh A B`, see `blender/bird/chain.sh`)
+  with a keep-alive waiter and pushing only its frames to its own branch `claude/<film>-frames-a…f`;
+  collect the branches, post, deliver, archive the workers.
