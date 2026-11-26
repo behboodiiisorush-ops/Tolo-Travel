@@ -25,3 +25,4 @@
   `[scared]`, `[sighs]` — ElevenLabs performs these and does not read them aloud. Never write the delivery
   as plain text, and never put Persian words in brackets.
 - Persian captions: Vazirmatn font in `blender/fonts/`, Pillow with raqm.
+- Always give times to the user in Berlin time (Europe/Berlin), not UTC.
