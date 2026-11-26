@@ -192,7 +192,7 @@ def vault(x0, x1, cy, radius, z0):
             c = Vector((x, cy, z0)) + n * (radius + 0.03)
             q = n.to_track_quat("Z", "X").to_matrix().to_4x4()
             rr = R.random()
-            key = "pane3" if rr < 0.02 else "pane2" if rr < 0.08 else "pane"
+            key = "pane2" if rr < 0.03 else "pane"
             hole = ((x - 6) ** 2 / 9 + (a - 1.2) ** 2 / 0.12 < 1) or ((x + 12) ** 2 / 6 + (a - 2.1) ** 2 / 0.08 < 1) \
                 or ((x - 21) ** 2 / 5 + (a - 0.9) ** 2 / 0.07 < 1)
             cube((lost if hole else keep)[key], c, ((x1 - x0) / nx * 0.86, math.pi * radius / ny * 0.86, 0.015), q)

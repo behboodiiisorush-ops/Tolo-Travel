@@ -271,7 +271,7 @@ act("kian", "breathing_idle", 43.0, 52.6, KI_I, FAC_KI, src_from=3.0)
 act("kian", "head_nod_yes", 52.6, 54.0, KI_I, FAC_KI)
 # K/L: we walk off; Kian a little ahead on my right
 WALK_V = 1.3
-ME_W0, KI_W0 = Vector((15.0, 0.45, 0)), Vector((15.9, -0.55, 0))
+ME_W0, KI_W0 = Vector((15.0, 0.45, 0)), Vector((16.5, -0.45, 0))
 walk("me", 54.0, END + 0.1, ME_W0, -90, WALK_V)
 walk("kian", 54.0, END + 0.1, KI_W0, -90, WALK_V)
 
@@ -418,15 +418,15 @@ eye_rest = sum(pts, Vector()) / max(1, len(pts))
 eye_rest.y = min(p.y for p in pts) - 0.02                       # just in front of the eyes (rig space, rest)
 pov = bpy.data.objects.new("POV", bpy.data.cameras.new("POV"))
 sc.collection.objects.link(pov)
-pov.data.lens = 14
+pov.data.lens = 16
 pov.data.sensor_fit = "VERTICAL"
 pov.data.sensor_height = 36
 pov.data.clip_start = 0.06
 pov.data.clip_end = 800
 pov.rotation_mode = "XYZ"
 LOOK = [  # (t, pitch up deg, yaw left deg) — where I look, on top of where my head points
-    (FB0, 2, 0), (12.0, 2, 6), (14.0, 0, -4), (FALL, -4, 0), (26.0, 4, 0), (28.5, 18, 10), (30.5, 8, -15),
-    (31.0, 6, 0), (34.4, 12, 0), (43.0, -6, 0), (45.0, -8, 0), (54.0, 0, 0), (60.0, 4, 8), (63.0, 2, -6)]
+    (FB0, 2, 0), (12.0, 2, 6), (14.0, 0, -4), (FALL, -4, 0), (26.0, 2, -14), (28.6, 4, -16), (29.8, 16, 6),
+    (31.0, 4, -14), (34.4, 10, -6), (43.0, -24, 0), (54.0, 0, -12), (58.0, 0, -6), (61.0, 4, 6), (63.0, 2, -4)]
 
 
 def look(t):
@@ -478,7 +478,7 @@ KEYS += [(fr(0.0), Vector((-48, -12, 44)), Vector((0, 3, 3)), 22), (fr(7.0) - 1,
 # E: my eyes on the floor: broken glass above, then I turn my head to Kian and sit up
 FL = Vector((11.0, 0.9, 0.16))
 k_head = Vector(KI_E) + Vector((0.2, 0.3, 0.15))
-for t, c, a in ((WAKE, FL, FL + Vector((0.6, -0.4, 6))), (21.8, FL, FL + Vector((1.0, -0.8, 6))),
+for t, c, a in ((WAKE, FL, FL + Vector((1.2, 0.6, 6))), (21.8, FL, FL + Vector((1.8, 0.3, 6))),
                 (22.8, FL + Vector((0, 0, 0.04)), k_head + Vector((0, 0, 0.4))),
                 (24.4, FL + Vector((0.1, -0.1, 0.32)), k_head + Vector((0, 0, 0.9))),
                 (25.96, FL + Vector((0.2, -0.15, 0.7)), Vector(KI_E) + Vector((0, 0, 1.2)))):
