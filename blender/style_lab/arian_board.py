@@ -33,7 +33,7 @@ STYLE.update({"l-eye-scale-incr": 1.0, "r-eye-scale-incr": 1.0, "head-scale-vert
               "nose-scale-horiz-decr": 0.7, "mouth-scale-horiz-decr": 0.2})
 cast.STYLE = STYLE
 cast.CAST["arian"] = dict(cast.CAST["arian"], age=0.42, height=0.55, weight=0.4,
-                          hair="culturalibre_hair_14", hair_col=(0.035, 0.025, 0.02), brow="eyebrow002",
+                          skin_tint=(0.86, 0.6, 0.46), hair="culturalibre_hair_14", hair_col=(0.035, 0.025, 0.02), brow="eyebrow002",
                           clothes={"elvs_hooded_sweat_jacket1": (0.55, 0.06, 0.07),
                                    "cortu_cargo_pants": (0.07, 0.07, 0.08),
                                    "culturalibre_sneakers": (0.92, 0.9, 0.88)})
@@ -47,16 +47,24 @@ sc.frame_set(1)
 bpy.context.view_layer.update()
 neck = ar.rig.matrix_world @ ar.rig.pose.bones["neck_01"].head
 parts = []
-bpy.ops.mesh.primitive_torus_add(major_radius=0.105, minor_radius=0.012, location=neck + Vector((0, 0.0, -0.02)))
+bpy.ops.mesh.primitive_torus_add(major_radius=0.1, minor_radius=0.014, location=neck + Vector((0, 0.01, -0.035)),
+                                  major_segments=40)
 band = bpy.context.object
-band.scale = (1.05, 0.9, 1.0)
+band.scale = (1.05, 0.95, 1.0)
+band.rotation_euler.x = math.radians(-18)       # dips towards the chest at the front, sits high on the nape
+import bmesh
+bm = bmesh.new()
+bm.from_mesh(band.data)
+bmesh.ops.delete(bm, geom=[v for v in bm.verts if v.co.y < -0.035], context="VERTS")   # open at the front
+bm.to_mesh(band.data)
+bm.free()
 band.data.materials.append(m_hp)
 parts.append(band)
-for sx in (-1, 1):   # cups lie on the collarbones, facing up
-    c = P.cyl(neck + Vector((sx * 0.1, -0.035, -0.075)), neck + Vector((sx * 0.1, -0.035, -0.045)), 0.045, m_hp, "Cup", 24)
-    s = P.cyl(neck + Vector((sx * 0.1, -0.035, -0.045)), neck + Vector((sx * 0.1, -0.035, -0.03)), 0.04, m_cush,
-              "Cushion", 24)
-    parts += [c, s]
+for sx in (-1, 1):   # cups hang at the front of the neck, facing forward/out
+    a = neck + Vector((sx * 0.085, -0.075, -0.085))
+    d = Vector((sx * 0.35, -1.0, 0.25)).normalized()
+    parts.append(P.cyl(a - d * 0.02, a + d * 0.02, 0.05, m_hp, "Cup", 28))
+    parts.append(P.cyl(a - d * 0.035, a - d * 0.02, 0.043, m_cush, "Cushion", 28))
 for o in parts:
     bpy.ops.object.shade_smooth() if False else None
     MT.attach(o, ar.rig, "neck_01")
@@ -73,6 +81,16 @@ for m in bpy.data.materials:
         m.node_tree.links.new(s.links[0].from_socket, h.inputs["Color"])
         m.node_tree.links.new(h.outputs[0], s)
 
+for o in ar.parts.get("Eyes", []):
+    for slot in o.material_slots:
+        b = next((n for n in slot.material.node_tree.nodes if n.type == "BSDF_PRINCIPLED"), None)
+        if b:
+            b.inputs["Roughness"].default_value = 0.04
+            b.inputs["Coat Weight"].default_value = 1.0
+            b.inputs["Coat Roughness"].default_value = 0.02
+for kb in ar.keys.values():
+    kb.slider_max = 2.0
+
 # ------------------------------------------------------------------ render setup
 sc.render.engine = "BLENDER_EEVEE"
 sc.eevee.taa_render_samples = 48
@@ -80,7 +98,7 @@ for prop, v in (("use_raytracing", True), ("use_shadows", True), ("use_fast_gi",
     if hasattr(sc.eevee, prop):
         setattr(sc.eevee, prop, v)
 sc.view_settings.view_transform = "AgX"
-sc.view_settings.exposure = 0.3
+sc.view_settings.exposure = 0.1
 sc.render.image_settings.file_format = "PNG"
 world = bpy.data.worlds.new("W")
 sc.world = world
@@ -129,26 +147,26 @@ if PART == "char":
         ar.rig.rotation_euler.z = math.radians(ang)
         ar.rig.keyframe_insert("rotation_euler", index=2, frame=20)
         sc.frame_set(20)
-        shot(os.path.join(OUT, f"board_turn_{i}.png"), (0, -5.2, hz * 0.55), (0, 0, hz * 0.52), 50, 540, 960)
+        shot(os.path.join(OUT, f"board_turn_{i}.png"), (0, -3.6, hz * 0.6), (0, 0, hz * 0.52), 50, 540, 960)
     ar.rig.rotation_euler.z = math.radians(12)
     ar.rig.keyframe_insert("rotation_euler", index=2, frame=20)
     sc.frame_set(20)
     head = ar.rig.matrix_world @ ar.rig.pose.bones["head"].head + Vector((0, 0, 0.07))
-    cam_d.dof.use_dof = True
-    cam_d.dof.focus_distance = 0.75
-    cam_d.dof.aperture_fstop = 2.0
+    cam_d.dof.use_dof = False
     faces = {
-        "happy": dict(mouth_corner_puller=1.0, mouth_elevation=0.3, eye_SIDE_slit=0.35, eyebrows_SIDE_extern_up=0.4),
-        "surprised": dict(mouth_open=0.8, eye_SIDE_opened_up=1.0, eyebrows_SIDE_up=1.0),
-        "sad": dict(eyebrows_SIDE_inner_up=1.0, mouth_depression=0.8, eye_SIDE_slit=0.25),
-        "angry": dict(eyebrows_SIDE_down=1.0, mouth_compression=0.6, nose_SIDE_elevation=0.4, eye_SIDE_slit=0.3),
-        "scared": dict(eyebrows_SIDE_inner_up=1.0, eyebrows_SIDE_up=0.5, eye_SIDE_opened_up=0.9, mouth_open=0.35,
-                       mouth_retraction=0.5),
+        "happy": dict(mouth_corner_puller=1.6, mouth_elevation=0.4, mouth_open=0.25, eye_SIDE_slit=0.5,
+                      eyebrows_SIDE_extern_up=0.6),
+        "surprised": dict(mouth_open=1.3, eye_SIDE_opened_up=1.6, eyebrows_SIDE_up=1.8, eyebrows_SIDE_inner_up=0.6),
+        "sad": dict(eyebrows_SIDE_inner_up=1.8, mouth_depression=1.5, eye_SIDE_slit=0.45, mouth_compression=0.4),
+        "angry": dict(eyebrows_SIDE_down=1.9, mouth_compression=1.0, mouth_retraction=0.6, nose_SIDE_elevation=0.9,
+                      eye_SIDE_slit=0.5),
+        "scared": dict(eyebrows_SIDE_inner_up=1.8, eyebrows_SIDE_up=1.0, eye_SIDE_opened_up=1.6, mouth_open=0.7,
+                       mouth_retraction=1.0),
     }
     for name, v in faces.items():
         keys(**v)
-        shot(os.path.join(OUT, f"board_face_{name}.png"), head + Vector((0.12, -0.72, 0.0)), head + Vector((0, 0, -0.02)),
-             85, 480, 480)
+        shot(os.path.join(OUT, f"board_face_{name}.png"), head + Vector((0.1, -0.62, 0.0)), head + Vector((0, 0, -0.01)),
+             85, 640, 640)
 
 if PART == "room":
     # cosy bedroom: lilac-blue walls, wooden shelves with toys, desk with a monitor, bed with a navy blanket,
@@ -160,10 +178,10 @@ if PART == "room":
     m_navy = P.mat("Blanket", (0.08, 0.12, 0.32), 0.95)
     m_sheet = P.mat("Sheet", (0.85, 0.85, 0.9), 0.9)
     m_curt = P.mat("Curtain", (0.12, 0.25, 0.5), 0.95)
-    m_sky = P.emit("Sky", (1.0, 0.85, 0.65), 3.0)
+    m_sky = P.emit("Sky", (1.0, 0.62, 0.35), 4.0)
     m_dark = P.mat("Dark", (0.03, 0.03, 0.035), 0.3)
     m_screen = P.emit("Screen", (0.35, 0.55, 0.9), 1.5)
-    m_rug = P.mat("Rug", (0.6, 0.55, 0.5), 0.95)
+    m_rug = P.mat("Rug", (0.75, 0.55, 0.3), 0.95)
     m_plant = P.mat("Leaf", (0.15, 0.45, 0.15), 0.7)
     m_pot = P.mat("Pot", (0.85, 0.85, 0.82), 0.5)
     m_lamp = P.emit("Lamp", (1.0, 0.75, 0.45), 8.0)
@@ -176,10 +194,10 @@ if PART == "room":
     for x in (-0.05, 1.85):
         P.box((x, 2.35, 1.4), (0.35, 0.08, 2.6), m_curt, "Curtain")
     # bed along the left wall
-    P.box((-1.5, 1.0, 0.2), (1.6, 2.6, 0.4), m_wood, "Bed base")
-    P.box((-1.5, 1.0, 0.48), (1.5, 2.5, 0.16), m_sheet, "Mattress")
-    P.box((-1.5, 0.6, 0.58), (1.6, 1.7, 0.06), m_navy, "Blanket")
-    P.box((-1.5, 2.05, 0.65), (0.9, 0.35, 0.18), m_sheet, "Pillow")
+    P.box((-1.5, 1.0, 0.13), (1.6, 2.6, 0.26), m_wood, "Bed base", bevel=0.02)
+    P.box((-1.5, 1.0, 0.36), (1.5, 2.5, 0.2), m_sheet, "Mattress", bevel=0.05)
+    P.box((-1.5, 0.6, 0.47), (1.62, 1.7, 0.05), m_navy, "Blanket", bevel=0.02)
+    P.box((-1.5, 2.05, 0.54), (0.9, 0.35, 0.18), m_sheet, "Pillow", bevel=0.07)
     P.box((-1.5, 2.4, 0.9), (1.6, 0.08, 1.0), m_wood, "Headboard")
     # shelves with "toys" above the bed
     for z in (1.6, 2.05):
@@ -206,6 +224,28 @@ if PART == "room":
     P.box((0.2, 0.4, 0.008), (1.6, 1.2, 0.016), m_rug, "Rug")
     for x, c in ((0.1, (0.85, 0.45, 0.2)), (-0.2, (0.3, 0.5, 0.75))):
         P.box((x + 2.05, 2.44, 1.9), (0.4, 0.01, 0.55), P.mat(f"Poster{x}", c, 0.7), "Poster")
+    # extra life: bedside table + lamp, desk chair, string lights, stuffed toys, backpack, books, hanging plant
+    P.box((-0.45, 2.15, 0.25), (0.45, 0.4, 0.5), m_wood, "Bedside", bevel=0.01)
+    P.cyl((-0.45, 2.15, 0.5), (-0.45, 2.15, 0.75), 0.03, m_dark, "Bed lamp foot")
+    P.cyl((-0.45, 2.15, 0.72), (-0.45, 2.15, 0.9), 0.11, m_lamp, "Bed lamp")
+    P.box((1.75, 0.95, 0.45), (0.5, 0.5, 0.06), m_dark, "Chair seat", bevel=0.02)
+    P.box((1.75, 1.22, 0.75), (0.5, 0.06, 0.6), m_dark, "Chair back", bevel=0.02)
+    P.cyl((1.75, 0.95, 0.05), (1.75, 0.95, 0.42), 0.03, m_dark, "Chair post")
+    bulb = P.emit("Bulb", (1.0, 0.8, 0.45), 15.0)
+    for i in range(16):
+        x = -2.3 + i * 0.14
+        P.sphere((x, 2.43, 2.45 - 0.12 * math.sin(i / 15 * math.pi)), 0.018, bulb, "Bulb")
+    for i, (x, c) in enumerate(((-1.25, (0.85, 0.6, 0.35)), (-1.05, (0.5, 0.75, 0.9)))):
+        mt = P.mat(f"Plush{i}", c, 0.95)
+        P.sphere((x, 1.95, 0.62), 0.11, mt, "Plush body")
+        P.sphere((x, 1.95, 0.8), 0.085, mt, "Plush head")
+        for ex in (-0.05, 0.05):
+            P.sphere((x + ex, 1.95, 0.88), 0.03, mt, "Plush ear")
+    P.box((0.45, 1.9, 0.22), (0.35, 0.2, 0.44), P.mat("Backpack", (0.1, 0.1, 0.12), 0.8), "Backpack", bevel=0.05)
+    for i in range(4):
+        P.box((1.15 + i * 0.07, 0.45, 0.84), (0.05, 0.2, 0.15), P.mat(f"DBook{i}", cols[i], 0.7), "Desk book")
+    for i in range(5):
+        P.sphere((0.05 + 0.05 * math.sin(i), 2.3, 2.6 - 0.18 * i), 0.09 - 0.008 * i, m_plant, "Hanging leaf")
     # light: warm sunset through the window, lamps, cool fill
     P.area_light((0.9, 2.2, 1.6), (0, 0, 0.8), 260, 1.4, (1.0, 0.75, 0.5), name="Window")
     for loc, e in (((2.15, 0.6, 1.15), 25), ((-1.5, 2.1, 2.3), 35)):
@@ -215,7 +255,7 @@ if PART == "room":
         sc.collection.objects.link(o)
         o.location = loc
     P.area_light((0.5, -2.2, 2.3), (0, 1, 1), 110, 3.0, (0.75, 0.8, 1.0), name="Fill")
-    MC.apply(ar, sit, start=1, length=40, offset=(-0.82, 0.6, 0.45), facing=-105, in_place=True, step=1)
+    MC.apply(ar, sit, start=1, length=40, offset=(-0.82, 0.6, 0.22), facing=-105, in_place=True, step=1)
     MC.flush(ar)
     sc.frame_set(20)
     cam_d.dof.use_dof = True
