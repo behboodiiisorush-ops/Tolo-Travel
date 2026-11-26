@@ -5,7 +5,7 @@ sys.path.insert(0, HERE)
 from captions import FLASHBACK, WAKE  # noqa: E402
 bpy.ops.wm.open_mainfile(filepath=os.path.join(HERE, "year1500.blend"))
 sc = bpy.context.scene
-sc.eevee.taa_render_samples = int(os.environ.get("SAMPLES", "4"))   # flat cel look: 4 is enough, ~2x faster
+sc.eevee.taa_render_samples = int(os.environ.get("SAMPLES", "6"))   # soft stylized look: 6 keeps the AO calm
 a, b = [int(v) for v in sys.argv[-1].split("-")]
 os.makedirs(os.path.join(HERE, "frames"), exist_ok=True)
 # Sun shadows cost 5-7x on this CPU renderer in the POV shots and barely show in the flat cel look:
@@ -32,6 +32,7 @@ for f in range(a, b + 1):
     if FLASHBACK[1] * 24 < f <= WAKE * 24:   # the black between the fall and waking up (post draws it)
         continue
     sc.frame_set(f)
-    sc.eevee.use_shadows = cam_at(f) != "POV"   # also the world light's own sun shadow
+    if os.environ.get("LOOK") == "comic":
+        sc.eevee.use_shadows = cam_at(f) != "POV"   # also the world light's own sun shadow
     sc.render.filepath = out
     bpy.ops.render.render(write_still=True)

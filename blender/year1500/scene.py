@@ -113,8 +113,9 @@ for o in C["INTACT"]:
 for o in C["RUIN"]:
     key_vis(o, [(0, True), (FB0, False), (FB1, True)])
 sun = C["SUN"]
+SUNK = 1.0 if os.environ.get("LOOK", "stylized") == "comic" else 1.6   # the stylized look needs a stronger key
 for t, e in ((0, 3.2), (FALL + 0.6, 3.2), (FALL + 0.9, 1.0), (FALL + 1.1, 2.8), (FALL + 1.5, 0.8), (FB1, 3.2)):
-    sun.data.energy = e
+    sun.data.energy = e * SUNK
     sun.data.keyframe_insert("energy", frame=fr(t))
 glow = P.area_light((30.0, 0.0, 7.0), (10.0, 0.0, 1.2), 0, 10.0, (0.75, 0.85, 1.0), size_y=6.0, name="Screen glow")
 for f in range(1, N + 1, 2):
@@ -505,16 +506,58 @@ for t, c in ((0.0, cam), (FB0, pov), (FB1, cam), (26.0, pov), (65.0, cam)):
     m = sc.timeline_markers.new(f"cam {t}", frame=fr(t))
     m.camera = c
 sc.camera = cam
-# ------------------------------------------------------------------ look: bright cartoon + Freestyle ink
+# ------------------------------------------------------------------ look
+FILM_LOOK = os.environ.get("LOOK", "stylized")   # "stylized": smooth rounded toy-like 3D  |  "comic": cel + ink
 sc.frame_set(1)
-T.SAT = 1.3
-T.toonify(sc, samples=int(os.environ.get("SAMPLES", "8")))
-city.ivy_ink()
-# black ink outlines (inverted hull: cheap in memory, unlike Freestyle on a whole city)
-people = [o for c_ in CH.values() for o in c_.objects if o.type == "MESH" and o not in HEAD_OBJS and not any(
-    k in o.name.lower() for k in ("high-poly", "lash", "brow", "teeth", "tongue", "tear"))]
-T.ink(people, 0.006)
-T.ink([o for o in C["INK"] if o.type == "MESH"], 0.04)
+if FILM_LOOK == "comic":
+    T.SAT = 1.3
+    T.toonify(sc, samples=int(os.environ.get("SAMPLES", "8")))
+    city.ivy_ink()
+    # black ink outlines (inverted hull: cheap in memory, unlike Freestyle on a whole city)
+    people = [o for c_ in CH.values() for o in c_.objects if o.type == "MESH" and o not in HEAD_OBJS and not any(
+        k in o.name.lower() for k in ("high-poly", "lash", "brow", "teeth", "tongue", "tear"))]
+    T.ink(people, 0.006)
+    T.ink([o for o in C["INK"] if o.type == "MESH"], 0.04)
+else:
+    import stylized_look as S
+    S.SAT = 1.35
+    S.PALETTE.update({                      # bright toy city: warm terracotta + sky blue, glossy candy cars
+        "Concrete": (0.92, 0.5, 0.3), "Concrete 2": (0.42, 0.68, 0.86),
+        "Window dark": (0.05, 0.1, 0.2), "Window glass": (0.18, 0.45, 0.8),
+        "Road": (0.12, 0.12, 0.15), "Pavement": (0.8, 0.7, 0.55),
+        "Arcade floor": (0.82, 0.5, 0.32), "Arcade floor 2": (0.74, 0.43, 0.27),
+        "Iron": (0.04, 0.22, 0.3), "Glazing bars": (0.03, 0.18, 0.25),
+        "Pane": (0.8, 0.93, 1.0), "Pane grey": (0.55, 0.78, 0.92), "Pane dark": (0.2, 0.42, 0.6),
+        "Shard": (0.75, 0.9, 1.0),
+        "Trunk": (0.35, 0.18, 0.08), "Leaf": (0.22, 0.65, 0.1), "Leaf 2": (0.14, 0.5, 0.07),
+        "Ivy": (0.16, 0.55, 0.1), "Ivy mid": (0.12, 0.45, 0.08), "Ivy light": (0.26, 0.68, 0.14),
+        "Low wall": (0.95, 0.78, 0.5), "Low wall 2": (0.85, 0.58, 0.36),
+        "Rubble": (0.72, 0.6, 0.48), "Soot": (0.1, 0.09, 0.09),
+        "Car pale": (1.0, 0.66, 0.05), "Car teal": (0.02, 0.5, 0.62), "Car rust": (0.85, 0.08, 0.05),
+        "Car glass": (0.04, 0.08, 0.14), "Tyre": (0.03, 0.03, 0.035),
+    })
+    wn = sc.world.node_tree.nodes                       # a clear blue sky instead of the peach haze
+    for n in wn:
+        if n.type == "VALTORGB":
+            n.color_ramp.elements[0].position, n.color_ramp.elements[0].color = 0.5, (0.75, 0.86, 1.0, 1)
+            n.color_ramp.elements[1].position, n.color_ramp.elements[1].color = 0.8, (0.22, 0.5, 0.95, 1)
+    for n in wn:
+        if n.type == "BACKGROUND" and not n.inputs[0].is_linked:
+            n.inputs[0].default_value = (0.22, 0.25, 0.3, 1)        # sky-blue ambient fill
+    fill = bpy.data.objects.new("Fill", bpy.data.lights.new("Fill", "SUN"))   # soft fill from the other side:
+    sc.collection.objects.link(fill)                                          # faces never sink into black
+    fill.data.energy, fill.data.color, fill.data.use_shadow = 1.1, (0.75, 0.85, 1.0), False
+    fill.rotation_euler = (math.radians(70), 0, math.radians(60))
+    import colorsys
+    for k_, (skin, clothes) in list(T.SKIN.items()):      # warmer, livelier skin
+        h_, s_, v_ = colorsys.rgb_to_hsv(*skin)
+        T.SKIN[k_] = (colorsys.hsv_to_rgb(h_, min(1.0, s_ * 1.5), v_), clothes)
+    S.stylize(sc, samples=int(os.environ.get("SAMPLES", "8")))
+    S.round_edges([o for o in sc.objects if o.type == "MESH" and not o.parent
+                   and o not in C["IVY"] and "Vault" not in o.name and "Glass" not in o.name
+                   and o.name not in ("Ground",) and "Screen" not in o.name], width=0.08)
+    sun = C["SUN"].data
+    sun.angle = 0.09                          # soft shadow edges
 sc.render.resolution_x, sc.render.resolution_y = 540, 960
 sc.render.film_transparent = False
 
