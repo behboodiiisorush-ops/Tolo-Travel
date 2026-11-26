@@ -377,15 +377,15 @@ if PART == "anim":
                     olds[i][f] = qn[i]
         MC.BUF[ch.rig.name] = merged
 
-    FACE = 130                                   # walking towards the back-left (the bed)
+    FACE = 49                                    # walking towards the back-left (the bed)
     A0 = Vector((1.55, -1.25, 0))
     play(ar, CL["start_walking"], 1, 72, offset=A0, facing=FACE, in_place=False)
     MC.flush(ar)
     sc.frame_set(72)
     p = ar.rig.matrix_world @ ar.rig.pose.bones["pelvis"].head
     stop = Vector((p.x, p.y, 0))
-    play(ar, CL["nervously_look_around"], 62, 50, blend=14, offset=stop, facing=FACE - 40, in_place=True)
-    play(ar, CL["hands_forward_gesture"], 104, 47, blend=12, offset=stop, facing=FACE - 70, in_place=True)
+    play(ar, CL["nervously_look_around"], 62, 50, blend=14, offset=stop, facing=20, in_place=True)
+    play(ar, CL["hands_forward_gesture"], 104, 47, blend=12, offset=stop, facing=-5, in_place=True)
     MC.flush(ar)
     for f in range(1, N + 1):
         t = (f - 1) / 24
@@ -397,7 +397,7 @@ if PART == "anim":
     # camera: from near the desk, follows his head with a slow drift
     sc.frame_start, sc.frame_end = 1, N
     sc.render.fps = 24
-    cam_d.lens = 30
+    cam_d.lens = 26
     cam_d.dof.use_dof = True
     cam_d.dof.focus_object = ar.rig
     cam_d.dof.aperture_fstop = 3.5
@@ -407,7 +407,7 @@ if PART == "anim":
         aim.location = (h.x, h.y, h.z - 0.25)
         aim.keyframe_insert("location", frame=f)
         u = (f - 1) / (N - 1)
-        cam.location = (1.6 - 0.5 * u, -2.3 + 0.45 * u, 1.5)
+        cam.location = (0.35 - 0.15 * u, 2.1 - 0.25 * u, 1.55)
         cam.keyframe_insert("location", frame=f)
     sc.render.resolution_x, sc.render.resolution_y = 1280, 720
     a, b = [int(v) for v in argv[argv.index("--frames") + 1:argv.index("--frames") + 3]] if "--frames" in argv else (1, N)
