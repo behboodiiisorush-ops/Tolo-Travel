@@ -52,7 +52,7 @@ def caption(img, who, text, alpha=1.0):
                stroke_width=9, stroke_fill=(0, 0, 0))
 
 
-TITLE = ("زنگ آخر — قسمت ۲", "آستین")
+TITLE = ("زنگ آخر — قسمت ۳", "انباری")
 
 
 def title(img, t):
@@ -66,6 +66,19 @@ def title(img, t):
            language="fa", stroke_width=6, stroke_fill=(0, 0, 0, int(230 * a)))
     d.text((W // 2, 360), TITLE[1], font=font(120), fill=(230, 40, 50, int(255 * a)), anchor="mm", direction="rtl",
            language="fa", stroke_width=10, stroke_fill=(0, 0, 0, int(255 * a)))
+    d.text((W // 2, 460), CHANNEL, font=font(46), fill=(255, 255, 255, int(220 * a)), anchor="mm",
+           stroke_width=5, stroke_fill=(0, 0, 0, int(220 * a)))
+    img.paste(Image.alpha_composite(img.convert("RGBA"), ov).convert("RGB"))
+
+
+CHANNEL = "agetobudi"
+
+
+def credit(img):
+    """small channel name in the bottom corner of every frame, every version."""
+    ov = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    ImageDraw.Draw(ov).text((W - 50, H - 90), CHANNEL, font=font(40), fill=(255, 255, 255, 150), anchor="rm",
+                            stroke_width=3, stroke_fill=(0, 0, 0, 120))
     img.paste(Image.alpha_composite(img.convert("RGBA"), ov).convert("RGB"))
 
 
@@ -79,6 +92,7 @@ def card(t):
     c = int(255 * a)
     for k, ln in enumerate(lines):
         d.text((W // 2, y0 + k * 120), ln, font=f, fill=(c, c, c), anchor="mm", direction="rtl", language="fa")
+    d.text((W // 2, H - 330), CHANNEL, font=font(64), fill=(c, c, c), anchor="mm")
     d.text((W // 2, y0 - 190), "؟", font=font(140), fill=(int(230 * a), int(40 * a), int(50 * a)), anchor="mm")
     return img
 
@@ -116,6 +130,8 @@ def main():
             img = card(t - len(names) / FPS)
         if t < 4.2:
             title(img, t)
+        if i < len(names):
+            credit(img)
         img.save(os.path.join(TMP, f"n_{i:04d}.jpg"), quality=95)
         for a, b, who, text in LINES:
             if a <= t <= b and i < len(names):
