@@ -1,6 +1,6 @@
 """Put the ElevenLabs voices (voices/NN_who.mp3, one file per line) on «انباری».
-The soldier is turning: his voice is pitched down, roughened, with a low growl layer under it and
-muffled by the storeroom door. Mum (the voice behind the hall doors) is muffled too and plays twice,
+The soldier: his own raspy ElevenLabs voice, untouched except for the storeroom door muffling it
+(the user did not like the added growl / pitch effect). Mum (the voice behind the hall doors) is muffled too and plays twice,
 the very same file. The boys are pitched up a little to sound like teenagers.
     python3 mix_voices.py   -> out/storeroom_voices.wav  (+ out/storeroom_voices.mp4 when the captions film exists)
 """
@@ -9,7 +9,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 V = os.path.join(HERE, "voices")
 OUT = os.path.join(HERE, "out")
 
-DOOR = "lowpass=f=3600,aecho=0.7:0.5:14:0.2"
+DOOR = "lowpass=f=5000,aecho=0.6:0.3:12:0.12"
 TEEN = "rubberband=pitch=1.1:formant=shifted"
 MOM = "lowpass=f=2500,aecho=0.6:0.4:18:0.25,volume=0.85"
 # (file, start in the film, filter, zombie growl layer?)
@@ -36,9 +36,7 @@ def run(cmd):
 def zombie(src, dst, flt):
     """voice a bit lower and rough + the same words an octave down, trembling, as a growl underneath."""
     fc = ("[0:a]asplit=2[a][b];"
-          "[a]rubberband=pitch=0.9:formant=preserved,volume=2.2,asoftclip=type=tanh,volume=0.75[main];"
-          "[b]rubberband=pitch=0.5:formant=shifted,tremolo=f=32:d=0.8,lowpass=f=900,volume=0.55[growl];"
-          f"[main][growl]amix=inputs=2:normalize=0,{flt}[o]")
+          f"[a]{flt}[o];[b]anullsink")
     run(["ffmpeg", "-y", "-loglevel", "error", "-i", src, "-filter_complex", fc, "-map", "[o]",
          "-ar", "48000", "-ac", "2", dst])
 
