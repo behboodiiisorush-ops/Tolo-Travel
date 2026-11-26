@@ -1,11 +1,14 @@
 #!/bin/bash
-# build the scene once, then render all frames; restarts the renderer whenever EEVEE crashes
+# build the scene once, then render frames A..B (default all); restarts the renderer whenever EEVEE crashes
+# usage: ./chain.sh [A B]
 cd "$(dirname "$0")"
-[ -f bird.blend ] || ../cast/bpy.sh scene.py --save > /tmp/claude-0/bird_build.log 2>&1
 N=1464
+A=${1:-1}; B=${2:-$N}
+[ -f bird.blend ] || ../cast/bpy.sh scene.py --save > /tmp/bird_build.log 2>&1
+missing() { local m=0; for f in $(seq $A $B); do [ -s frames/f_$(printf %04d $f).png ] || m=$((m+1)); done; echo $m; }
 for i in $(seq 1 300); do
-  [ $(ls frames/f_*.png 2>/dev/null | wc -l) -ge $N ] && break
+  [ "$(missing)" -eq 0 ] && break
   find frames -size 0 -delete 2>/dev/null
-  ../cast/bpy.sh render.py 1-$N >> /tmp/claude-0/bird_render.log 2>&1
+  ../cast/bpy.sh render.py $A-$B >> /tmp/bird_render.log 2>&1
 done
-echo CHAIN_DONE >> /tmp/claude-0/bird_render.log
+echo CHAIN_DONE >> /tmp/bird_render.log
