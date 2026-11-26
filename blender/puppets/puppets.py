@@ -151,7 +151,7 @@ def _base(m):
     return None
 
 
-def finish(ch, outline=0.0055, look=None, smile=0.25):
+def finish(ch, outline=0.0055, look=None, smile=0.25, keep_head=False):
     """After all animation: puppet proportions, eye target, toon colours, outlines."""
     d = ch.sheet
     rig = ch.rig
@@ -162,7 +162,7 @@ def finish(ch, outline=0.0055, look=None, smile=0.25):
         kb = mo.data.shape_keys.key_blocks["smile"]
         if kb.value == 0.0 and not (mo.data.shape_keys.animation_data and mo.data.shape_keys.animation_data.action):
             kb.value = smile
-    for b, s in (("head", HEAD), ("hand_l", HANDS), ("hand_r", HANDS), ("foot_l", FEET), ("foot_r", FEET)):
+    for b, s in ((("head", HEAD),) if not keep_head else ()) + (("hand_l", HANDS), ("hand_r", HANDS), ("foot_l", FEET), ("foot_r", FEET)):
         rig.pose.bones[b].scale = (s, s, s)
     for o in ch.objects:
         if o.type != "MESH":

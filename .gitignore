@@ -34,3 +34,9 @@ blender/wall/post_tmp/
 blender/wall/*.blend
 blender/wall/out/*.wav
 blender/wall/out/preview/
+blender/wall_toon/frames/
+blender/wall_toon/test/
+blender/wall_toon/post_tmp/
+blender/wall_toon/*.blend
+blender/wall_toon/out/*.wav
+blender/wall_toon/out/preview/
