@@ -426,13 +426,13 @@ pov.data.clip_end = 800
 pov.rotation_mode = "XYZ"
 LOOK = [  # (t, pitch up deg, yaw left deg) — where I look, on top of where my head points
     (FB0, 2, 0), (12.0, 2, 6), (14.0, 0, -4), (FALL, -4, 0), (26.0, 2, -14), (28.6, 4, -16), (29.8, 16, 6),
-    (31.0, 4, -14), (34.4, 10, -6), (43.0, -24, 0), (54.0, 0, -12), (58.0, 0, -6), (61.0, 4, 6), (63.0, 2, -4)]
+    (31.0, 4, -14), (34.4, 14, -6), (42.9, 14, -6), (43.0, -22, 0), (53.0, -22, 0), (54.0, 0, -12), (58.0, 0, -6), (61.0, 4, 6), (63.0, 2, -4)]
 
 
 def look(t):
     for (a, pa, ya), (b, pb, yb) in zip(LOOK, LOOK[1:] + [(999, LOOK[-1][1], LOOK[-1][2])]):
         if a <= t < b:
-            u = seg(t, a, min(b, a + 1.2))
+            u = seg(t, max(a, b - 1.2), b)            # hold, then turn to the next look
             return pa + (pb - pa) * u, ya + (yb - ya) * u
     return LOOK[0][1], LOOK[0][2]
 
