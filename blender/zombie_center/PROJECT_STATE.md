@@ -125,4 +125,4 @@ optional: open the .blend files in desktop Blender to review.
 - 2026-11-26 (user): format changes to a **series of 12 × ~5 min long-form episodes**, released one by one (`docs/SERIES_PLAN.md`). Release time, pace and visual style still open.
 
 ## 8. Next task
-Wait for the user's approval of PHASE 01, screenplay v1.0 and decisions D1–D4 (+ render test question). Then PHASE 02 (character design).
+PHASE 02 — build and test the six main characters (MPFB + Rigify), reference sheets, then 02_CHARACTER_BIBLE.md from the built models. Then rigs + Mixamo retarget + motion QC tests (walk/run/foot contact) before any episode scene.

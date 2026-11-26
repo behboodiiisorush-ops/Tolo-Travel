@@ -26,3 +26,10 @@
   as plain text, and never put Persian words in brackets.
 - Persian captions: Vazirmatn font in `blender/fonts/`, Pillow with raqm.
 - Always give times to the user in Berlin time (Europe/Berlin), not UTC.
+
+## THE ZOMBIE CENTER (series, `blender/zombie_center/`)
+- **Read `blender/zombie_center/PROJECT_STATE.md` first** in every new conversation; never continue from guesswork.
+- Its §0 is a permanent law from the user: quality and natural, realistic motion before speed. Every episode ships
+  with a QC report; any important problem is fixed before delivery, even if the episode is late.
+- 12 episodes × ~5 min, 16:9 720p, every 2 days, the user publishes at 19:00 Berlin. For this series the user
+  connected ElevenLabs and asked Claude to generate the voices (one fixed designed voice per character).
