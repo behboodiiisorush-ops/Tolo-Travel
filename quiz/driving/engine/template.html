@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <style>
 @font-face { font-family: V; src: url("../../../blender/fonts/Vazirmatn-FD-ExtraBold.ttf"); }
+@font-face { font-family: M; src: url("../../../blender/fonts/Montserrat-ExtraBold.woff2"); }
 :root { --green:#22e07a; --red:#ff3b4f; --amber:#ffc21a; --ink:#0b1020; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { width: 1080px; height: 1920px; overflow: clip; background: #0b1020; font-family: V, sans-serif; color: #fff; }
@@ -42,7 +43,7 @@ canvas { position: absolute; inset: 0; }
 .opt.ok b { background: rgba(0,0,0,.22); }
 /* explain */
 #exp { position: absolute; top: 1790px; left: 70px; right: 70px; display: flex; justify-content: center; }
-#exp div { font-size: 44px; padding: 16px 36px; border-radius: 26px; background: rgba(255,194,26,.16); border: 3px solid rgba(255,194,26,.7); color: #ffe08a; }
+#exp div { font-size: 44px; padding: 16px 36px; border-radius: 26px; background: rgba(36,28,6,.92); border: 3px solid rgba(255,194,26,.75); text-align: center; color: #ffe08a; }
 /* intro */
 #intro { display: flex; flex-direction: column; align-items: center; }
 #ititle { position: absolute; top: 560px; width: 100%; text-align: center; font-size: 190px; line-height: 1.15; text-shadow: 0 14px 40px rgba(0,0,0,.6); }
@@ -55,8 +56,36 @@ canvas { position: absolute; inset: 0; }
 #onums { position: absolute; top: 900px; left: 0; right: 0; display: flex; justify-content: center; gap: 22px; direction: ltr; }
 #onums div { width: 140px; height: 140px; border-radius: 40px; display: flex; align-items: center; justify-content: center; font-size: 84px; background: rgba(255,255,255,.95); color: #141a2e; box-shadow: 0 12px 30px rgba(0,0,0,.4); }
 #onums div.top { background: linear-gradient(160deg,#ffd24a,#ff8a1a); color: #fff; }
-#osub { position: absolute; top: 1160px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 24px; font-size: 62px; }
+#osub { position: absolute; top: 1160px; left: 80px; right: 80px; text-align: center; display: flex; justify-content: center; align-items: center; gap: 24px; font-size: 62px; }
 #oicon { width: 110px; height: 110px; }
+/* ---- German UI (lang=de) ---- */
+body.de { font-family: M, sans-serif; }
+body.de #prog { direction: ltr; }
+body.de .seg i { transform-origin: left; }
+body.de #qtext { font-size: 60px; line-height: 1.3; }
+body.de #qtext span { margin: 0 8px; }
+body.de .opt { font-size: 44px; }
+body.de .opt b { font-size: 40px; }
+body.de .opt .mark { left: auto; right: 26px; }
+body.de #exp div { font-size: 38px; }
+body.de #otitle { font-size: 96px; }
+body.de #osub { font-size: 48px; }
+body.de #isub { font-size: 56px; }
+/* ---- subtitles mode (Persian voice + German subtitles) ---- */
+body.subs #card { left: 280px; top: 300px; width: 520px; height: 520px; border-radius: 52px; }
+body.subs #card svg { width: 440px; height: 440px; }
+body.subs #timer { left: 200px; top: 240px; }
+body.subs #qtext { top: 845px; font-size: 60px; line-height: 1.35; }
+body.subs #opts { top: 1060px; gap: 16px; }
+body.subs .opt { height: 112px; }
+body.subs .ot { display: flex; flex-direction: column; line-height: 1.15; }
+body.subs .ot small { font-family: M, sans-serif; font-size: 30px; opacity: .7; direction: ltr; text-align: right; }
+body.subs .opt.ok .ot small { opacity: .85; }
+body.subs #exp { display: none; }
+#sub { position: absolute; left: 60px; right: 60px; top: 1625px; display: none; justify-content: center; }
+body.subs #sub { display: flex; }
+#sub div { direction: ltr; font-family: M, sans-serif; font-size: 40px; line-height: 1.3; text-align: center; color: #fff;
+  background: rgba(5,8,20,.78); padding: 14px 28px; border-radius: 22px; border: 2px solid rgba(255,255,255,.14); }
 #flash { position: absolute; inset: 0; background: #fff; pointer-events: none; }
 #vig { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(0,0,0,.55) 100%); pointer-events: none; }
 </style>
@@ -83,13 +112,15 @@ canvas { position: absolute; inset: 0; }
     <div id="osub"><svg id="oicon" viewBox="0 0 100 100"><path d="M14 20 h72 a8 8 0 0 1 8 8 v40 a8 8 0 0 1 -8 8 h-40 l-18 16 v-16 h-14 a8 8 0 0 1 -8 -8 v-40 a8 8 0 0 1 8 -8z" fill="#ffc21a"/><circle cx="32" cy="48" r="6" fill="#1a1100"/><circle cx="50" cy="48" r="6" fill="#1a1100"/><circle cx="68" cy="48" r="6" fill="#1a1100"/></svg><span></span></div>
   </div>
   <div id="hdr"><div id="brand">کوییز رانندگی</div><div id="prog"></div><div id="qnum"></div></div>
+  <div id="sub"><div></div></div>
   <canvas id="fx" width="1080" height="1920"></canvas>
   <div id="vig"></div>
   <div id="flash"></div>
 </div>
 <script>
-const FA = d => String(d).replace(/[0-9]/g, c => '۰۱۲۳۴۵۶۷۸۹'[c]);
-const LET = ['الف','ب','ج','د'];
+let FA = d => String(d).replace(/[0-9]/g, c => '۰۱۲۳۴۵۶۷۸۹'[c]);
+let LET = ['الف','ب','ج','د'];
+let QMARK = '؟';
 const clamp = (x,a=0,b=1) => Math.max(a, Math.min(b, x));
 const lin = (t,a,b) => clamp((t-a)/(b-a));
 const eOut = x => 1 - Math.pow(1-x, 3);
@@ -118,7 +149,7 @@ function visual(kind, lt){
     return `<svg viewBox="0 0 520 520"><rect x="248" y="380" width="24" height="140" fill="#9aa3b5"/>
       <polygon points="${oct(260,230,205)}" fill="#fff"/><polygon points="${oct(260,230,188)}" fill="#d8142b"/>
       <polygon points="${oct(260,230,170)}" fill="none" stroke="#fff" stroke-width="6" opacity=".9"/>
-      <text x="260" y="270" text-anchor="middle" font-size="130" fill="#fff" font-family="V">؟</text></svg>`;
+      <text x="260" y="270" text-anchor="middle" font-size="130" fill="#fff" font-family="V">${QMARK}</text></svg>`;
   }
   if(kind==='light_flashing_yellow'){
     const on = (Math.floor(lt*2.2)%2)===0;
@@ -241,11 +272,23 @@ let curQ = -1;
 function setupQ(i){
   curQ = i; const q = EP.questions[i];
   $('qtext').innerHTML = q.text.split(' ').map(w=>`<span>${w}</span>`).join('');
-  $('opts').innerHTML = q.options.map((o,k)=>`<div class="opt"><b>${LET[k]}</b><span>${o}</span><svg class="mark" viewBox="0 0 70 70"></svg></div>`).join('');
+  const so = (EP.subs && EP.subs.options) ? EP.subs.options[i] : null;
+  $('opts').innerHTML = q.options.map((o,k)=>`<div class="opt"><b>${LET[k]}</b><div class="ot"><span>${o}</span>${so?`<small>${so[k]}</small>`:''}</div><svg class="mark" viewBox="0 0 70 70"></svg></div>`).join('');
   $('exp').firstChild.textContent = q.explain;
 }
 function init(ep, tl){
   EP = ep; TL = tl;
+  const ui = EP.ui || {};
+  if(EP.lang === 'de'){
+    document.documentElement.dir = 'ltr'; document.documentElement.lang = 'de'; document.body.classList.add('de');
+    FA = d => String(d); LET = ['A','B','C','D']; QMARK = '?';
+  }
+  if(EP.subs) document.body.classList.add('subs');
+  if(ui.brand) $('brand').textContent = ui.brand;
+  if(ui.badge) $('ibadge').textContent = ui.badge;
+  const l1 = $('ititle').querySelector('.l1'), l2 = $('ititle').querySelector('.l2');
+  if(ui.title1) l1.textContent = ui.title1; if(ui.title2) l2.textContent = ui.title2;
+  if(ui.title1Size) l1.style.fontSize = ui.title1Size+'px'; if(ui.title2Size) l2.style.fontSize = ui.title2Size+'px';
   $('prog').innerHTML = EP.questions.map(()=>'<div class="seg"><i></i></div>').join('');
   $('isub').textContent = EP.subtitle;
   $('icar').innerHTML = introCar(0);
@@ -297,7 +340,7 @@ function renderAt(t){
     const Q = qs[qi], lt = t - Q.start, w = whip(Q.start, Q.end);
     const L = $('quiz'); L.style.transform=`translateX(${w.x}px)`; L.style.filter = w.blur>0.3?`blur(${w.blur}px)`:'none';
     // header
-    $('qnum').textContent = `سوال ${FA(qi+1)} از ${FA(qs.length)}`;
+    $('qnum').textContent = (EP.ui && EP.ui.qnum ? EP.ui.qnum : 'سوال {n} از {m}').replace('{n}', FA(qi+1)).replace('{m}', FA(qs.length));
     [...document.querySelectorAll('.seg i')].forEach((el,k)=>{
       const f = k<qi ? 1 : (k===qi ? eOut(lin(t, qs[k].reveal, qs[k].reveal+.5)) : 0);
       el.style.transform=`scaleX(${f})`; });
@@ -351,7 +394,7 @@ function renderAt(t){
     if(t>=Q.reveal){
       flash = Math.max(flash, .45*clamp(1-(t-Q.reveal)/.18));
       shake = Math.max(shake, 14*clamp(1-(t-Q.reveal)/.3));
-      const oy = 1210 + EP.questions[qi].answer*144 + 59;
+      const rc = $('opts').children[EP.questions[qi].answer].getBoundingClientRect(); const oy = rc.top + rc.height/2;
       confetti(t, Q.reveal, 540, oy, 100+qi);
     }
     // explain chip
@@ -377,6 +420,16 @@ function renderAt(t){
     $('flash').style.opacity = lin(t, TL.duration-.35, TL.duration);
   } else { $('flash').style.background='#fff'; $('flash').style.opacity = flash; }
 
+  if(EP.subs){
+    const L = [[TL.intro.voice[0], EP.subs.intro]];
+    TL.q.forEach((q,i)=>{ L.push([q.qv[0], EP.subs.q[i]]); L.push([q.av[0], EP.subs.a[i]]); L.push([q.end-0.35, '']); });
+    L.push([TL.outro.voice[0], EP.subs.outro]);
+    let cur = null; for(const l of L) if(t >= l[0]-0.05) cur = l;
+    const sd = $('sub');
+    if(cur && cur[1]){ sd.firstChild.textContent = cur[1]; const k = lin(t, cur[0]-0.05, cur[0]+0.2);
+      sd.style.opacity = k * (1 - lin(t, TL.duration-0.5, TL.duration-0.2)); sd.style.transform = `translateY(${(1-eOut(k))*20}px)`; }
+    else sd.style.opacity = 0;
+  }
   const r = rnd(Math.floor(t*30)+1);
   $('stage').style.transform = shake>0.2 ? `translate(${(r()-.5)*shake}px, ${(r()-.5)*shake}px)` : 'none';
   return true;

@@ -58,6 +58,16 @@ node engine/render.js episodes/epNN --workers 4     # ~5–10 min → out/epNN_q
 - Commit (`episode.json`, raw audio, mix, timeline, the mp4) and push to the working branch.
 - Tell the user: the 5 questions, the voice used, and a suggested title + description + hashtags for Shorts.
 
+## German versions (when asked)
+- **German voice** (`episodes/epNN_de/`): `episode.json` with `"lang": "de"` and a `"ui"` block (brand, badge, title1/title2 + sizes,
+  qnum "Frage {n} von {m}"), German texts/options; the screen switches to LTR, Montserrat (`blender/fonts/Montserrat-ExtraBold.woff2`),
+  A–D letters, Latin digits. Narrator: ElevenLabs **Henry the high-energy hire** `LMwgkTZL66bLQfT9Y7py`, model `eleven_v4`.
+  Copy SFX/music from the Persian episode; `build.py episodes/epNN_de --tempo 1.17`; render with `--name epNN_de_quiz`.
+  Example: `episodes/ep01_de/`.
+- **Persian voice + German subtitles**: `episodes/epNN/episode.de-subs.json` = the Persian episode plus a `"subs"` block
+  (intro, q[5], a[5], outro, options[5][4] in German). Compact layout, German under each option, subtitle box at the bottom.
+  Uses the Persian timeline/mix: `node engine/render.js episodes/epNN --ep episode.de-subs.json --name epNN_fa_de-subs_quiz`.
+
 ## Rules (from CLAUDE.md)
 No hijab, flags, emblems, logos, place names or real-country signs with text. The video may end with one question to the viewer.
 Persian text in Vazirmatn (`blender/fonts/Vazirmatn-FD-ExtraBold.ttf`). Times to the user in Berlin time.

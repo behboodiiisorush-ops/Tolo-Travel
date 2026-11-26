@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Render a driving-quiz episode (template.html + episode.json + timeline.json) to video.
-// usage: node render.js <episode_dir> [--still 1.0,12.5] [--workers 3]
+// usage: node render.js <episode_dir> [--still 1.0,12.5] [--workers 3] [--ep episode.json] [--name epNN_quiz]
+//   --ep picks another episode file in the folder (e.g. episode.de-subs.json); --name the output file name.
 // Headless Chromium draws each frame (renderAt(t)); frames go straight into ffmpeg, one slice per worker,
 // then the slices are joined and audio/mix.wav is muxed in.
 const { chromium } = require('playwright');
@@ -11,9 +12,9 @@ const args = process.argv.slice(2);
 const EP = path.resolve(args[0]);
 const opt = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : d; };
 const STILL = opt('--still', ''), W = +opt('--workers', 3);
-const ep = JSON.parse(fs.readFileSync(`${EP}/episode.json`, 'utf8'));
+const ep = JSON.parse(fs.readFileSync(`${EP}/${opt('--ep', 'episode.json')}`, 'utf8'));
 const tl = JSON.parse(fs.readFileSync(`${EP}/timeline.json`, 'utf8'));
-const NAME = path.basename(EP);
+const OUTNAME = opt('--name', path.basename(EP) + '_quiz');
 
 async function newPage(browser) {
   const pg = await browser.newPage({ viewport: { width: 1080, height: 1920 }, deviceScaleFactor: 1 });
@@ -27,11 +28,11 @@ async function newPage(browser) {
 (async () => {
   const browser = await chromium.launch({ args: ['--font-render-hinting=none'] });
   if (STILL) {
-    fs.mkdirSync(`${EP}/stills`, { recursive: true });
+    fs.mkdirSync(`${EP}/stills`, { recursive: true }); const pre = opt('--name', '');
     const pg = await newPage(browser);
     for (const s of STILL.split(',')) {
       const t = +s; await pg.evaluate(t => renderAt(t), t);
-      await pg.screenshot({ path: `${EP}/stills/t${t.toFixed(2).padStart(6, '0')}.png` });
+      await pg.screenshot({ path: `${EP}/stills/${pre}t${t.toFixed(2).padStart(6, '0')}.png` });
     }
     await browser.close(); return;
   }
@@ -54,7 +55,7 @@ async function newPage(browser) {
   }));
   await browser.close();
   fs.writeFileSync(`${EP}/out/parts.txt`, parts.map(p => `file '${p}'`).join('\n'));
-  const silent = `${EP}/out/${NAME}_silent.mp4`, final = `${EP}/out/${NAME}_quiz.mp4`;
+  const silent = `${EP}/out/${OUTNAME}_silent.mp4`, final = `${EP}/out/${OUTNAME}.mp4`;
   execFileSync('ffmpeg', ['-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', `${EP}/out/parts.txt`, '-c', 'copy', silent]);
   execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', silent, '-i', `${EP}/audio/mix.wav`, '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k',
     '-shortest', '-movflags', '+faststart', final]);

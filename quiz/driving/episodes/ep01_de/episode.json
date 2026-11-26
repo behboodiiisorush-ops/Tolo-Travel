@@ -1,0 +1,107 @@
+{
+  "id": "ep01_de",
+  "lang": "de",
+  "subtitle": "5 Fragen – wie viele schaffst du?",
+  "ui": {
+    "brand": "Führerschein-Quiz",
+    "badge": "Nur 5 Fragen!",
+    "title1": "Führerschein",
+    "title2": "QUIZ",
+    "title1Size": 124,
+    "title2Size": 230,
+    "qnum": "Frage {n} von {m}"
+  },
+  "voice": {
+    "provider": "elevenlabs",
+    "voice_id": "LMwgkTZL66bLQfT9Y7py",
+    "name": "Henry the high-energy hire",
+    "model": "eleven_v4"
+  },
+  "elevenlabs_flow": "Q849NLO75ay7iVbeYRzK",
+  "source_episode": "ep01",
+  "intro": {
+    "say": "[excited] Führerschein-Quiz! Fünf Fragen… mal sehen, wie viele du richtig hast!"
+  },
+  "questions": [
+    {
+      "id": "octagon-stop",
+      "visual": "sign_octagon",
+      "text": "Was bedeutet das rote Achteck-Schild?",
+      "say_q": "[curious] Frage eins. Was bedeutet das rote, achteckige Schild?",
+      "options": [
+        "Langsamer fahren",
+        "Komplett anhalten",
+        "Vorfahrt gewähren",
+        "Parkverbot"
+      ],
+      "answer": 1,
+      "explain": "Auch wenn die Straße leer ist!",
+      "say_a": "[confident] Richtig: komplett anhalten! Auch wenn die Straße leer ist."
+    },
+    {
+      "id": "flashing-yellow",
+      "visual": "light_flashing_yellow",
+      "text": "Was bedeutet ein gelb blinkendes Licht?",
+      "say_q": "[curious] Frage zwei. Was bedeutet ein gelb blinkendes Licht?",
+      "options": [
+        "Sofort anhalten",
+        "Schnell durchfahren",
+        "Vorsichtig weiterfahren",
+        "Ampel ist kaputt"
+      ],
+      "answer": 2,
+      "explain": "Langsamer werden und umschauen",
+      "say_a": "[confident] Vorsichtig weiterfahren! Langsamer werden und gut umschauen."
+    },
+    {
+      "id": "no-entry",
+      "visual": "sign_no_entry",
+      "text": "Roter Kreis mit weißem Balken?",
+      "say_q": "[curious] Frage drei. Roter Kreis mit weißem Balken – was heißt das?",
+      "options": [
+        "Einfahrt verboten",
+        "Ende der Straße",
+        "Halteverbot",
+        "Einbahnstraße"
+      ],
+      "answer": 0,
+      "explain": "Hier darfst du nicht reinfahren",
+      "say_a": "[confident] Einfahrt verboten! Hier darfst du nicht reinfahren."
+    },
+    {
+      "id": "ambulance-behind",
+      "visual": "ambulance",
+      "text": "Krankenwagen mit Sirene hinter dir. Was tust du?",
+      "say_q": "[serious] Frage vier. Ein Krankenwagen mit Sirene ist hinter dir. Was machst du?",
+      "options": [
+        "Gas geben",
+        "Stehen bleiben",
+        "Hupen",
+        "Rechts ran, Platz machen"
+      ],
+      "answer": 3,
+      "explain": "Jede Sekunde zählt!",
+      "say_a": "[confident] Rechts ran und Platz machen! Jede Sekunde zählt."
+    },
+    {
+      "id": "rain-distance",
+      "visual": "rain_distance",
+      "text": "Bei Regen: Abstand zum Auto vor dir?",
+      "say_q": "[dramatically] Letzte Frage, die schwerste! Bei Regen – wie viel Abstand zum Auto vor dir?",
+      "options": [
+        "Wie immer",
+        "Mindestens doppelt",
+        "Die Hälfte",
+        "Egal"
+      ],
+      "answer": 1,
+      "explain": "Auf nasser Straße wird der Bremsweg länger",
+      "say_a": "[excited] Mindestens doppelt so viel! Auf nasser Straße wird der Bremsweg länger."
+    }
+  ],
+  "outro": {
+    "text": "Wie viele hattest du richtig?",
+    "sub": "Schreib deine Zahl in die Kommentare",
+    "say": "[excited] Na… wie viele hattest du richtig? Schreib deine Zahl in die Kommentare!"
+  }
+}
