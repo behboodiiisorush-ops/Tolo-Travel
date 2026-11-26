@@ -120,6 +120,7 @@ dying, grabbing, crawling, arguing, sitting down/standing up…); provide GPU re
 optional: open the .blend files in desktop Blender to review.
 
 ## 7. Approved changes
+- From CLAUDE.md (set in other chats, apply here too): voices AND sound effects from ElevenLabs (one designed voice per character, reused); credit «ساخته شده توسط بلندر» + «agetobudi» in every episode (opening/closing card + small corner credit); long renders split over ~6 worker chats (`chain.sh A B` pattern, frames pushed to `claude/<film>-frames-a…f`); push notification + SendUserFile when an episode is finished. Render splitting makes 720p episodes ≈ 6–8 h wall-clock instead of ~40 h.
 - 2026-11-26 (user): screenplay v1.0 additions approved (drawing in Arin's pocket, second drawing hint for Mark, music motifs, fevered man at the gate, route «۴» bus clue, merge fixes).
 - 2026-11-26 (user): phone only; one episode every 2 days at 720p; YouTube release 19:00 Berlin; ElevenLabs connected for Claude to use; PERMANENT QUALITY LAW (§0).
 - 2026-11-26 (user): format changes to a **series of 12 × ~5 min long-form episodes**, released one by one (`docs/SERIES_PLAN.md`). Release time, pace and visual style still open.
