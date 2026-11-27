@@ -73,7 +73,10 @@ def centre_part_hair(ch, n=20000, seed=1, colour=(0.012, 0.010, 0.010), name=Non
         fy = (p.y - front_y) / max(1e-6, (back_y - front_y))
         return on_scalp(p) and (abs(p.x - cx) < 0.055 or p.z > ear_z + 0.05 or (fy > 0.68 and p.z > ear_z - 0.01))
     faces = [f for f in bm.faces if root_ok(f.calc_center_median())]
-    _darken_scalp(body, on_scalp)
+    def paint_ok(p):
+        fy = (p.y - front_y) / max(1e-6, (back_y - front_y))
+        return root_ok(p) and (fy > 0.3 or p.z > hairline_front + 0.02)
+    _darken_scalp(body, paint_ok)
     areas = [f.calc_area() for f in faces]
     tot = sum(areas)
     roots = []
@@ -152,8 +155,10 @@ def centre_part_hair(ch, n=20000, seed=1, colour=(0.012, 0.010, 0.010), name=Non
             pts.append(p.copy())
         for i in range(1, len(pts)):           # hard guard: nothing beside the face, nothing over the eyes
             q = pts[i]
-            if (abs(q.x - cx) > 0.058 and q.z < ear_z + 0.045) or (fy < 0.45 and abs(q.x - cx) < 0.058 and q.z < brow_z + 0.025):
+            if q.z < ear_z - 0.03 or (abs(q.x - cx) > 0.058 and q.z < ear_z + 0.045) or (fy < 0.45 and abs(q.x - cx) < 0.058 and q.z < brow_z + 0.025):
                 pts[i] = pts[i - 1].copy()
+        if sum((pts[i] - pts[i - 1]).length for i in range(1, len(pts))) < 0.4 * L:
+            continue                           # clipped to a stub: would show as a dot, drop it
         strands.append(pts)
     bm.free()
 
