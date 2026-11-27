@@ -4,11 +4,15 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 a, b = int(sys.argv[1]), int(sys.argv[2])
 pct = int(sys.argv[3]) if len(sys.argv) > 3 else 67
 smp = int(sys.argv[4]) if len(sys.argv) > 4 else 16
-bpy.ops.wm.open_mainfile(filepath=os.path.join(HERE, "nila.blend"))
+TAG = "_toon" if os.environ.get("LOOK") == "toon" else ""     # LOOK=toon -> the comic version
+bpy.ops.wm.open_mainfile(filepath=os.path.join(HERE, f"nila{TAG}.blend"))
 sc = bpy.context.scene
 sc.render.resolution_percentage = pct
-sc.cycles.samples = smp
-d = os.path.join(HERE, "frames")
+if TAG:
+    sc.eevee.taa_render_samples = smp
+else:
+    sc.cycles.samples = smp
+d = os.path.join(HERE, "frames" + TAG)
 os.makedirs(d, exist_ok=True)
 for f in range(a, b + 1):
     p = os.path.join(d, f"f_{f:04d}.png")

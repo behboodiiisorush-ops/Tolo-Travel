@@ -33,6 +33,8 @@ def arg(name, n=1, default=None):
 STILL = arg("--still")
 ANIM = arg("--anim", 2)
 FACE = "--face" in argv
+TOON = "--toon" in argv or os.environ.get("LOOK") == "toon"   # comic version (cel + ink, EEVEE)
+TAG = "_toon" if TOON else ""
 FPS, N = 24, 264
 MOCAP = os.path.join(HERE, "..", "mocap")
 
@@ -57,6 +59,9 @@ STYLE.update({
     "l-cheek-volume-incr": 0.6, "r-cheek-volume-incr": 0.6, "l-cheek-bones-decr": 0.5, "r-cheek-bones-decr": 0.5,
     "l-ear-scale-incr": 0.3, "r-ear-scale-incr": 0.3, "neck-scale-horiz-decr": 0.25,
 })
+if TOON:   # comic face: wider eye opening, slimmer lips (shape targets only, the motion is unchanged)
+    STYLE.update({"l-eye-height2-incr": 1.5, "r-eye-height2-incr": 1.5, "l-eye-height1-incr": 0.8, "r-eye-height1-incr": 0.8,
+                  "mouth-lowerlip-volume-incr": 0.3, "mouth-upperlip-volume-incr": 0.2})
 cast.STYLE = STYLE
 _load = M.TargetService.load_target
 
@@ -435,8 +440,55 @@ if FACE:
     tc.target = eyefocus
 cam_d.dof.aperture_fstop = 2.8
 
+# ------------------------------------------------------------------ comic look (same motion, same camera)
+if TOON:
+    sys.path.insert(0, os.path.join(HERE, "..", "studio"))
+    import toon_look as T  # noqa: E402
+    T.SKIN[nila.name] = ((0.86, 0.55, 0.4), {"joepal_crude_t-shirt_female": (0.34, 0.17, 0.09),
+                                             "toigo_wool_pants": (0.13, 0.16, 0.26),
+                                             "culturalibre_sneakers": (0.85, 0.83, 0.8)})
+    for o in nila.parts.get("Eyebrows", []):
+        M.recolor_bsdf(o, lambda nt, bsdf, c: M.mix(nt, c, (0.04, 0.02, 0.012), 0.97))
+    for o in nila.parts.get("Eyelashes", []):                            # comic eyes: the lid ink line is enough
+        o.hide_render = True
+    for nm, e in (("Fill", 0.35), ("Rim L", 0.6), ("Rim R", 0.6)):     # less fill -> readable light bands
+        L = bpy.data.objects.get(nm)
+        if L:
+            L.data.energy *= e
+            L.data.size = min(L.data.size, 0.6)
+    L = bpy.data.objects.get("Key")
+    if L:
+        L.data.size = 0.5                                                 # crisper shadow edge, less noise
+    bb.inputs["Base Color"].default_value = (0.32, 0.36, 0.42, 1)       # lighter comic backdrop
+    sc.frame_set(1)
+    T.toonify(sc, samples=int(arg("--samples", default=16)))
+    for m in bpy.data.materials:                                          # pink comic lips
+        if m.name.startswith(nila.name + ".lips") and m.use_nodes:
+            mul = next((n for n in m.node_tree.nodes if n.type == "MIX" and n.blend_type == "MULTIPLY"), None)
+            if mul is not None and not mul.inputs[6].is_linked:
+                mul.inputs[6].default_value = (0.74, 0.42, 0.37, 1)
+    for o in nila.parts["Eyes"]:                                         # flat comic eye: pupil / iris / white
+        for m in o.data.materials:
+            for r in [x for x in m.node_tree.nodes if x.type == "VALTORGB"]:
+                r.color_ramp.interpolation = "CONSTANT"
+                # texture luminance: pupil ~0, iris 0.01-0.02, white 0.25-0.4 (measured on brown_eye.png)
+                for el, (pos, col) in zip(r.color_ramp.elements, ((0.0, (0.01, 0.008, 0.008)), (0.005, (0.22, 0.09, 0.028)),
+                                                                  (0.016, (0.34, 0.16, 0.055)), (0.1, (0.95, 0.94, 0.92)),
+                                                                  (0.11, (0.95, 0.94, 0.92)))):
+                    el.position, el.color = pos, col + (1,)
+    ee = sc.eevee
+    for attr, v in (("use_raytracing", False), ("shadow_ray_count", 1), ("shadow_step_count", 2), ("use_shadows", True)):
+        if hasattr(ee, attr):
+            setattr(ee, attr, v)
+    sc.render.dither_intensity = 0.0
+    T.ink([o for o in bpy.data.objects if o.type == "MESH" and not any(
+        k in o.name.lower() for k in ("high-poly", "lash", "brow", "teeth", "tongue", "cyclorama", "eye"))], 0.004)
+    cam_d.dof.use_dof = False                                             # comic frames stay crisp
+
 # ------------------------------------------------------------------ render
-if "--cycles" in argv or ANIM or "--save" in argv:
+if TOON:
+    pass
+elif "--cycles" in argv or ANIM or "--save" in argv:
     sc.render.engine = "CYCLES"
     cy = sc.cycles
     cy.device, cy.samples, cy.use_adaptive_sampling = "CPU", int(arg("--samples", default=16)), True
@@ -445,18 +497,20 @@ if "--cycles" in argv or ANIM or "--save" in argv:
 else:
     sc.render.engine = "BLENDER_EEVEE"
 ee = sc.eevee
-ee.taa_render_samples = int(arg("--samples", default=32))
-for prop, v in (("use_raytracing", True), ("use_shadows", True), ("shadow_ray_count", 2), ("shadow_step_count", 8)):
+if not TOON:
+    ee.taa_render_samples = int(arg("--samples", default=32))
+for prop, v in () if TOON else (("use_raytracing", True), ("use_shadows", True), ("shadow_ray_count", 2), ("shadow_step_count", 8)):
     if hasattr(ee, prop):
         setattr(ee, prop, v)
-if hasattr(ee, "use_fast_gi"):
+if hasattr(ee, "use_fast_gi") and not TOON:
     ee.use_fast_gi = True
-sc.view_settings.view_transform = "AgX"
-try:
-    sc.view_settings.look = "AgX - Punchy"
-except TypeError:
-    pass
-sc.view_settings.exposure = 0.3
+if not TOON:
+    sc.view_settings.view_transform = "AgX"
+    try:
+        sc.view_settings.look = "AgX - Punchy"
+    except TypeError:
+        pass
+    sc.view_settings.exposure = 0.3
 pct = int(arg("--pct", default=100))
 sc.render.resolution_x, sc.render.resolution_y = 1080, 1920
 sc.render.resolution_percentage = pct
@@ -467,11 +521,11 @@ if STILL:
     os.makedirs(os.path.join(HERE, "out"), exist_ok=True)
     for f in STILL.split(","):
         sc.frame_set(int(f))
-        sc.render.filepath = os.path.join(HERE, "out", f"{'face' if FACE else 'still'}_{int(f):03d}.png")
+        sc.render.filepath = os.path.join(HERE, "out", f"{'face' if FACE else 'still'}{TAG}_{int(f):03d}.png")
         bpy.ops.render.render(write_still=True)
 if ANIM:
     a, b = int(ANIM[0]), int(ANIM[1])
-    d = os.path.join(HERE, "frames")
+    d = os.path.join(HERE, "frames" + TAG)
     os.makedirs(d, exist_ok=True)
     for f in range(a, b + 1):
         p = os.path.join(d, f"f_{f:04d}.png")
@@ -481,4 +535,4 @@ if ANIM:
         sc.render.filepath = p
         bpy.ops.render.render(write_still=True)
 if "--save" in argv:
-    bpy.ops.wm.save_as_mainfile(filepath=os.path.join(HERE, "nila.blend"))
+    bpy.ops.wm.save_as_mainfile(filepath=os.path.join(HERE, f"nila{TAG}.blend"))

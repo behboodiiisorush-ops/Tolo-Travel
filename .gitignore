@@ -91,3 +91,6 @@ blender/nila/preview/
 blender/nila/preview.mp4
 blender/*/*_motion.txt
 blender/nila/nila.mp4
+blender/nila/frames_toon/
+blender/nila/nila_toon.blend
+blender/nila/nila_toon.mp4
