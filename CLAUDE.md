@@ -30,8 +30,9 @@
 - **Voices and sound effects always come from ElevenLabs** (the connected ElevenLabs MCP tools, `mcp__ElevenLabs__*`).
   **Only the Persian voices already in the user's ElevenLabs account** (`creative_list_voices`, languages=["fa"]):
   Aidin Podcast, Amin.GS, Amitis, Aramofen, Aran - Parsi, Arash, Danesh, Farshad, Hengameh, Javid, Mard, Mitra,
-  MohammadHossein, Najib, Rashnow, Sara, amir, mohsen, «خشن», «معلم». One fixed voice per character, reused across
-  films. Never a non-Persian voice (no German/English/Afghan-Dari "Omid"), never design or save a new voice, and do not
+  MohammadHossein, Najib, Omid, Rashnow, Sara, amir, mohsen, «خشن», «معلم» (every Persian voice in his saved list).
+  One fixed voice per character, reused across films. Never a non-Persian voice (German/English…), never design or
+  save a new voice, and do not
   use the Claude-designed voices (ZC Arin/Mark/Nika, Wagon-Mom, Wagon-Rahim). If no listed voice fits, ask the user.
   When the user sends their own recording, use it (cut per line). Keep lips on the lines, fit captions to the real
   lengths, and keep a version without sound. If the ElevenLabs tools are not available in a chat, tell the user.
