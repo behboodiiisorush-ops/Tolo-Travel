@@ -134,6 +134,7 @@ def ball(loc, r, m, name="Ball", scale=(1, 1, 1), seg=20):
     o = bpy.context.object
     o.scale = scale
     bpy.ops.object.transform_apply(scale=True)
+    bpy.ops.object.origin_set(type="ORIGIN_GEOMETRY", center="BOUNDS")    # keep the pivot in the ball
     return finish(o, m, name, smooth=True)
 
 
@@ -250,6 +251,9 @@ def talking(name, t):
 # ================================================================ characters
 
 
+HEAD_SCALE = 1.2
+
+
 class Person:
     """Puppet-like character built at the origin facing +Y, then driven by its root.
 
@@ -257,6 +261,7 @@ class Person:
     """
 
     def __init__(self, name, s, R, look):
+        R = R * HEAD_SCALE                     # episode 3: bigger heads, more readable faces
         self.name, self.s, self.R, self.p = name, s, R, {}
         L = look
         sk = self.m_skin = toon(f"{name} skin", L["skin"])
@@ -312,49 +317,61 @@ class Person:
             self.add(ball(hc + Vector((sx * 0.97 * R, -0.05 * R, -0.05 * R)), 0.22 * R, sk, "ear",
                           scale=(0.45, 0.7, 1.0), seg=12), head)
         # eyes: white, coloured iris, pupil, shine; eyelid; lashes; brows
-        eye_sz = L.get("eye", 1.0)
+        eye_sz = L.get("eye", 1.0) * 1.15
+        lashline = toon("Lash line", (0.05, 0.035, 0.03), 0.0)
         for side, sx in (("L", -1), ("R", 1)):
-            ec = hc + Vector((sx * 0.37 * R, 0.8 * R, 0.1 * R))
-            er = 0.26 * R * eye_sz
-            self.add(ball(ec, er, white, f"eye {side}", scale=(1, 0.55, 1.15)), head)
-            self.add(ball(ec + Vector((0, 0.11 * R, -0.02 * R)), 0.15 * R * eye_sz, iris, f"iris {side}",
-                          scale=(1, 0.5, 1.2), seg=14), head)
-            self.add(ball(ec + Vector((0, 0.15 * R, -0.02 * R)), 0.085 * R * eye_sz, ink, f"pupil {side}",
-                          scale=(1, 0.5, 1.2), seg=12), head)
-            self.add(ball(ec + Vector((sx * -0.04 * R, 0.19 * R, 0.05 * R)), 0.03 * R, shine, f"shine {side}",
+            ec = hc + Vector((sx * 0.37 * R, 0.8 * R, 0.08 * R))
+            er = 0.27 * R * eye_sz
+            self.add(ball(ec, er, white, f"eye {side}", scale=(1, 0.5, 1.12)), head)
+            self.add(ball(ec + Vector((0, 0.1 * R, -0.03 * R)), 0.17 * R * eye_sz, iris, f"iris {side}",
+                          scale=(1, 0.45, 1.15), seg=16), head)
+            self.add(ball(ec + Vector((0, 0.145 * R, -0.03 * R)), 0.095 * R * eye_sz, ink, f"pupil {side}",
+                          scale=(1, 0.45, 1.15), seg=12), head)
+            self.add(ball(ec + Vector((sx * -0.05 * R, 0.18 * R, 0.06 * R)), 0.045 * R, shine, f"shine {side}",
                           seg=8), head)
+            self.add(ball(ec + Vector((sx * 0.04 * R, 0.17 * R, -0.08 * R)), 0.022 * R, shine, f"shine2 {side}",
+                          seg=6), head)
+            # a soft dark line along the upper lid gives every eye a clear shape
+            ll = ball(ec + Vector((0, 0.07 * R, er * 0.86)), er * 0.98, lashline, "lash line",
+                      scale=(1.05, 0.32, 0.13), seg=14)
+            ll.rotation_euler = (D(-8), 0, sx * D(-6))
+            self.add(ll, head)
             lid = L.get("lid", 0.0)
             if lid:
                 self.add(ball(ec + Vector((0, 0.02 * R, (0.2 - 0.12 * lid) * R)), er * 1.08, sk, f"lid {side}",
-                              scale=(1.05, 0.62, 0.7), seg=14), head)
+                              scale=(1.05, 0.58, 0.7), seg=14), head)
             if L.get("lashes"):
                 for k in range(3):
-                    lb = box(ec + Vector((sx * (0.12 + 0.07 * k) * R, 0.05 * R, (0.27 - 0.03 * k) * R)),
-                             (0.03 * R, 0.02 * R, 0.11 * R), ink, "lash")
+                    lb = box(ec + Vector((sx * (0.13 + 0.07 * k) * R, 0.05 * R, (0.29 - 0.03 * k) * R)),
+                             (0.03 * R, 0.02 * R, 0.1 * R), ink, "lash")
                     lb.rotation_euler = (0, sx * D(25 + 15 * k), 0)
                     self.add(lb, head)
             bw = L.get("brow", 1.0)
             self.p[f"brow{side}"] = self.add(
-                box(ec + Vector((0, 0.07 * R, 0.37 * R)), (0.36 * R * bw, 0.06 * R, 0.08 * R * bw),
-                    toon(f"{name} brows", L.get("brow_col", hair_c)), f"brow {side}", bevel=0.02 * R), head)
+                ball(ec + Vector((0, 0.08 * R, 0.4 * R)), 0.12 * R * bw,
+                     toon(f"{name} brows", L.get("brow_col", hair_c)), f"brow {side}", scale=(1.7, 0.4, 0.42), seg=14),
+                head)
         nose = L.get("nose", (1, 1, 1))
-        self.add(ball(hc + Vector((0, 0.97 * R, -0.12 * R)), 0.17 * R, sk, "nose",
+        self.add(ball(hc + Vector((0, 0.98 * R, -0.13 * R)), 0.13 * R, sk, "nose",
                       scale=(nose[0], 0.9 * nose[1], 0.85 * nose[2]), seg=14), head)
+        if not L.get("blush"):
+            L = dict(L, blush=tuple(min(1.0, c * k) for c, k in zip(L["skin"], (1.02, 0.78, 0.78))))
         if L.get("blush"):
             for sx in (-1, 1):
                 self.add(ball(hc + Vector((sx * 0.55 * R, 0.76 * R, -0.25 * R)), 0.13 * R,
                               toon("Blush", L["blush"], 0.3), "blush", scale=(1, 0.3, 0.6), seg=10), head)
         # puppet mouth: dark inside + tongue + hinged jaw (with lip colour edge)
-        self.add(ball(hc + Vector((0, 0.68 * R, -0.5 * R)), 0.3 * R, mouth_m, "mouth inside",
+        # mouth: a soft closed line in the face; the chin (jaw) sits flush and drops open while talking
+        self.add(ball(hc + Vector((0, 0.66 * R, -0.5 * R)), 0.24 * R, mouth_m, "mouth inside",
                       scale=(1.25, 0.6, 0.55), seg=14), head)
+        lipc = L.get("lips", tuple(c * k for c, k in zip(L["skin"], (0.72, 0.45, 0.45))))
+        self.add(ball(hc + Vector((0, 0.9 * R, -0.43 * R)), 0.12 * R, toon(f"{name} lips", lipc, 0.25), "mouth line",
+                      scale=(1.55, 0.35, 0.3), seg=12), head)
         jaw = self.pivot("jaw", tuple(hc + Vector((0, 0.1 * R, -0.42 * R))), head)
-        self.add(ball(hc + Vector((0, 0.66 * R, -0.6 * R)), 0.2 * R, tongue, "tongue", scale=(1.2, 0.8, 0.4),
+        self.add(ball(hc + Vector((0, 0.62 * R, -0.58 * R)), 0.16 * R, tongue, "tongue", scale=(1.2, 0.8, 0.4),
                       seg=10), jaw)
-        self.add(ball(hc + Vector((0, 0.38 * R, -0.66 * R)), 0.52 * R, sk, "jaw", scale=(1.3, 1.15, 0.6), seg=20),
+        self.add(ball(hc + Vector((0, 0.3 * R, -0.56 * R)), 0.5 * R, sk, "jaw", scale=(1.22, 1.2, 0.6), seg=20),
                  jaw)
-        if L.get("lips"):
-            self.add(box(hc + Vector((0, 0.86 * R, -0.5 * R)), (0.34 * R, 0.05 * R, 0.05 * R),
-                         toon(f"{name} lips", L["lips"], 0.3), "lips", bevel=0.02 * R), jaw)
 
         for side, sx in (("L", -1), ("R", 1)):
             shp = Vector((sx * 0.27 * s * width, 0, sh_z - 0.04 * s))
@@ -524,13 +541,13 @@ def make_lena():
         p.add(ball(hc + Vector((sx * 0.9 * R, -0.2 * R, 0.05 * R)), 0.13 * R, toon("Hair tie", (0.98, 0.85, 0.3)),
                    "hair tie"), head)
     hat = toon("Lena beanie", (0.85, 0.15, 0.15))
-    p.add(ball(hc + Vector((0, -0.05 * R, 0.38 * R)), 1.1 * R, hat, "beanie", scale=(1, 1, 0.72)), head)
-    bpy.ops.mesh.primitive_torus_add(location=hc + Vector((0, -0.02 * R, 0.28 * R)), major_radius=1.02 * R,
+    p.add(ball(hc + Vector((0, -0.08 * R, 0.55 * R)), 1.06 * R, hat, "beanie", scale=(1, 1, 0.66)), head)
+    bpy.ops.mesh.primitive_torus_add(location=hc + Vector((0, -0.04 * R, 0.47 * R)), major_radius=0.96 * R,
                                      minor_radius=0.14 * R, major_segments=32, minor_segments=8)
     rim = finish(bpy.context.object, toon("Beanie rim", (0.97, 0.95, 0.88)), "beanie rim", smooth=True)
     rim.rotation_euler = (D(-12), 0, 0)
     p.add(rim, head)
-    p.add(ball(hc + Vector((0, 0, 1.25 * R)), 0.28 * R, toon("Beanie rim", (0.97, 0.95, 0.88)), "pompom"), head)
+    p.add(ball(hc + Vector((0, -0.05 * R, 1.3 * R)), 0.28 * R, toon("Beanie rim", (0.97, 0.95, 0.88)), "pompom"), head)
     scarf_wrap(p, (0.98, 0.5, 0.65))
     white = toon("Bunny", (0.97, 0.95, 0.94))
     pink = toon("Bunny pink", (0.98, 0.6, 0.7))
@@ -859,9 +876,9 @@ def setup_render(scene, samples=8, res=(450, 800), sky=(0.78, 0.62, 0.5), sky_st
     scene.cycles.glossy_bounces = 0
     scene.cycles.transparent_max_bounces = 4
     scene.render.resolution_x, scene.render.resolution_y = res
-    scene.view_settings.view_transform = "AgX"
+    scene.view_settings.view_transform = "Standard"
     try:
-        scene.view_settings.look = "AgX - Punchy"
+        scene.view_settings.look = "Medium High Contrast"
     except TypeError:
         pass
     scene.render.use_freestyle = False

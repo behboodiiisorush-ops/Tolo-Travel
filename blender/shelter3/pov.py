@@ -492,8 +492,8 @@ def puppet_mask(p, kind="resp"):
     objs = [p.add(ball(hc + Vector((0, 0.8 * R, -0.36 * R)), 0.5 * R, m, "mask cup", scale=(1.12, 0.78, 0.98)), head)]
     if kind == "resp":
         for sx in (-1, 1):
-            o = rod(hc + Vector((sx * 0.42 * R, 0.98 * R, -0.5 * R)), hc + Vector((sx * 0.62 * R, 1.12 * R, -0.55 * R)),
-                    0.2 * R, flt, "mask filter")
+            o = rod(hc + Vector((sx * 0.36 * R, 0.98 * R, -0.5 * R)), hc + Vector((sx * 0.44 * R, 1.16 * R, -0.62 * R)),
+                    0.16 * R, flt, "mask filter")
             objs.append(p.add(o, head))
         objs.append(p.add(rod(hc + Vector((0, 1.15 * R, -0.45 * R)), hc + Vector((0, 1.26 * R, -0.5 * R)), 0.1 * R,
                               flt, "mask valve"), head))
@@ -510,8 +510,13 @@ def make_guard():
     g = Person("Guard", 1.04, 0.2, dict(skin=(0.82, 0.6, 0.46), top=(0.95, 0.5, 0.08), pants=(0.2, 0.22, 0.28),
                                         shoes=(0.08, 0.08, 0.08), hair=(0.1, 0.07, 0.05), belt=(0.15, 0.1, 0.05),
                                         iris=(0.25, 0.18, 0.1), brow=1.4, lid=0.3, gloves=(0.2, 0.2, 0.2)))
-    g.add(ball(g.head_c + Vector((0, 0, 0.45 * g.R)), 1.08 * g.R, toon("Hard hat", (0.95, 0.85, 0.15), 0.2),
-               "hard hat", scale=(1, 1.05, 0.62)), g.p["head"])
+    hat_m = toon("Hard hat", (0.95, 0.85, 0.15), 0.2)
+    g.add(ball(g.head_c + Vector((0, 0, 0.45 * g.R)), 1.08 * g.R, hat_m, "hard hat", scale=(1, 1.05, 0.62)),
+          g.p["head"])
+    g.add(ball(g.head_c + Vector((0, 0.12 * g.R, 0.32 * g.R)), 1.28 * g.R, hat_m, "hard hat brim",
+               scale=(1.0, 1.08, 0.08)), g.p["head"])
+    g.add(box(g.head_c + Vector((0, 0, 0.98 * g.R)), (0.18 * g.R, 1.9 * g.R, 0.14 * g.R), hat_m, "hard hat ridge",
+              bevel=0.05 * g.R), g.p["head"])
     z = 0.86 * g.s + 0.29 * g.s
     g.add(box((0, 0.17, z), (0.5, 0.02, 0.06), toon("Reflective", (0.92, 0.92, 0.92), 0.6), "vest stripe"),
           g.p["torso"])
