@@ -121,13 +121,16 @@ c2 = cam("CAM_S02_wide", (1.2, -16.0, 0.32), (0.4, edge_y + 0.8, 1.2), 24, 145)
 c3 = cam("CAM_S03_insert", pv + Vector((0.5, -0.5, 0.22)), pv + Vector((-0.15, 0.3, 0.03)), 50, 289)
 c4 = cam("CAM_S04_CU", eyec + fwd * 0.45 + Vector((0, -0.35, 0)), eyec, 35, 409)
 c5 = cam("CAM_S05_track", head + Vector((0.05, -0.35, -0.3)), zfeet, 35, 505)
-c6 = cam("CAM_S06_POV", eyec + fwd * 0.03, eyec + fwd * 0.4, 28, 889)
-c7 = cam("CAM_S07_CU", eyec + fwd * 0.35 + Vector((0, -0.25, 0)), eyec, 50, 1009)
+c6 = cam("CAM_S06_POV", eyec + fwd * 0.03, eyec + fwd * 0.3 - (eyec - (arin.rig.matrix_world @ arin.rig.pose.bones["spine_03"].head)).normalized() * 0.12, 35, 889)
+c7 = None   # placed after the hand side is known (below)
 
 # ================================================================ acting
 from mathutils import Quaternion
 mesh_c = lambda o: (lambda me: sum((o.matrix_world @ v.co for v in me.vertices), Vector()) / len(me.vertices))(o.evaluated_get(bpy.context.evaluated_depsgraph_get()).to_mesh())
 mouth = mesh_c(arin.parts["Teeth"][0]) + fwd * 0.02
+_hb = arin.rig.pose.bones["head"]
+up = ((arin.rig.matrix_world @ _hb.tail) - (arin.rig.matrix_world @ _hb.head)).normalized()   # crown direction
+right = fwd.cross(up).normalized()
 chest = (arin.rig.matrix_world @ arin.rig.pose.bones["spine_03"].head) + fwd * 0.14
 sc.frame_set(300)
 hl = arin.rig.matrix_world @ arin.rig.pose.bones["hand_l"].head
@@ -139,9 +142,9 @@ grab = pv + Vector((0, 0, 0.03))
 A.hand(arin, SIDE, [
     (300, hrest), (318, (hrest + grab) / 2 + Vector((0, 0, 0.06))), (345, grab), (352, grab),     # reach out, grab
     (395, chest), (404, chest),                                                                   # pull it in to the chest
-    (418, mouth + fwd * 0.05), (880, mouth + fwd * 0.05),                                         # hand clamped over his mouth
+    (418, mouth + fwd * 0.06 - up * 0.1), (880, mouth + fwd * 0.06 - up * 0.1),                                         # hand clamped over his mouth
     (900, chest + Vector((0, 0, 0.02))), (906, chest + Vector((0, 0, 0.02))),                     # takes the phone off his chest
-    (935, eyec + fwd * 0.26 + Vector((0, 0, -0.06))), (1080, eyec + fwd * 0.26 + Vector((0, 0, -0.06))),
+    (935, eyec + fwd * 0.28 - up * 0.2), (1080, eyec + fwd * 0.28 - up * 0.2),
 ])
 # the phone: lies in the puddle -> carried 352–404 -> rests face-down on his chest -> lifted and turned to his face
 q_down = ph.rotation_euler.to_quaternion()
@@ -152,8 +155,12 @@ sc.frame_set(404)
 A.place(ph, 405, chest + fwd * 0.01, ph.matrix_world.to_quaternion())
 A.place(ph, 905, chest + fwd * 0.01, ph.matrix_world.to_quaternion())
 q_face = (-fwd).to_track_quat("Z", "Y")
-A.place(ph, 935, eyec + fwd * 0.3, q_face)
-A.place(ph, 1080, eyec + fwd * 0.3, q_face)
+PH_HOLD = eyec + fwd * 0.3 - up * 0.12
+q_face = (eyec - PH_HOLD).normalized().to_track_quat("Z", "Y")
+A.place(ph, 935, PH_HOLD, q_face)
+A.place(ph, 1080, PH_HOLD, q_face)
+_s = 1 if SIDE == "l" else -1     # camera on the far side from the hand that holds the phone
+c7 = cam("CAM_S07_CU", eyec + fwd * 0.38 + right * (0.22 * _s), eyec, 50, 1009)
 # head turns toward the dragging feet while she passes; face: fear, then shock at the name
 A.look(arin, 560, 860, lambda f: zfeet, weight=0.45)
 A.face(arin, 1, 1080, lambda f, t: dict(worry=(1.5 if f < 940 else 1.0), talking=(1040 <= f <= 1068)))
