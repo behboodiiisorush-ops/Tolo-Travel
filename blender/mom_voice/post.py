@@ -1,5 +1,5 @@
 """Post for «صدای مامان»: upscale, fisheye POV, channel branding on every frame, Persian captions,
-fade to black, question card with the credit.
+fade to black, question card with the channel name.
     out/mom_voice_silent.mp4     no captions, no sound
     out/mom_voice_captions.mp4   captions, no sound (for re-recording the voices)
     out/mom_voice_clean.mp4      captions + ElevenLabs voices + room tone
@@ -11,7 +11,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from captions import LINES, NAMES, END, QUESTION, TITLE  # noqa: E402
 sys.path.insert(0, os.path.join(HERE, "..", "brand"))
-from brand import overlay, CREDIT, CHANNEL  # noqa: E402
+from brand import overlay, CHANNEL  # noqa: E402
 FONT = os.path.join(HERE, "..", "fonts", "Vazirmatn-FD-ExtraBold.ttf")
 FPS, W, H = 24, 1080, 1920
 CARD = 4.0
@@ -68,7 +68,6 @@ def card(t):
         d.text((W // 2, y0 + k * 120), ln, font=f, fill=(c, c, c), anchor="mm", direction="rtl", language="fa")
     d.text((W // 2, y0 - 190), "؟", font=font(140), fill=(int(230 * a), int(40 * a), int(50 * a)), anchor="mm")
     g = int(200 * a)
-    d.text((W // 2, H - 330), CREDIT, font=font(46), fill=(g, g, g), anchor="mm", direction="rtl", language="fa")
     d.text((W // 2, H - 250), CHANNEL, font=font(58), fill=(g, g, g), anchor="mm")
     return overlay(img, TITLE)
 

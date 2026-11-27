@@ -38,7 +38,7 @@ for a, b, who, _, clip in LINES:
     chain = ["silenceremove=start_periods=1:start_threshold=-50dB"]
     if who == "arian":
         chain.append("rubberband=pitch=1.12:formant=preserved")
-    chain.append("loudnorm=I=-18:TP=-2:LRA=7")
+    chain.append("loudnorm=I=-16:TP=-2:LRA=7")
     if who == "mom_phone":
         chain.append("highpass=f=320,lowpass=f=3400,acompressor=threshold=-20dB:ratio=3")
     ff("-i", src, "-af", ",".join(chain), "-ar", str(SR), "-ac", "1", dst)

@@ -47,9 +47,9 @@
   creak, slam, knock, footsteps, breathing etc.; place each exactly on the frame it happens; listen to the take
   and regenerate a bad one. Never reuse a generic "door" sound for every door.
 - **Branding on every video** (all versions, every frame): the film's name in the top-right corner and the channel
-  logo (`blender/brand/agetobudi_logo_round.png`, the user's «داستان‌های POV — Agetobudi» logo) in the top-left,
-  plus the credit «ساخته شده توسط بلندر» (channel «agetobudi»). Use `overlay(img, title)` from `blender/brand/brand.py`
-  in post (works for vertical and 16:9); the closing card also shows the credit.
+  logo (`blender/brand/agetobudi_logo_round.png`, the user's «داستان‌های POV — Agetobudi» logo) in the top-left.
+  Use `overlay(img, title)` from `blender/brand/brand.py` in post (works for vertical and 16:9).
+  Never show «ساخته شده توسط بلندر» or "Blender" on screen (the user removed it), closing cards included.
 - Voice scripts: give each line in its own copyable block, per speaker. Put the delivery (how to say it)
   inside the line as ElevenLabs v3 audio tags in square brackets, in English, e.g. `[whispers]`, `[shouting]`,
   `[scared]`, `[sighs]` — ElevenLabs performs these and does not read them aloud. Never write the delivery
