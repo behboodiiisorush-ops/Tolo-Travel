@@ -30,8 +30,11 @@
 - **Voices and sound effects always come from ElevenLabs** (the connected ElevenLabs MCP tools, `mcp__ElevenLabs__*`):
   Claude generates every spoken line **only with the Persian (فارسی) voices already in the user's ElevenLabs account** — Aidin Podcast, Amin.GS,
   Amitis, Aramofen, Aran - Parsi, Arash, Danesh, Farshad, Hengameh, Javid, Mard, Mitra, MohammadHossein, Najib, Omid, Rashnow,
-  Sara, amir, mohsen, «خشن», «معلم» (check `creative_list_voices`, language fa). Never a non-Persian voice (no German/English), never design/save a new voice (`creative_design_voice`/`creative_save_designed_voice`; the Claude-made ZC …/Wagon …
-  voices are not to be used). Films voiced otherwise get their lines regenerated with these voices (one fixed voice per
+  Sara, amir, mohsen, «خشن», «معلم» (check `creative_list_voices`, language fa). Never a non-Persian voice (no German/English), never design/save a new voice (`creative_design_voice`/`creative_save_designed_voice`; the Claude-made ZC … voices are not to be used).
+  **Voice cast like «واگن آخر ۲» (user, 27 Nov — for every film):** boy/narrator = Mard (vJZ82xJdoy9JqX5RmoBD, +2 st
+  formant-preserved), second boy = Arash (Mn0jJ3FC9Ijz7lQe8ELI, +3 st), girl = Rashnow (g36FEKq8A536osj4GuaD),
+  mom = Wagon - Mom (CW1H0ECNiIvEZCNLa1az), old man / driver = Wagon - Rahim (41Jt86rYN2Yqnjt1W6hi).
+  When redoing voices, only replace the audio on the existing film (fit each line to the old line's length). Films voiced otherwise get their lines regenerated with these voices (one fixed voice per
   character, never a voice_id from memory) and every sound effect
   (no synthesised numpy effects any more). Keep `talking=True` lip movement on the lines in `captions.py` and fit
   captions + lips to the generated lengths. Also keep a version without sound. If the ElevenLabs tools are not
