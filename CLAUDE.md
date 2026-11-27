@@ -46,6 +46,9 @@
   duck music/effects to about −13 dB under every line, keep radio/phone colour light. Before delivery transcribe the
   final mix with faster-whisper (`HF_HUB_DISABLE_XET=1`, model small, language fa) and regenerate any line that
   comes out garbled; speech should sit ≥ 10 dB above the effects.
+- **Use the voices exactly as ElevenLabs makes them** (the user, 2026-11-27: «از صداهای ساخته شده در elevenlabs استفاده کن،
+  هیچ وقت از خودت نساز»): never make or change a voice yourself — no pitch-shifting, no phone/door/radio filters on
+  voices; only loudness matching. Pick the character's fixed ElevenLabs voice from `blender/voices/VOICES.md`.
 - **Every sound is a real ElevenLabs sound effect — never a fake/synthesised one** (the user: door sounds so far were
   bad). Make one effect per action with a precise prompt: what it is made of, size, distance, how it moves, e.g.
   "heavy steel bunker door, latch clicks, slow creaking open, metal echo in a concrete room, close" or
