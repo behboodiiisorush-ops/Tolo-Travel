@@ -111,13 +111,14 @@ def write(rep, path):
     return rep["summary"]
 
 
-def ground(ch, f0, f1, floor=0.0, smooth=2):
+def ground(ch, f0, f1, floor=0.0, smooth=2, keep_flight=False):
     """Put the soles on the floor every frame: the rig is lifted/lowered so the lowest foot point is at
     `floor` (no sinking, no floating), lightly smoothed so the body doesn't jitter. Keys rig location z."""
     sc = bpy.context.scene
     objs = _foot_objects(ch)
     rig = ch.rig
-    lows, base = [], []
+    lows, base, stance = [], [], []
+    prevc = {}
     for f in range(f0, f1 + 1):
         sc.frame_set(f)
         dg = bpy.context.evaluated_depsgraph_get()
@@ -125,7 +126,32 @@ def ground(ch, f0, f1, floor=0.0, smooth=2):
         pts = L + R
         lows.append(min(p.z for p in pts) - floor if pts else 0.0)
         base.append(rig.location.z)
+        # stance = a foot whose lowest patch is (nearly) not moving horizontally -> it is on the ground
+        st = None
+        for s, P in (("l", L), ("r", R)):
+            if not P:
+                continue
+            zs = sorted(p.z for p in P); cut = zs[max(0, len(zs) // 7)]
+            c = sum((p for p in P if p.z <= cut), Vector()) / max(1, len([p for p in P if p.z <= cut]))
+            if s in prevc and math.hypot(c.x - prevc[s].x, c.y - prevc[s].y) < 0.02:
+                low = min(p.z for p in P) - floor
+                st = low if st is None else min(st, low)
+            prevc[s] = c
+        stance.append(st)
     n = len(lows)
+    if keep_flight:      # correct only stance frames, interpolate the offset through flight (keeps the jump)
+        idx = [i for i in range(n) if stance[i] is not None]
+        if idx:
+            corr = [0.0] * n
+            for i in range(n):
+                a = max([j for j in idx if j <= i], default=None)
+                b = min([j for j in idx if j >= i], default=None)
+                if a is None: corr[i] = stance[b]
+                elif b is None or a == b: corr[i] = stance[a]
+                else: corr[i] = stance[a] + (stance[b] - stance[a]) * (i - a) / (b - a)
+            # but never let a foot sink below the floor during flight
+            lows = [max(min(lows[i], corr[i]), corr[i] if lows[i] >= corr[i] else lows[i]) for i in range(n)]
+            lows = [min(corr[i], lows[i]) if lows[i] < corr[i] else corr[i] for i in range(n)]
     sm = []
     for i in range(n):
         a, b = max(0, i - smooth), min(n, i + smooth + 1)

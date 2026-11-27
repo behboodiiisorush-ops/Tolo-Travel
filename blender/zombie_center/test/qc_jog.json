@@ -1,0 +1,1321 @@
+{
+ "summary": {
+  "frames": [
+   1,
+   96
+  ],
+  "slide_max_cm": 5.04,
+  "slide_mean_cm": 0.96,
+  "slide_bad_frames": [
+   4,
+   10,
+   11,
+   17,
+   20,
+   21,
+   27,
+   41,
+   42,
+   60,
+   61,
+   62,
+   63,
+   64,
+   65,
+   71,
+   81,
+   82,
+   83
+  ],
+  "sink_max_cm": 0.0,
+  "sink_bad_frames": [],
+  "airborne_frames": [
+   1,
+   2,
+   5,
+   6,
+   12,
+   13,
+   14,
+   15,
+   22,
+   23,
+   24,
+   25,
+   31,
+   32,
+   33,
+   34,
+   35,
+   43,
+   45,
+   51,
+   52,
+   53,
+   54,
+   55,
+   72,
+   73,
+   74,
+   75,
+   76,
+   84,
+   86,
+   92,
+   93,
+   95,
+   96
+  ],
+  "pass": false
+ },
+ "rows": [
+  {
+   "frame": 1,
+   "l": {
+    "h_cm": 15.1,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 2.93,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 2,
+   "l": {
+    "h_cm": 7.32,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 2.39,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 3,
+   "l": {
+    "h_cm": 4.76,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 0.19,
+    "planted": true,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 4,
+   "l": {
+    "h_cm": 4.95,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 0.39,
+    "planted": true,
+    "slide_cm": 5.04
+   }
+  },
+  {
+   "frame": 5,
+   "l": {
+    "h_cm": 5.69,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 3.98,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 6,
+   "l": {
+    "h_cm": 2.34,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 8.04,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 7,
+   "l": {
+    "h_cm": 0.01,
+    "planted": true,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 11.77,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 8,
+   "l": {
+    "h_cm": 0.24,
+    "planted": true,
+    "slide_cm": 0.35
+   },
+   "r": {
+    "h_cm": 14.02,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 9,
+   "l": {
+    "h_cm": 0.66,
+    "planted": true,
+    "slide_cm": 0.33
+   },
+   "r": {
+    "h_cm": 13.25,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 10,
+   "l": {
+    "h_cm": 0.81,
+    "planted": true,
+    "slide_cm": 0.69
+   },
+   "r": {
+    "h_cm": 8.8,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 11,
+   "l": {
+    "h_cm": 0.34,
+    "planted": true,
+    "slide_cm": 3.21
+   },
+   "r": {
+    "h_cm": 4.26,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 12,
+   "l": {
+    "h_cm": 2.08,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 2.04,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 13,
+   "l": {
+    "h_cm": 1.92,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 4.31,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 14,
+   "l": {
+    "h_cm": 2.15,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 4.79,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 15,
+   "l": {
+    "h_cm": 6.35,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 4.09,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 16,
+   "l": {
+    "h_cm": 11.75,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 0.0,
+    "planted": true,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 17,
+   "l": {
+    "h_cm": 17.53,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 0.0,
+    "planted": true,
+    "slide_cm": 1.01
+   }
+  },
+  {
+   "frame": 18,
+   "l": {
+    "h_cm": 20.34,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 0.36,
+    "planted": true,
+    "slide_cm": 0.24
+   }
+  },
+  {
+   "frame": 19,
+   "l": {
+    "h_cm": 18.87,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 0.16,
+    "planted": true,
+    "slide_cm": 0.45
+   }
+  },
+  {
+   "frame": 20,
+   "l": {
+    "h_cm": 13.63,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 0.14,
+    "planted": true,
+    "slide_cm": 0.79
+   }
+  },
+  {
+   "frame": 21,
+   "l": {
+    "h_cm": 10.33,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 0.47,
+    "planted": true,
+    "slide_cm": 1.2
+   }
+  },
+  {
+   "frame": 22,
+   "l": {
+    "h_cm": 4.29,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 1.28,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 23,
+   "l": {
+    "h_cm": 3.41,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 2.75,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 24,
+   "l": {
+    "h_cm": 5.26,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 1.27,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 25,
+   "l": {
+    "h_cm": 3.19,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 1.56,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 26,
+   "l": {
+    "h_cm": 0.01,
+    "planted": true,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 3.72,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 27,
+   "l": {
+    "h_cm": 0.0,
+    "planted": true,
+    "slide_cm": 0.84
+   },
+   "r": {
+    "h_cm": 6.12,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 28,
+   "l": {
+    "h_cm": 0.02,
+    "planted": true,
+    "slide_cm": 0.1
+   },
+   "r": {
+    "h_cm": 8.27,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 29,
+   "l": {
+    "h_cm": 0.27,
+    "planted": true,
+    "slide_cm": 0.07
+   },
+   "r": {
+    "h_cm": 7.97,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 30,
+   "l": {
+    "h_cm": 1.06,
+    "planted": true,
+    "slide_cm": 0.39
+   },
+   "r": {
+    "h_cm": 4.86,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 31,
+   "l": {
+    "h_cm": 1.92,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 2.56,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 32,
+   "l": {
+    "h_cm": 2.13,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 2.92,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 33,
+   "l": {
+    "h_cm": 3.65,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 3.72,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 34,
+   "l": {
+    "h_cm": 1.92,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 5.12,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 35,
+   "l": {
+    "h_cm": 6.03,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 4.07,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 36,
+   "l": {
+    "h_cm": 11.78,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 0.24,
+    "planted": true,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 37,
+   "l": {
+    "h_cm": 17.98,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 0.0,
+    "planted": true,
+    "slide_cm": 0.38
+   }
+  },
+  {
+   "frame": 38,
+   "l": {
+    "h_cm": 21.58,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 0.0,
+    "planted": true,
+    "slide_cm": 0.14
+   }
+  },
+  {
+   "frame": 39,
+   "l": {
+    "h_cm": 20.09,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 0.0,
+    "planted": true,
+    "slide_cm": 0.34
+   }
+  },
+  {
+   "frame": 40,
+   "l": {
+    "h_cm": 15.12,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 0.23,
+    "planted": true,
+    "slide_cm": 0.59
+   }
+  },
+  {
+   "frame": 41,
+   "l": {
+    "h_cm": 12.66,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 0.55,
+    "planted": true,
+    "slide_cm": 1.21
+   }
+  },
+  {
+   "frame": 42,
+   "l": {
+    "h_cm": 4.22,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 0.9,
+    "planted": true,
+    "slide_cm": 2.39
+   }
+  },
+  {
+   "frame": 43,
+   "l": {
+    "h_cm": 2.54,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 2.48,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 44,
+   "l": {
+    "h_cm": 6.51,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 0.82,
+    "planted": true,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 45,
+   "l": {
+    "h_cm": 4.36,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 1.71,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 46,
+   "l": {
+    "h_cm": 0.19,
+    "planted": true,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 6.37,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 47,
+   "l": {
+    "h_cm": 0.0,
+    "planted": true,
+    "slide_cm": 0.57
+   },
+   "r": {
+    "h_cm": 10.96,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 48,
+   "l": {
+    "h_cm": 0.0,
+    "planted": true,
+    "slide_cm": 0.11
+   },
+   "r": {
+    "h_cm": 13.83,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 49,
+   "l": {
+    "h_cm": 0.18,
+    "planted": true,
+    "slide_cm": 0.08
+   },
+   "r": {
+    "h_cm": 13.27,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 50,
+   "l": {
+    "h_cm": 0.8,
+    "planted": true,
+    "slide_cm": 0.24
+   },
+   "r": {
+    "h_cm": 8.95,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 51,
+   "l": {
+    "h_cm": 1.26,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 3.44,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 52,
+   "l": {
+    "h_cm": 2.59,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 2.68,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 53,
+   "l": {
+    "h_cm": 4.53,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 3.26,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 54,
+   "l": {
+    "h_cm": 2.76,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 5.62,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 55,
+   "l": {
+    "h_cm": 3.51,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 3.61,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 56,
+   "l": {
+    "h_cm": 7.81,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 0.5,
+    "planted": true,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 57,
+   "l": {
+    "h_cm": 12.08,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 0.0,
+    "planted": true,
+    "slide_cm": 0.6
+   }
+  },
+  {
+   "frame": 58,
+   "l": {
+    "h_cm": 14.72,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 0.0,
+    "planted": true,
+    "slide_cm": 0.11
+   }
+  },
+  {
+   "frame": 59,
+   "l": {
+    "h_cm": 13.94,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 0.0,
+    "planted": true,
+    "slide_cm": 0.14
+   }
+  },
+  {
+   "frame": 60,
+   "l": {
+    "h_cm": 10.63,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 0.64,
+    "planted": true,
+    "slide_cm": 0.76
+   }
+  },
+  {
+   "frame": 61,
+   "l": {
+    "h_cm": 8.46,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 0.73,
+    "planted": true,
+    "slide_cm": 1.24
+   }
+  },
+  {
+   "frame": 62,
+   "l": {
+    "h_cm": 3.2,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 0.68,
+    "planted": true,
+    "slide_cm": 2.28
+   }
+  },
+  {
+   "frame": 63,
+   "l": {
+    "h_cm": 2.67,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 0.97,
+    "planted": true,
+    "slide_cm": 2.76
+   }
+  },
+  {
+   "frame": 64,
+   "l": {
+    "h_cm": 5.93,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 0.84,
+    "planted": true,
+    "slide_cm": 3.31
+   }
+  },
+  {
+   "frame": 65,
+   "l": {
+    "h_cm": 4.62,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 0.92,
+    "planted": true,
+    "slide_cm": 4.78
+   }
+  },
+  {
+   "frame": 66,
+   "l": {
+    "h_cm": 0.1,
+    "planted": true,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 6.09,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 67,
+   "l": {
+    "h_cm": 0.0,
+    "planted": true,
+    "slide_cm": 0.32
+   },
+   "r": {
+    "h_cm": 11.8,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 68,
+   "l": {
+    "h_cm": 0.0,
+    "planted": true,
+    "slide_cm": 0.24
+   },
+   "r": {
+    "h_cm": 15.95,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 69,
+   "l": {
+    "h_cm": 0.01,
+    "planted": true,
+    "slide_cm": 0.03
+   },
+   "r": {
+    "h_cm": 16.71,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 70,
+   "l": {
+    "h_cm": 0.3,
+    "planted": true,
+    "slide_cm": 0.09
+   },
+   "r": {
+    "h_cm": 12.58,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 71,
+   "l": {
+    "h_cm": 1.06,
+    "planted": true,
+    "slide_cm": 0.92
+   },
+   "r": {
+    "h_cm": 6.43,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 72,
+   "l": {
+    "h_cm": 1.38,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 2.56,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 73,
+   "l": {
+    "h_cm": 2.77,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 2.99,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 74,
+   "l": {
+    "h_cm": 2.91,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 5.36,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 75,
+   "l": {
+    "h_cm": 3.02,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 3.9,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 76,
+   "l": {
+    "h_cm": 7.25,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 2.59,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 77,
+   "l": {
+    "h_cm": 11.59,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": -0.0,
+    "planted": true,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 78,
+   "l": {
+    "h_cm": 15.44,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 0.0,
+    "planted": true,
+    "slide_cm": 0.09
+   }
+  },
+  {
+   "frame": 79,
+   "l": {
+    "h_cm": 16.05,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 0.0,
+    "planted": true,
+    "slide_cm": 0.25
+   }
+  },
+  {
+   "frame": 80,
+   "l": {
+    "h_cm": 13.45,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 0.46,
+    "planted": true,
+    "slide_cm": 0.46
+   }
+  },
+  {
+   "frame": 81,
+   "l": {
+    "h_cm": 14.66,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 0.63,
+    "planted": true,
+    "slide_cm": 0.83
+   }
+  },
+  {
+   "frame": 82,
+   "l": {
+    "h_cm": 5.71,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 0.56,
+    "planted": true,
+    "slide_cm": 2.19
+   }
+  },
+  {
+   "frame": 83,
+   "l": {
+    "h_cm": 2.1,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 0.46,
+    "planted": true,
+    "slide_cm": 3.08
+   }
+  },
+  {
+   "frame": 84,
+   "l": {
+    "h_cm": 2.21,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 1.36,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 85,
+   "l": {
+    "h_cm": 4.9,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 0.98,
+    "planted": true,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 86,
+   "l": {
+    "h_cm": 2.43,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 2.95,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 87,
+   "l": {
+    "h_cm": 0.56,
+    "planted": true,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 7.05,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 88,
+   "l": {
+    "h_cm": 0.0,
+    "planted": true,
+    "slide_cm": 0.15
+   },
+   "r": {
+    "h_cm": 11.33,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 89,
+   "l": {
+    "h_cm": 0.0,
+    "planted": true,
+    "slide_cm": 0.09
+   },
+   "r": {
+    "h_cm": 13.95,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 90,
+   "l": {
+    "h_cm": 0.12,
+    "planted": true,
+    "slide_cm": 0.16
+   },
+   "r": {
+    "h_cm": 12.09,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 91,
+   "l": {
+    "h_cm": 0.97,
+    "planted": true,
+    "slide_cm": 0.58
+   },
+   "r": {
+    "h_cm": 7.8,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 92,
+   "l": {
+    "h_cm": 1.53,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 3.32,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 93,
+   "l": {
+    "h_cm": 2.07,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 2.54,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 94,
+   "l": {
+    "h_cm": 1.13,
+    "planted": true,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 3.21,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 95,
+   "l": {
+    "h_cm": 2.09,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 4.07,
+    "planted": false,
+    "slide_cm": null
+   }
+  },
+  {
+   "frame": 96,
+   "l": {
+    "h_cm": 6.36,
+    "planted": false,
+    "slide_cm": null
+   },
+   "r": {
+    "h_cm": 3.42,
+    "planted": false,
+    "slide_cm": null
+   }
+  }
+ ]
+}
