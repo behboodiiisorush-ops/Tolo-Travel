@@ -1,4 +1,4 @@
-"""Arin's phone screen for CH01_SC002, one PNG per scene frame (1081–2796) -> out/sc002_screen/s_####.png.
+"""Arin's phone screen for CH01_SC002, one PNG per scene frame (1081–2684) -> out/sc002_screen/s_####.png.
 Plain python3 + Pillow (no Blender). Uses Nika's video frames (out/sc002_video/f_####.png, else prev_####.png).
 
  1081–1248  paused on the first video frame, play icon; he dims the screen (~1190)
