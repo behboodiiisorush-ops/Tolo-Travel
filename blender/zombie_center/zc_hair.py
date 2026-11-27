@@ -102,7 +102,7 @@ def centre_part_hair(ch, n=20000, seed=1, colour=(0.012, 0.010, 0.010), name=Non
     for p0, nrm in roots:
         fy = (p0.y - front_y) / (back_y - front_y)
         dx = p0.x - cx
-        side = math.copysign(1.0, dx) if abs(dx) > 0.004 else rnd.choice((-1, 1))
+        side = math.copysign(1.0, dx) if abs(dx) > 0.008 else rnd.choice((-1, 1))
         top_region = p0.z > ear_z + 0.06 and abs(dx) < 0.065
         if top_region and fy < 0.5:
             L = 0.095 + 0.02 * rnd.random()          # fringe / top: long, falls to the sides
@@ -147,6 +147,10 @@ def centre_part_hair(ch, n=20000, seed=1, colour=(0.012, 0.010, 0.010), name=Non
                 p = pts[-1] + (p - pts[-1]) * 0.15
                 step *= 0.3
             pts.append(p.copy())
+        for i in range(1, len(pts)):           # hard guard: nothing beside the face, nothing over the eyes
+            q = pts[i]
+            if (abs(q.x - cx) > 0.058 and q.z < ear_z + 0.045) or (fy < 0.45 and abs(q.x - cx) < 0.058 and q.z < brow_z + 0.025):
+                pts[i] = pts[i - 1].copy()
         strands.append(pts)
     bm.free()
 

@@ -28,11 +28,12 @@ ZC = {
     "zc_elena": dict(
         fa="دکتر النا", role="Scientist, 48. Dark-blonde jaw-length bob, white lab coat over grey top, dark trousers.",
         gender=0.0, age=0.68, height=0.5, weight=0.45, muscle=0.35, skin="middleage_caucasian_female", skin_tint=WARM,
-        hair="bob02", hair_set=(0.5, 0.39, 0.25), brow="eyebrow011", brow_col=(0.3, 0.22, 0.14), dark_eyes=True,
+        hair="elvs_wavy_bob", hair_set=(0.5, 0.39, 0.25), brow="eyebrow011", brow_col=(0.3, 0.22, 0.14), dark_eyes=True,
         clothes={"joepal_crude_t-shirt_female": None, "mindfront_female_trousers_1": None,
                  "toigo_ankle_boots_female": (0.1, 0.09, 0.09), "mindfront_cardigan_long_open_front": None},
         flat={"joepal_crude_t-shirt_female": (0.36, 0.37, 0.39), "mindfront_female_trousers_1": (0.12, 0.12, 0.14),
-              "mindfront_cardigan_long_open_front": (0.93, 0.93, 0.92)}),
+              "mindfront_cardigan_long_open_front": (0.93, 0.93, 0.92)},
+        outer=("mindfront_cardigan_long_open_front",)),
     "zc_sara": dict(
         fa="سارا", role="Survivor, 23. Dark-brown hair in a low ponytail, olive field jacket, black jeans, worn boots.",
         gender=0.0, age=0.48, height=0.48, weight=0.42, muscle=0.45, skin="young_caucasian_female2", skin_tint=(0.68, 0.52, 0.4),
@@ -89,6 +90,9 @@ def finish(ch, d):
         zc_look.brow_scar(ch, side=+1)
     if d.get("strand_hair") == "centre_part":
         ch.hair_strands = zc_hair.centre_part_hair(ch)
+    for asset in d.get("outer", ()):                  # outer layer pushed out a few mm: no poke-through
+        for o in ch.parts.get("by_asset", {}).get(asset, []):
+            dm = o.modifiers.new("ZC_Outer", "DISPLACE"); dm.strength = 0.006; dm.mid_level = 0.0
     for o in ch.parts.get("Clothes", []):          # no plastic shoes / clothes
         for ms in o.material_slots:
             m = ms.material
