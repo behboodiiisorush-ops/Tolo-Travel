@@ -14,6 +14,10 @@ if [ ! -x "$V/venv/bin/python" ]; then
   python3 -m venv "$V/venv"
   "$V/venv/bin/pip" install -q bpy==5.3.0 numpy
 fi
+# Pillow (Persian text with raqm) for phone screens, captions, branding — needed by the film scripts
+"$V/venv/bin/python" -c "import PIL" 2>/dev/null || "$V/venv/bin/pip" install -q pillow==13.0.0
+"$V/venv/bin/python" -c "from PIL import features; assert features.check('raqm')" 2>/dev/null || \
+  (apt-get install -y -q libraqm0 >/dev/null 2>&1 || true)
 
 MPFB_URL='https://extensions.blender.org/download/sha256:c075b3e9b94b8e5556a5f03f4653602d02ea306de08126e8f55ed6dee28a2dad/add-on-mpfb-v2.0.18.zip?repository=%2Fapi%2Fv1%2Fextensions%2F&blender_version_min=4.2.0'
 if [ ! -d "$V/ext/user_default/mpfb" ]; then
