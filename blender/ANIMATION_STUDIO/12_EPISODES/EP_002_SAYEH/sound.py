@@ -5,7 +5,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "..", "..", "school_pov"))
 sys.path.insert(0, HERE)
 import sfx as S          # noqa: E402
-from lines import END  # noqa: E402
+from lines import END, COLD, COLD_CARD  # noqa: E402
 
 TOTAL = END + 4.0
 
@@ -67,5 +67,12 @@ def build():
 if __name__ == "__main__":
     os.makedirs(os.path.join(HERE, "out"), exist_ok=True)
     p = os.path.join(HERE, "out", "sayeh_sfx.wav")
-    S.write(p, build())
+    film = build()
+    a, b = int(COLD[0] * S.SR), int(COLD[1] * S.SR)
+    cold = film[a:b].copy()
+    cold[-int(0.4 * S.SR):] *= np.linspace(1, 0, int(0.4 * S.SR))[:, None]
+    n = int(COLD_CARD[0] * S.SR)
+    hit = np.sin(2 * np.pi * 50 * S.tt(n)) * np.exp(-S.tt(n) * 3) * 0.6       # a deep hit under the black card
+    gap = np.stack([hit, hit], axis=1)
+    S.write(p, np.concatenate([cold, gap, film]))
     print(p)

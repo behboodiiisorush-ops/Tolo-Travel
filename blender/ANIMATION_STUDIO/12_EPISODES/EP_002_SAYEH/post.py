@@ -7,7 +7,7 @@ import os, shutil, subprocess, sys
 from PIL import Image, ImageDraw, ImageFont
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from lines import LINES, NAMES, END, QUESTION  # noqa: E402
+from lines import LINES, NAMES, END, QUESTION, COLD, COLD_CARD  # noqa: E402
 FONT = os.path.join(HERE, "..", "..", "..", "fonts", "Vazirmatn-FD-ExtraBold.ttf")
 FPS, W, H = 24, 1080, 1920
 CARD = 4.0
@@ -75,32 +75,58 @@ def encode(pattern, out, audio=None):
     print(out)
 
 
+def title_card(t, text):
+    img = Image.new("RGB", (W, H), (0, 0, 0))
+    d = ImageDraw.Draw(img)
+    a = min(1.0, t / 0.3)
+    c = int(235 * a)
+    d.text((W // 2, H // 2), text, font=font(80), fill=(c, c, c), anchor="mm", direction="rtl", language="fa")
+    return img
+
+
+def timeline():
+    """(kind, film_time) per output frame: cold open, card, the film, question card."""
+    out = [("film", COLD[0] + i / FPS) for i in range(int((COLD[1] - COLD[0]) * FPS))]
+    out += [("cold", i / FPS) for i in range(int(COLD_CARD[0] * FPS))]
+    out += [("film", i / FPS) for i in range(int(END * FPS))]
+    out += [("card", i / FPS) for i in range(int(CARD * FPS))]
+    return out
+
+
 def main():
     shutil.rmtree(TMP, ignore_errors=True)
     os.makedirs(TMP)
     os.makedirs(OUT, exist_ok=True)
     n_pic = int(END * FPS)
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-framerate", str(FPS), "-i", os.path.join(SRC, "f_%04d.png"),
-                    "-frames:v", str(n_pic),
-                    "-vf", f"scale={W}:{H}:flags=lanczos,vignette=PI/6",
+                    "-frames:v", str(n_pic), "-vf", f"scale={W}:{H}:flags=lanczos,vignette=PI/6",
                     "-q:v", "2", os.path.join(TMP, "u_%04d.jpg")], check=True)
-    names = sorted(n for n in os.listdir(TMP) if n.startswith("u_"))
-    total = len(names) + int(CARD * FPS)
-    for i in range(total):
-        t = i / FPS
-        if i < len(names):
-            img = Image.open(os.path.join(TMP, names[i])).convert("RGB")
-            os.remove(os.path.join(TMP, names[i]))      # keep the disk small
-            fade = min(1.0, max(0.0, (END - t) / 0.6))
+    n_have = len([n for n in os.listdir(TMP) if n.startswith("u_")])
+    tl = timeline()
+    first_film = int((COLD[1] - COLD[0]) * FPS) + int(COLD_CARD[0] * FPS)
+    for i, (kind, t) in enumerate(tl):
+        if kind == "film":
+            k = min(n_have, int(round(t * FPS)) + 1)
+            img = Image.open(os.path.join(TMP, f"u_{k:04d}.jpg")).convert("RGB")
+            if i >= first_film:
+                fade = min(1.0, max(0.0, (END - t) / 0.6), (i - first_film + 1) / 8)
+            else:
+                fade = min(1.0, i / 6, max(0.0, (COLD[1] - t) / 0.4))
             if fade < 1:
-                img = Image.blend(Image.new("RGB", img.size), img, fade)
+                img = Image.blend(Image.new("RGB", img.size), img, max(0.0, fade))
+        elif kind == "cold":
+            img = title_card(t, COLD_CARD[1])
         else:
-            img = card(t - len(names) / FPS)
+            img = card(t)
         img.save(os.path.join(TMP, f"n_{i:04d}.jpg"), quality=95)
-        for a, b, who, text in LINES:
-            if a <= t <= b and i < len(names):
-                caption(img, who, text)
+        if kind == "film":
+            for a, b, who, text in LINES:
+                if a <= t <= b:
+                    caption(img, who, text)
         img.save(os.path.join(TMP, f"c_{i:04d}.jpg"), quality=95)
+    for n in os.listdir(TMP):
+        if n.startswith("u_"):
+            os.remove(os.path.join(TMP, n))
     encode(os.path.join(TMP, "c_%04d.jpg"), os.path.join(OUT, "sayeh_captions.mp4"))
     encode(os.path.join(TMP, "n_%04d.jpg"), os.path.join(OUT, "sayeh_clean.mp4"))
     sfx = os.path.join(OUT, "sayeh_sfx.wav")

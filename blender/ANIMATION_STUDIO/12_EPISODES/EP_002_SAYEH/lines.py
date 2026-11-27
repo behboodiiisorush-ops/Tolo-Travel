@@ -16,3 +16,7 @@ FPS = 24
 
 def fr(t):
     return int(round(t * FPS)) + 1
+
+# cold open (the hook): this part of the film plays first, then a black card, then the film from the start
+COLD = (17.6, 21.6)
+COLD_CARD = (1.3, "ده دقیقه قبل...")
