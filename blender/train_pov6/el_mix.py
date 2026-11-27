@@ -17,10 +17,8 @@ TOTAL = END + 4.0
 # clarity first (the user found ep6 voices unclear): eleven_multilingual_v2 takes, every line loudness-matched,
 # gentle pitch with formants kept, a light radio colour for Mom only
 NORM = "highpass=f=80,acompressor=threshold=-24dB:ratio=3:attack=5:release=120,loudnorm=I=-16:TP=-1.5:LRA=7"
-FX = {"Me": "rubberband=pitch=1.10:formant=preserved," + NORM,
-      "Lena": "rubberband=pitch=1.18:formant=preserved," + NORM,
-      "Rahim": NORM,
-      "Mom": "highpass=f=250,lowpass=f=5000," + NORM}
+FX = {"Me": NORM, "Lena": NORM, "Rahim": NORM,      # the user's own ElevenLabs recording (user/rec.mp3), cut per line
+      "Mom": "highpass=f=380,lowpass=f=3300,acrusher=bits=11:mix=0.18,acompressor=threshold=-22dB:ratio=5," + NORM}   # walkie-talkie
 GAIN = {"Me": 1.0, "Lena": 1.0, "Rahim": 1.0, "Mom": 1.0}
 
 
@@ -60,6 +58,9 @@ def voices(buf):
     for key, who, _ in LINES:
         a, b = KEY_OF[key]
         x = load(key, FX[who])
+        room = (b - a) + 0.5
+        if len(x) / SR > room:                      # end with the rendered lips: speed up a little (max 1.25x)
+            x = load(key, FX[who] + f",rubberband=tempo={min(1.25, len(x) / SR / room):.3f}")
         put(buf, x, a, GAIN[who], {"Me": 0, "Lena": -0.15, "Rahim": 0.2, "Mom": 0.1}[who])
         windows.append((a, a + len(x) / SR))
         print(f"{key:7s} {who:6s} {a:6.2f}s {len(x) / SR:5.2f}s (window {b - a:.2f}s)")
