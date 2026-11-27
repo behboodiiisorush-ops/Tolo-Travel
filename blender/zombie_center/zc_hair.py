@@ -36,7 +36,7 @@ def _darken_scalp(body, on_scalp, rgb=(0.012, 0.01, 0.01)):
     M.recolor(body, lambda nt, c: M.mix(nt, c, rgb, M.attr(nt, "zc_scalp")[0]))
 
 
-def centre_part_hair(ch, n=32000, seed=1, colour=(0.012, 0.010, 0.010), name=None):
+def centre_part_hair(ch, n=20000, seed=1, colour=(0.012, 0.010, 0.010), name=None):
     rnd = random.Random(seed)
     body, rig = ch.body, ch.rig
     bpy.context.view_layer.update()
@@ -157,7 +157,7 @@ def centre_part_hair(ch, n=32000, seed=1, colour=(0.012, 0.010, 0.010), name=Non
     rv = []
     for s in strands:
         for i in range(SEG):
-            rv.append(0.00013 * (1 - 0.7 * i / (SEG - 1)))
+            rv.append(0.00016 * (1 - 0.7 * i / (SEG - 1)))
     rad.data.foreach_set("value", rv)
     ob = bpy.data.objects.new(cname, cv)
     for c in body.users_collection:

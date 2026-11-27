@@ -15,9 +15,9 @@ sc = bpy.context.scene
 for o in list(bpy.data.objects): bpy.data.objects.remove(o, do_unlink=True)
 ch = zc_cast.spawn(key)
 bpy.context.view_layer.update()
-dg = bpy.context.evaluated_depsgraph_get(); _me = ch.body.evaluated_get(dg).to_mesh()
-zs = [(ch.body.matrix_world @ v.co).z for v in _me.vertices]
-H = max(zs) - min(zs)
+import mpfb_tools as M
+_pts, _ = M.rest_positions(ch.body)
+H = max(p.z for p in _pts) - min(p.z for p in _pts)
 
 w = bpy.data.worlds.new("w"); sc.world = w; w.use_nodes = True
 w.node_tree.nodes["Background"].inputs[0].default_value = (0.32, 0.33, 0.35, 1)
