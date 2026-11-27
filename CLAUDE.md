@@ -20,16 +20,53 @@
   library with foot locking, FACE_CTRL face rig, NLA sequencer, numeric QC. Read its README (honest status table)
   first. One character end to end: `create_character.py ARIAN`; episodes in `12_EPISODES/` (`build_ep001.py`).
   Headless Workbench/EEVEE renders need `apt-get install -y libegl1 libgl1-mesa-dri`.
+- **Mixamo library (the user keeps adding clips):** every new film uses the clips in `blender/mocap/` for body motion
+  — read `CLIPS.md` first and pick the clip that really shows the action (sitting_talking, driving, pointing, crying,
+  picking_up, falling_down, crawling, laying_idle, …). Pull the newest clips from `claude/great-newton-w2xf6z`
+  (`git checkout FETCH_HEAD -- blender/mocap`). Mixamo has no hug: make hugs by hand (two characters close, arms
+  posed with IK around the other's back, blended in from `breathing_idle`).
+- **Faces:** blinks are automatic (`anim.blink`); lips follow the real ElevenLabs voices with
+  `blender/cast/lipsync.py` (`talking=LS.level(who, t)` instead of `True`). No paid face add-ons (Faceit, Super Easy).
+  Extra motion from **Rokoko Motion Library** (head nods, listening, hand gestures, sit-and-talk transitions) is welcome
+  when the user downloads it as FBX — add it to `blender/mocap/` like the Mixamo clips and describe it in `CLIPS.md`.
 - Older cartoon (toon) films: `blender/school_pov/`, `blender/train_pov/` — workflow skill `/film-toon`.
 
 ## Rules the user set
 - No hijab on anyone. No flags, emblems, logos or anything that ties a shot to a real place.
 - The story never depends on the audience; a film may end with one question to the viewer.
-- The user records the voices (ElevenLabs); deliver a version without sound, and keep `talking=True`
-  lip movement on the lines in `captions.py` so their voices fit.
+- **Voices and sound effects always come from ElevenLabs** (the connected ElevenLabs MCP tools, `mcp__ElevenLabs__*`):
+  Claude generates every spoken line (one fixed voice per character — designed once with `creative_design_voice` +
+  `creative_save_designed_voice` and reused across films, never a voice_id from memory) and every sound effect
+  (no synthesised numpy effects any more). Keep `talking=True` lip movement on the lines in `captions.py` and fit
+  captions + lips to the generated lengths. Also keep a version without sound. If the ElevenLabs tools are not
+  available in a chat, say so to the user instead of falling back silently.
+- **Every sound is a real ElevenLabs sound effect — never a fake/synthesised one** (the user: door sounds so far were
+  bad). Make one effect per action with a precise prompt: what it is made of, size, distance, how it moves, e.g.
+  "heavy steel bunker door, latch clicks, slow creaking open, metal echo in a concrete room, close" or
+  "old wooden apartment door handle turns, door creaks open slowly, quiet hallway". Separate clips for unlock, open,
+  creak, slam, knock, footsteps, breathing etc.; place each exactly on the frame it happens; listen to the take
+  and regenerate a bad one. Never reuse a generic "door" sound for every door.
+- **Branding on every video** (all versions, every frame): the film's name in the top-right corner and the channel
+  logo (`blender/brand/agetobudi_logo_round.png`, the user's «داستان‌های POV — Agetobudi» logo) in the top-left,
+  plus the credit «ساخته شده توسط بلندر» (channel «agetobudi»). Use `overlay(img, title)` from `blender/brand/brand.py`
+  in post (works for vertical and 16:9); the closing card also shows the credit.
 - Voice scripts: give each line in its own copyable block, per speaker. Put the delivery (how to say it)
   inside the line as ElevenLabs v3 audio tags in square brackets, in English, e.g. `[whispers]`, `[shouting]`,
   `[scared]`, `[sighs]` — ElevenLabs performs these and does not read them aloud. Never write the delivery
   as plain text, and never put Persian words in brackets.
 - Persian captions: Vazirmatn font in `blender/fonts/`, Pillow with raqm.
 - Always give times to the user in Berlin time (Europe/Berlin), not UTC.
+- When a film is finished (final mp4s made), tell the user with a push notification (PushNotification tool,
+  status "proactive", one short Persian line with the film's name) and send the videos with SendUserFile
+  (status "proactive") so they reach the phone with a sound.
+
+## THE ZOMBIE CENTER (series, `blender/zombie_center/`)
+- **Read `blender/zombie_center/PROJECT_STATE.md` first** in every new conversation; never continue from guesswork.
+- Its §0 is a permanent law from the user: quality and natural, realistic motion before speed. Every episode ships
+  with a QC report; any important problem is fixed before delivery, even if the episode is late.
+- 12 episodes × ~5 min, 16:9 720p, every 2 days, the user publishes at 19:00 Berlin. For this series the user
+  connected ElevenLabs and asked Claude to generate the voices (one fixed designed voice per character) — now the rule for every film.
+- Long renders are always split across several chats (the user's wish): render one frame range here and start
+  ~6 worker chats with create_session, each rendering its range (`chain.sh A B`, see `blender/bird/chain.sh`)
+  with a keep-alive waiter and pushing only its frames to its own branch `claude/<film>-frames-a…f`;
+  collect the branches, post, deliver, archive the workers.

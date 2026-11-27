@@ -1,0 +1,86 @@
+{
+ "meshes": {
+  "SHADOW_BODY": {
+   "verts": 19158,
+   "unweighted": 16
+  },
+  "SHADOW_CLOTH_culturalibre_male_boots": {
+   "verts": 15308,
+   "unweighted": 0
+  },
+  "SHADOW_CLOTH_elvs_hooded_sweat_jacket1": {
+   "verts": 9935,
+   "unweighted": 0
+  },
+  "SHADOW_CLOTH_punkduck_male_classic_jeans": {
+   "verts": 2614,
+   "unweighted": 0
+  },
+  "SHADOW_FACE_brow_l": {
+   "verts": 266,
+   "unweighted": 0
+  },
+  "SHADOW_FACE_brow_r": {
+   "verts": 266,
+   "unweighted": 0
+  },
+  "SHADOW_FACE_ear": {
+   "verts": 114,
+   "unweighted": 0
+  },
+  "SHADOW_FACE_ear.001": {
+   "verts": 114,
+   "unweighted": 0
+  },
+  "SHADOW_FACE_eye_l": {
+   "verts": 482,
+   "unweighted": 0
+  },
+  "SHADOW_FACE_eye_r": {
+   "verts": 482,
+   "unweighted": 0
+  },
+  "SHADOW_FACE_glint_l": {
+   "verts": 62,
+   "unweighted": 0
+  },
+  "SHADOW_FACE_glint_r": {
+   "verts": 62,
+   "unweighted": 0
+  },
+  "SHADOW_FACE_hair": {
+   "verts": 5080,
+   "unweighted": 0
+  },
+  "SHADOW_FACE_head": {
+   "verts": 1106,
+   "unweighted": 0
+  },
+  "SHADOW_FACE_lid_l": {
+   "verts": 161,
+   "unweighted": 0
+  },
+  "SHADOW_FACE_lid_r": {
+   "verts": 161,
+   "unweighted": 0
+  },
+  "SHADOW_FACE_mouth": {
+   "verts": 24,
+   "unweighted": 0
+  },
+  "SHADOW_FACE_nose": {
+   "verts": 114,
+   "unweighted": 0
+  },
+  "SHADOW_FACE_pupil_l": {
+   "verts": 266,
+   "unweighted": 0
+  },
+  "SHADOW_FACE_pupil_r": {
+   "verts": 266,
+   "unweighted": 0
+  }
+ },
+ "body_unweighted_visible": 0,
+ "pass_": true
+}

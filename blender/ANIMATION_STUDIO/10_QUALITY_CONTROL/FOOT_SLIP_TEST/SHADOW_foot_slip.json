@@ -1,0 +1,223 @@
+{
+ "UHS_IDLE_Breathing": {
+  "raw_slip_cm": 1.53,
+  "locked": {
+   "max_cm": 0.33,
+   "contacts": 2,
+   "pass_": true
+  },
+  "ground": {
+   "lowest_cm": -0.0,
+   "floating_contacts": 0,
+   "pass_": true
+  }
+ },
+ "UHS_IDLE_Nervous": {
+  "raw_slip_cm": 2.65,
+  "locked": {
+   "max_cm": 1.33,
+   "contacts": 2,
+   "pass_": true
+  },
+  "ground": {
+   "lowest_cm": -0.0,
+   "floating_contacts": 0,
+   "pass_": true
+  }
+ },
+ "UHS_WALK_Natural": {
+  "raw_slip_cm": 2.97,
+  "locked": {
+   "max_cm": 4.15,
+   "contacts": 5,
+   "pass_": false
+  },
+  "ground": {
+   "lowest_cm": -0.76,
+   "floating_contacts": 0,
+   "pass_": true
+  }
+ },
+ "UHS_WALK_Sneak": {
+  "raw_slip_cm": 3.76,
+  "locked": {
+   "max_cm": 0.21,
+   "contacts": 5,
+   "pass_": true
+  },
+  "ground": {
+   "lowest_cm": -0.0,
+   "floating_contacts": 0,
+   "pass_": true
+  }
+ },
+ "UHS_RUN_Cartoon": {
+  "raw_slip_cm": 7.88,
+  "locked": {
+   "max_cm": 0.28,
+   "contacts": 4,
+   "pass_": true
+  },
+  "ground": {
+   "lowest_cm": -0.0,
+   "floating_contacts": 0,
+   "pass_": true
+  }
+ },
+ "UHS_JUMP_Forward": {
+  "raw_slip_cm": 4.72,
+  "locked": {
+   "max_cm": 0.2,
+   "contacts": 4,
+   "pass_": true
+  },
+  "ground": {
+   "lowest_cm": -0.0,
+   "floating_contacts": 0,
+   "pass_": true
+  }
+ },
+ "UHS_SIT_Idle": {
+  "raw_slip_cm": 0.27,
+  "locked": {
+   "max_cm": 0.02,
+   "contacts": 2,
+   "pass_": true
+  },
+  "ground": {
+   "lowest_cm": -0.0,
+   "floating_contacts": 0,
+   "pass_": true
+  }
+ },
+ "UHS_STAND_UpFromFloor": {
+  "raw_slip_cm": 12.67,
+  "locked": {
+   "max_cm": 6.39,
+   "contacts": 3,
+   "pass_": false
+  },
+  "ground": {
+   "lowest_cm": -0.0,
+   "floating_contacts": 0,
+   "pass_": true
+  }
+ },
+ "UHS_GESTURE_Yes": {
+  "raw_slip_cm": 0.82,
+  "locked": {
+   "max_cm": 0.03,
+   "contacts": 2,
+   "pass_": true
+  },
+  "ground": {
+   "lowest_cm": -0.0,
+   "floating_contacts": 0,
+   "pass_": true
+  }
+ },
+ "UHS_GESTURE_No": {
+  "raw_slip_cm": 2.16,
+  "locked": {
+   "max_cm": 0.09,
+   "contacts": 2,
+   "pass_": true
+  },
+  "ground": {
+   "lowest_cm": -0.0,
+   "floating_contacts": 0,
+   "pass_": true
+  }
+ },
+ "UHS_GESTURE_ForgetIt": {
+  "raw_slip_cm": 0.42,
+  "locked": {
+   "max_cm": 0.0,
+   "contacts": 2,
+   "pass_": true
+  },
+  "ground": {
+   "lowest_cm": -0.0,
+   "floating_contacts": 0,
+   "pass_": true
+  }
+ },
+ "UHS_GESTURE_Wait": {
+  "raw_slip_cm": 2.27,
+  "locked": {
+   "max_cm": 0.17,
+   "contacts": 2,
+   "pass_": true
+  },
+  "ground": {
+   "lowest_cm": -0.0,
+   "floating_contacts": 0,
+   "pass_": true
+  }
+ },
+ "UHS_GESTURE_Thinking": {
+  "raw_slip_cm": 3.97,
+  "locked": {
+   "max_cm": 1.51,
+   "contacts": 3,
+   "pass_": false
+  },
+  "ground": {
+   "lowest_cm": -0.0,
+   "floating_contacts": 0,
+   "pass_": true
+  }
+ },
+ "UHS_EMOTION_Terrified": {
+  "raw_slip_cm": 11.45,
+  "locked": {
+   "max_cm": 0.26,
+   "contacts": 2,
+   "pass_": true
+  },
+  "ground": {
+   "lowest_cm": -0.0,
+   "floating_contacts": 0,
+   "pass_": true
+  }
+ },
+ "UHS_INTERACT_OpenDoor": {
+  "raw_slip_cm": 25.8,
+  "locked": {
+   "max_cm": 22.38,
+   "contacts": 9,
+   "pass_": false
+  },
+  "ground": {
+   "lowest_cm": -0.65,
+   "floating_contacts": 0,
+   "pass_": true
+  }
+ },
+ "UHS_INTERACT_Punch": {
+  "raw_slip_cm": 4.83,
+  "locked": {
+   "max_cm": 4.05,
+   "contacts": 5,
+   "pass_": false
+  },
+  "ground": {
+   "lowest_cm": -0.0,
+   "floating_contacts": 0,
+   "pass_": true
+  }
+ },
+ "UHS_TRANS_IdleToWalk": {
+  "raw_slip_cm": 62.87,
+  "locked": {
+   "max_cm": 18.08,
+   "contacts": 7,
+   "pass_": false
+  },
+  "ground": {
+   "lowest_cm": -0.0,
+   "floating_contacts": 0,
+   "pass_": true
+  }
+ }
+}
