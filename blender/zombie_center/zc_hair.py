@@ -140,7 +140,10 @@ def centre_part_hair(ch, n=20000, seed=1, colour=(0.012, 0.010, 0.010), name=Non
                 want = layer * min(1.0, 0.3 + t_)
                 if h < want or h > want + 0.006:
                     p = loc + nor * (want if h < want else want + 0.006)
-            if p.z < stop_z:                       # never below the brows (front) / ear tops (sides)
+            if abs(p.x - cx) > 0.068 and p.z < ear_z + 0.03:   # nothing hangs down beside the face
+                p = pts[-1] + (p - pts[-1]) * 0.15
+                step *= 0.3
+            elif p.z < stop_z:                       # never below the brows (front) / ear tops (sides)
                 p = pts[-1] + (p - pts[-1]) * 0.15
                 step *= 0.3
             pts.append(p.copy())
