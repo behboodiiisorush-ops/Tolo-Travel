@@ -253,6 +253,24 @@ for f in range(fr(71.6), fr(74.6)):
         if best is None or d < best[0]:
             best = (d, f, side)
 print("MAN HAND TO HANDLE", round(best[0], 3), best[1], best[2])
+# move him so his reaching hand really meets the handle (the clip's own reach), then measure again
+sc.frame_set(best[1])
+miss = hpos - (rig_m.matrix_world @ rig_m.pose.bones[f"hand_{best[2]}"].tail)
+MAN1 = MAN1 + Vector((miss.x, miss.y, 0))
+LASTSEG["man"] = 71.6
+walk("man", 65.0, 71.6, MAN0, MAN1 + Vector((0.4, 0.9, 0)))
+act("man", "opening_door_inwards", 71.6, 78.0, tuple(MAN1), 180, follow=False)
+best = None
+for f in range(fr(71.6), fr(74.6)):
+    sc.frame_set(f)
+    for side in ("l", "r"):
+        p = rig_m.matrix_world @ rig_m.pose.bones[f"hand_{side}"].tail
+        d = (p - hpos).length
+        if best is None or d < best[0]:
+            best = (d, f, side)
+print("MAN HAND TO HANDLE (moved)", round(best[0], 3), best[1], best[2])
+with open(os.path.join(HERE, "timing.txt"), "w") as fh:
+    fh.write(f"door_touch {(best[1] - 1) / FPS:.3f}\n")
 T_TOUCH = (best[1] - 1) / FPS
 SIDE = best[2]
 hinge = S["HINGE"]
@@ -293,6 +311,8 @@ for f in range(fr(39.0), fr(46.0)):
     if best is None or d < best[0]:
         best = (d, f)
 print("KIAN HANDS TO BREAD", round(best[0], 3), best[1])
+with open(os.path.join(HERE, "timing.txt"), "a") as fh:
+    fh.write(f"bread_grab {(best[1] - 1) / FPS:.3f}\n")
 bread = S["BREAD"]
 bread.keyframe_insert("location", frame=1)
 bread.keyframe_insert("location", frame=best[1] - 1)
