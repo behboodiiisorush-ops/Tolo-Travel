@@ -81,11 +81,11 @@ def const(owner):
 # ------------------------------------------------------------------ set: living room (x 0..5, y 0..4.5), kitchen at y<0
 H, WT, W, D = 2.7, 0.14, 5.0, 4.5
 M_ = dict(
-    wall=P.mat("Wall", (0.72, 0.66, 0.56), 0.9), wall2=P.mat("Wall 2", (0.55, 0.6, 0.62), 0.9),
+    wall=P.mat("Wall", (0.72, 0.66, 0.56), 0.9), wall2=P.mat("Wall 2", (0.36, 0.41, 0.45), 0.9),
     floor=P.mat("Floor", (0.42, 0.3, 0.22), 0.6), ceil=P.mat("Ceiling", (0.75, 0.74, 0.7), 0.9),
-    rug=P.mat("Rug", (0.55, 0.2, 0.22), 0.95), sofa=P.mat("Sofa", (0.28, 0.36, 0.48), 0.9),
+    rug=P.mat("Rug", (0.32, 0.17, 0.16), 0.95), sofa=P.mat("Sofa", (0.28, 0.36, 0.48), 0.9),
     wood=P.mat("Wood", (0.45, 0.32, 0.22), 0.6), frame=P.mat("Frame", (0.92, 0.92, 0.9), 0.5),
-    tile=P.mat("Kitchen tiles", (0.78, 0.8, 0.78), 0.4), cab=P.mat("Cabinet", (0.6, 0.65, 0.6), 0.6),
+    tile=P.mat("Kitchen tiles", (0.4, 0.43, 0.44), 0.4), cab=P.mat("Cabinet", (0.6, 0.65, 0.6), 0.6),
     counter=P.mat("Counter", (0.88, 0.88, 0.85), 0.4), metal=P.mat("Metal", (0.7, 0.72, 0.74), 0.3, metal=0.8),
     phone=P.mat("Phone", (0.06, 0.06, 0.08), 0.3), shade=P.mat("Lamp shade", (0.95, 0.85, 0.6), 0.8),
     plant=P.mat("Plant", (0.25, 0.5, 0.25), 0.8), pot=P.mat("Pot", (0.7, 0.4, 0.25), 0.7),
@@ -123,8 +123,8 @@ for y in (0.72, 2.48):
 # kitchen (y -3.2..0): tiled floor, counter, fridge, a pot on the stove
 box((4.2, -1.6, -0.05), (3.0, 3.2, 0.1), "tile", "Kitchen floor")
 box((4.2, -3.2 - WT / 2, H / 2), (3.0, WT, H), "wall2", "Kitchen back wall")
-box((2.7 - WT / 2, -1.6, H / 2), (WT, 3.2, H), "wall2", "Kitchen wall")
-box((5.7 + WT / 2, -1.6, H / 2), (WT, 3.2, H), "wall2", "Kitchen wall")
+box((2.7 - WT / 2, -1.67, H / 2), (WT, 3.06, H), "wall2", "Kitchen wall")   # stops behind the front wall (no z-fight)
+box((5.7 + WT / 2, -1.67, H / 2), (WT, 3.06, H), "wall2", "Kitchen wall")
 box((4.2, -1.6, H + 0.05), (3.0, 3.2, 0.1), "ceil", "Kitchen ceiling")
 box((4.2, -2.85, 0.45), (2.6, 0.6, 0.9), "cab", "Kitchen counter")
 box((4.2, -2.85, 0.92), (2.7, 0.66, 0.05), "counter", "Counter top")
@@ -163,8 +163,8 @@ world = bpy.data.worlds.new("W")
 sc.world = world
 world.color = (0.03, 0.035, 0.06)
 lamp = P.area_light((4.4, 3.8, 1.9), (2.5, 2.0, 0.5), 60, 0.8, (1.0, 0.82, 0.6), name="Floor lamp")
-fill = P.area_light((2.5, 2.0, 2.6), (2.5, 2.0, 0), 12, 3.5, (0.9, 0.85, 0.8), name="Room fill")
-kit = P.area_light((4.2, -1.4, 2.55), (4.2, -1.4, 0), 9, 1.2, (0.7, 0.85, 1.0), name="Kitchen light")
+fill = P.area_light((2.5, 2.0, 2.6), (2.5, 2.0, 0), 4, 3.5, (0.9, 0.85, 0.8), name="Room fill")
+kit = P.area_light((4.2, -1.4, 2.55), (4.2, -1.4, 0), 2.5, 1.2, (0.7, 0.85, 1.0), name="Kitchen light")
 moon = P.area_light((-0.6, 1.6, 1.6), (2.0, 1.8, 0.4), 15, 1.0, (0.5, 0.6, 1.0), name="Moon")
 phone_glow = bpy.data.objects.new("Phone glow", bpy.data.lights.new("Phone glow", "POINT"))
 sc.collection.objects.link(phone_glow)
@@ -177,7 +177,7 @@ for t, e in [(0, 0.0), (1.2, 0.0), (1.25, 2.5), (26.4, 2.5), (26.5, 0.0)]:
 FLICK = [0, 28.6, 28.75, 28.9, 29.0, 29.5, 29.6, 30.4, 30.5, 31.2]
 for k, t in enumerate(FLICK):
     on = k % 2 == 0 and t < 31.2
-    for L, e in ((lamp, 60), (fill, 12)):
+    for L, e in ((lamp, 60), (fill, 4)):
         L.data.energy = e if on else (0.0 if t >= 31.2 else e * 0.08)
         L.data.keyframe_insert("energy", frame=fr(t))
 for L in (lamp, fill, phone_glow):
@@ -241,10 +241,24 @@ def act(who, name, t0, t1, pos, facing, blend=8, **kw):
 # me: sitting on the sofa the whole film, facing the room (-Y)
 act("me", "sitting_idle", 0.0, END, (SX - 0.25, SY - 0.05, 0.02), 180, blend=0, loop=True)
 # Arian: in the kitchen (unseen), walks out through the doorway at 12.0, stops by the table, terrified
-AP = (3.25, 2.15)
-act("arian", "breathing_idle", 0.0, 12.0, (4.2, -1.6, 0.0), 0, blend=0, loop=True)
-walk("arian", 12.0, 15.2, [(4.2, -1.6), (4.2, 0.2), (3.6, 1.4), AP], face(AP, (SX - 0.25, SY)))
-act("arian", "terrified", 15.2, END, (AP[0], AP[1], 0.0), face(AP, (SX - 0.25, SY)), loop=True)
+AP = (1.75, 2.3)          # beside the table, out of the line between me and the doorway
+act("arian", "breathing_idle", 0.0, 12.0, (3.1, -1.3, 0.0), 0, blend=0, loop=True)   # hidden behind the wall
+F_ME = face(AP, (SX - 0.25, SY))
+F_PT = face(AP, ((DX0 + DX1) / 2, 0.0)) - 90           # the clip points to his left -> the arm aims at the kitchen
+F_PT = F_ME + ((F_PT - F_ME + 180) % 360 - 180)
+walk("arian", 12.0, 15.2, [(3.1, -1.3), (4.0, -0.7), (4.2, 0.2), (3.6, 1.4), AP], F_PT)
+
+
+def turn_act(who, name, t0, t1, pos, f0, f1, secs, **kw):
+    """Play a stationary clip while turning smoothly from f0 to f1 over `secs` (no snap)."""
+    n = fr(t1) - fr(t0)
+    mocap.apply(CH[who], clip(name), start=fr(t0), length=n, in_place=True, blend=8,
+                place=lambda j: ((pos[0], pos[1], 0.0), f0 + (f1 - f0) * seg(j / FPS, 0.0, secs)), **kw)
+
+
+turn_act("arian", "pointing", 15.2, 18.0, AP, F_PT, F_PT, 0.1)          # «مامان تو آشپزخونه‌ست...»
+turn_act("arian", "breathing_idle", 18.0, 20.4, AP, F_PT, F_ME, 0.6, loop=True)   # «...پس تو داری با کی حرف می‌زنی؟»
+turn_act("arian", "terrified", 20.4, END, AP, F_ME, F_ME, 0.1, loop=True)
 # mom: only seen in the doorway from 25.6, standing still (a little too still), smiling
 MP = ((DX0 + DX1) / 2, -0.35)
 act("mom", "breathing_idle", 0.0, END, (MP[0], MP[1], 0.0), 0, blend=0, loop=True, speed=0.6)
@@ -266,7 +280,7 @@ LOOK = [  # (t, target, seconds to turn)
     (1.4, (PX, PY, PZ), 0.8),               # the phone lights up on the table
     (8.7, tuple(DOOR), 0.5),                # the voice from the kitchen
     (12.3, (4.1, 0.4, 1.3), 0.6),           # Arian comes out
-    (13.8, (3.4, 1.8, 1.35), 0.9),
+    (13.8, (2.6, 1.9, 1.35), 0.9),
     (15.2, (AP[0], AP[1], 1.35), 0.6),      # his face
     (19.5, (PX, PY, PZ), 0.6),              # the phone again
     (25.9, (MP[0], MP[1], 1.5), 0.7),       # mom in the doorway
@@ -305,6 +319,8 @@ for f in range(1, N + 1):
     cam.rotation_quaternion = q
     cam.keyframe_insert("location", frame=f)
     cam.keyframe_insert("rotation_quaternion", frame=f)
+    cam.data.lens = 15 + 9 * seg(t, 26.2, 30.5) ** 1.5     # slow push-in on her face
+    cam.data.keyframe_insert("lens", frame=f)
     EYE[f] = eye_s.copy()
 for fc in fcurves_of(cam):
     for kp in fc.keyframe_points:

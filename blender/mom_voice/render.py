@@ -3,6 +3,7 @@ import bpy, sys, os
 HERE = os.path.dirname(os.path.abspath(__file__))
 bpy.ops.wm.open_mainfile(filepath=os.path.join(HERE, "mom_voice.blend"))
 sc = bpy.context.scene
+sc.render.use_persistent_data = True          # keep the scene synced between frames (faster)
 a, b = [int(v) for v in sys.argv[-1].split("-")]
 os.makedirs(os.path.join(HERE, "frames"), exist_ok=True)
 for f in range(a, b + 1):
