@@ -46,3 +46,4 @@ blender/bird/post_tmp/
 blender/bird/*.blend
 blender/bird/out/*.wav
 blender/zombie_center/01_CHARACTERS/sheets/_*.png
+blender/zombie_center/test/prev_*.png
