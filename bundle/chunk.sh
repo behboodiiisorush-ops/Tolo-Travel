@@ -4,7 +4,7 @@
 # Safe to run again: frames already on disk are skipped.
 set -u
 cd "$(dirname "$0")"
-R=$1; A=${R%-*}; B=${R#*-}; BR=render-y1500-$R
+R=$1; A=${R%-*}; B=${R#*-}; BR=${2:-render-y1500-$R}
 [ -s year1500.blend ] || cat year1500.blend.part* > year1500.blend
 [ -x venv/bin/python ] || { python3 -m venv venv && venv/bin/pip install -q bpy==5.3.0 numpy imageio-ffmpeg; }
 FF=$(command -v ffmpeg || venv/bin/python -c "import imageio_ffmpeg;print(imageio_ffmpeg.get_ffmpeg_exe())")
