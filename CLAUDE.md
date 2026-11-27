@@ -27,12 +27,14 @@
 ## Rules the user set
 - No hijab on anyone. No flags, emblems, logos or anything that ties a shot to a real place.
 - The story never depends on the audience; a film may end with one question to the viewer.
-- **Voices and sound effects always come from ElevenLabs** (the connected ElevenLabs MCP tools, `mcp__ElevenLabs__*`):
-  Claude generates every spoken line (one fixed voice per character — designed once with `creative_design_voice` +
-  `creative_save_designed_voice` and reused across films, never a voice_id from memory) and every sound effect
-  (no synthesised numpy effects any more). Keep `talking=True` lip movement on the lines in `captions.py` and fit
-  captions + lips to the generated lengths. Also keep a version without sound. If the ElevenLabs tools are not
-  available in a chat, say so to the user instead of falling back silently.
+- **Voices and sound effects always come from ElevenLabs** (the connected ElevenLabs MCP tools, `mcp__ElevenLabs__*`).
+  **Only the Persian voices already in the user's ElevenLabs account** (`creative_list_voices`, languages=["fa"]):
+  Aidin Podcast, Amin.GS, Amitis, Aramofen, Aran - Parsi, Arash, Danesh, Farshad, Hengameh, Javid, Mard, Mitra,
+  MohammadHossein, Najib, Rashnow, Sara, amir, mohsen, «خشن», «معلم». One fixed voice per character, reused across
+  films. Never a non-Persian voice (no German/English/Afghan-Dari "Omid"), never design or save a new voice, and do not
+  use the Claude-designed voices (ZC Arin/Mark/Nika, Wagon-Mom, Wagon-Rahim). If no listed voice fits, ask the user.
+  When the user sends their own recording, use it (cut per line). Keep lips on the lines, fit captions to the real
+  lengths, and keep a version without sound. If the ElevenLabs tools are not available in a chat, tell the user.
 - **Voices must be clear and easy to understand** (the user rejected «واگن آخر ۶» v1): for Persian use
   `eleven_multilingual_v2` (much clearer than v3; put emotion in punctuation/wording since v2 ignores [tags]),
   loudness-match every line (`loudnorm=I=-16`), pitch child voices gently with `formant=preserved` (≤ +3 st),
