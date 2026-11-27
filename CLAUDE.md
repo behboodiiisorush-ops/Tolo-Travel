@@ -36,6 +36,12 @@
   use the Claude-designed voices (ZC Arin/Mark/Nika, Wagon-Mom, Wagon-Rahim). If no listed voice fits, ask the user.
   When the user sends their own recording, use it (cut per line). Keep lips on the lines, fit captions to the real
   lengths, and keep a version without sound. If the ElevenLabs tools are not available in a chat, tell the user.
+- **Voice cast (the user, 27 Nov — same as «واگن آخر ۲»), for every film:** boy / narrator / young male = Mard
+  (vJZ82xJdoy9JqX5RmoBD, +2 st with formant=preserved for a child); second boy = Arash (Mn0jJ3FC9Ijz7lQe8ELI, +3 st);
+  girl / young woman = Rashnow (g36FEKq8A536osj4GuaD); mom / adult woman = Wagon-Mom (CW1H0ECNiIvEZCNLa1az, allowed
+  by the user); old man / driver / rough adult male = Wagon-Rahim (41Jt86rYN2Yqnjt1W6hi). eleven_multilingual_v2.
+  To re-voice a finished film: never re-render — regenerate the lines, fit each to the old line's window, re-mix and
+  mux onto the existing video.
 - **Voices must be clear and easy to understand** (the user rejected «واگن آخر ۶» v1): for Persian use
   `eleven_multilingual_v2` (much clearer than v3; put emotion in punctuation/wording since v2 ignores [tags]),
   loudness-match every line (`loudnorm=I=-16`), pitch child voices gently with `formant=preserved` (≤ +3 st),

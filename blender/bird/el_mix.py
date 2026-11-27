@@ -1,8 +1,8 @@
 """Mix the ElevenLabs voices + sound effects of «هشدار» (files in el/, generated with the ElevenLabs MCP tools).
     out/bird_sfx.wav     ElevenLabs sound effects only
     out/bird_voice.wav   ElevenLabs voices + sound effects
-Voices: Kian = "Sara - Neutral Persian Female" pitched up 2 semitones (formants kept) -> a boy;
-        Mom = "Hengameh"; passer-by = "Aidin Podcast" (all eleven_v3, delivery tags from voice_script.md).
+Voices (the user's «واگن آخر ۲» cast, eleven_multilingual_v2): Kian = Mard +2 st (formants kept);
+        Mom = Wagon-Mom; passer-by = Wagon-Rahim.  Earlier takes are in el_v1/.
 Each line starts at its caption start (the lips are already rendered there); a line longer than its caption
 window + 0.5 s is sped up (max 1.3x) so it ends with the lips.
 """
@@ -50,14 +50,15 @@ def voices(buf):
     windows = []
     for a, b, who, _ in LINES:
         name = VOICE_FILES[(a, who)]
-        af = {"kian": "rubberband=pitch=1.122:formant=preserved",
-              "mom": "lowpass=f=3800,aecho=0.8:0.5:40:0.25",                         # from another room
-              "passerby": "lowpass=f=5000,aecho=0.8:0.4:60:0.2"}[who]               # across the street
+        N = "loudnorm=I=-16:TP=-1.5:LRA=7"
+        af = {"kian": "rubberband=pitch=1.122:formant=preserved," + N,            # Mard +2 st (the user's wagon-2 cast)
+              "mom": "lowpass=f=4500,aecho=0.8:0.4:40:0.18," + N,                 # Wagon-Mom, from the kitchen
+              "passerby": "lowpass=f=6000,aecho=0.8:0.3:60:0.15," + N}[who]       # Wagon-Rahim, across the street
         x = load(name, af)
         dur, room = len(x) / SR, (b - a) + 0.5
         if dur > room:
             x = load(name, af + f",rubberband=tempo={min(1.3, dur / room):.3f}")
-        gain = {"kian": 0.95, "mom": 0.8, "passerby": 0.6}[who]
+        gain = {"kian": 1.0, "mom": 0.85, "passerby": 0.75}[who]
         put(buf, x, a, gain, {"kian": 0.0, "mom": -0.25, "passerby": 0.3}[who])
         windows.append((a, a + len(x) / SR))
         print(f"{name:6s} {who:8s} {a:5.1f}s  {dur:.2f}s -> {len(x) / SR:.2f}s (window {b - a:.1f}s)")
@@ -113,4 +114,4 @@ if __name__ == "__main__":
     write(os.path.join(OUT, "bird_sfx.wav"), fx.copy())
     fx2 = np.zeros((n, 2), np.float32)
     effects(fx2, win)
-    write(os.path.join(OUT, "bird_voice.wav"), fx2 * 0.8 + v)
+    write(os.path.join(OUT, "bird_voice.wav"), fx2 * 0.6 + v)
