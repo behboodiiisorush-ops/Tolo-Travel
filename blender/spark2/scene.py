@@ -425,7 +425,7 @@ GAZE = [  # (time the gaze starts moving there, target(f)[, ease seconds])
     (0.0, lambda f: ACROSS), (20.0, lambda f: SIDE, 0.8), (22.0, lambda f: SCREEN_C),
     (25.0, lambda f: SCREEN_C + Vector((0, 0, 0.03 * math.sin(f / FPS * 2.2)))),
     (32.5, lambda f: DOOR), (36.0, lambda f: DOOR + Vector((0, 0, -0.3))), (39.5, lambda f: ACROSS),
-    (47.8, lambda f: hand(f) + Vector((0, 0, 0.05))),
+    (47.8, lambda f: hand(f) + Vector((0, 0, 0.05))), (51.2, lambda f: ACROSS, 0.9),
 ]
 EASE_S = 0.45                                       # an eye-head move takes about half a second
 for f in range(1, N + 1):
@@ -497,9 +497,11 @@ og = bpy.data.lights.new("Other glow", "POINT")
 og.color, og.shadow_soft_size = (0.35, 0.6, 1.0), 0.05
 ogo = bpy.data.objects.new("Other glow", og)
 sc.collection.objects.link(ogo)
-ogo.location = other.rig.matrix_world @ other.rig.pose.bones["hand_r"].tail
+sc.frame_set(1)
+o_hand = other.rig.matrix_world @ other.rig.pose.bones["hand_r"].tail     # world point, before any parenting
+ogo.location = o_hand
 MT.attach(ogo, other.rig, "hand_r")
-osph = P.sphere(ogo.location, 0.05, m_glow.copy(), "Other glow ball")
+osph = P.sphere(o_hand, 0.05, m_glow.copy(), "Other glow ball")
 MT.attach(osph, other.rig, "hand_r")
 oem = next(n for n in osph.data.materials[0].node_tree.nodes if n.type == "EMISSION")
 
@@ -654,7 +656,7 @@ SHOTS = [
     (22.0, 25.0, 24, lambda f, u: V((-0.9, -1.5, 1.5)), lambda f, u: head(f) - V((0, 0, 0.25))),
     (25.0, 27.0, 35, lambda f, u: SCREEN_C + V((-0.95 + 0.1 * u, -0.1, 0.0)), lambda f, u: SCREEN_C),
     (27.0, 32.4, 50, lambda f, u: V((2.1, -0.55, 1.42)), lambda f, u: head(f) + V((0, 0, 0.02))),
-    (32.4, 35.0, 16, lambda f, u: V((2.2, 0.9, 1.9)), lambda f, u: V((1.0, -1.3, 1.1))),
+    (32.4, 35.0, 22, lambda f, u: V((-1.2, 0.7, 1.6)), lambda f, u: V((1.05, -1.3, 1.15))),
     (35.0, 39.5, 35, lambda f, u: V((1.7, -1.05, 1.5)), lambda f, u: head(f) - V((0, 0, 0.1))),
     (39.5, 43.5, 24, lambda f, u: V((1.9, -1.6, 1.6)), lambda f, u: head(f) - V((0, 0, 0.2))),
     (43.5, 47.5, 55, lambda f, u: head(f) + V((-0.25, -0.5, 0.1)), lambda f, u: ACROSS + V((0, 0, -0.3))),
