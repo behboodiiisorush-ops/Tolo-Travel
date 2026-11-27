@@ -114,6 +114,8 @@ eyec = sum((eyes.matrix_world @ v.co for v in _e.vertices), Vector()) / len(_e.v
 eyes.evaluated_get(dg).to_mesh_clear()
 fwd = (eyec - head).normalized()                      # where his face points (lying on his back: mostly up)
 side = fwd.cross(Vector((0, 0, 1))).normalized() if abs(fwd.z) < 0.95 else Vector((1, 0, 0))
+_hb = arin.rig.pose.bones["head"]
+up = ((arin.rig.matrix_world @ _hb.tail) - (arin.rig.matrix_world @ _hb.head)).normalized()   # crown direction
 print("FACE fwd", tuple(round(v, 2) for v in fwd))
 zfeet = Vector((ZX, ZSTOP, 0.15))
 c1 = cam("CAM_S01_ECU_phone", pv + Vector((0.08, 0.5, 0.1)), pv + Vector((0, -1.0, 0.05)), 50, 1, (0.5, 1.4))
