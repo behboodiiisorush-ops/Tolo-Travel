@@ -9,7 +9,7 @@ ZC = os.path.dirname(HERE)
 sys.path.insert(0, ZC)
 import zc_cast, mocap, motion_qc as Q, footlock
 
-mode = "walk" if "run" not in sys.argv else "run"
+mode = "jog" if "jog" in sys.argv else ("run" if "run" in sys.argv else "walk")
 do_render = "render" in sys.argv
 OUT = os.path.join(ZC, "test"); os.makedirs(OUT, exist_ok=True)
 sc = bpy.context.scene
@@ -20,8 +20,8 @@ ch = zc_cast.spawn("zc_arin")
 MOCAP = os.path.join(ZC, "..", "mocap")
 N = 96
 
-if mode == "walk":
-    clip = mocap.load(os.path.join(MOCAP, "walking.fbx"))
+if mode != "jog":
+    clip = mocap.load(os.path.join(MOCAP, "walking.fbx" if mode == "walk" else "goofy_running.fbx"))
     # 1) measure the clip's stride speed: play in place, track the planted foot's backward speed
     mocap.apply(ch, clip, start=1, length=48, offset=(0, 0, 0), facing=0, in_place=True, loop=True)
     probe = Q.feet(ch, 1, 48)
@@ -43,12 +43,13 @@ else:
     clip = mocap.load(os.path.join(MOCAP, "jog_in_circle.fbx"))
     mocap.apply(ch, clip, start=1, length=N, offset=(0, 0, 0), facing=0, in_place=False)
 
-lift = Q.ground(ch, 1, N)
+lift = Q.ground(ch, 1, N, keep_flight=(mode != "walk"))
 print("LIFT_CM min/max", min(lift), max(lift))
 pre = Q.feet(ch, 1, N)["summary"]
 print("QC_BEFORE_LOCK", json.dumps({k: pre[k] for k in ("slide_max_cm", "slide_mean_cm", "sink_max_cm")}))
-footlock.lock(ch, 1, N)
-Q.ground(ch, 1, N)
+footlock.lock(ch, 1, N, mode=("drift" if mode == "walk" else "plant"))
+if mode == "walk":
+    Q.ground(ch, 1, N)
 rep = Q.feet(ch, 1, N)
 summ = Q.write(rep, os.path.join(OUT, f"qc_{mode}.json"))
 print("QC", json.dumps(summ))

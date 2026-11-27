@@ -19,11 +19,22 @@ def _drift(ch, f0, f1):
     acc = {"l": Vector((0, 0, 0)), "r": Vector((0, 0, 0))}
     out = {"l": {}, "r": {}}
     planted = {"l": {}, "r": {}}
+    lift = {"l": {}, "r": {}}
+    prevc = {}
     for f in range(f0, f1 + 1):
         sc.frame_set(f)
         cur = Q._sole(ch, objs, bpy.context.evaluated_depsgraph_get())
         for s in ("l", "r"):
+            pts = list(cur[s].values())
+            minz = min(p.z for p in pts) if pts else 1.0
+            c = sum(pts, Vector()) / len(pts) if pts else Vector()
+            speed = (Vector((c.x - prevc[s].x, c.y - prevc[s].y, 0)).length if s in prevc else 0.0)
+            prevc[s] = c
             touch = [k for k, p in cur[s].items() if p.z < TOUCH]
+            # a foot still swinging fast (>3 cm/frame) that grazes the floor is a scrape, not a plant: lift it
+            lift[s][f] = max(0.0, 0.02 - minz) if (speed > 0.03 and minz < 0.02) else 0.0
+            if lift[s][f] > 0:
+                touch = []
             planted[s][f] = bool(touch)
             if prev is not None and touch:
                 both = [k for k in touch if k in prev[s] and prev[s][k].z < TOUCH]
@@ -31,25 +42,76 @@ def _drift(ch, f0, f1):
                     d = sum(((cur[s][k] - prev[s][k]) for k in both), Vector()) / len(both)
                     acc[s] += Vector((d.x, d.y, 0))
             if not touch:
-                acc[s] = Vector((0, 0, 0))
+                acc[s] = acc[s] * 0.45          # foot in the air: release the correction over ~3 frames (invisible)
             out[s][f] = acc[s].copy()
         prev = cur
-    # ease the correction out over the last 3 planted frames and in over the first 2 (no pops)
+    # smooth the lifts (max over ±1 frame, then average over ±2) so the foot rises and lands without pops
     for s in ("l", "r"):
         fr = list(range(f0, f1 + 1))
+        mx = {f: max(lift[s].get(g, 0.0) for g in (f - 1, f, f + 1)) for f in fr}
+        lift[s] = {f: sum(mx.get(g, 0.0) for g in range(f - 2, f + 3)) / 5.0 * 1.6 for f in fr}
+    return out, lift
+
+
+def _plants(ch, f0, f1):
+    """Classic plant detection on the animation itself (for runs): a foot is planted while its ball is low
+    (within 4 cm of its lowest height) and nearly still in the world (< 5 cm/frame). Returns, per side and frame,
+    the XY correction that pins the ankle to the mean ankle XY of that plant."""
+    sc = bpy.context.scene
+    rig = ch.rig
+    ball, ank = {"l": {}, "r": {}}, {"l": {}, "r": {}}
+    for f in range(f0, f1 + 1):
+        sc.frame_set(f)
+        for s in ("l", "r"):
+            ball[s][f] = (rig.matrix_world @ rig.pose.bones[f"ball_{s}"].head).copy()
+            ank[s][f] = (rig.matrix_world @ rig.pose.bones[f"foot_{s}"].head).copy()
+    out = {"l": {}, "r": {}}
+    for s in ("l", "r"):
+        zmin = min(p.z for p in ball[s].values())
+        fr = list(range(f0, f1 + 1))
+        pl = {}
         for i, f in enumerate(fr):
-            if planted[s][f]:
-                nxt = [g for g in fr[i:i + 4] if not planted[s][g]]
-                if nxt:
-                    k = (nxt[0] - f) / 4.0
-                    out[s][f] = out[s][f] * k
+            sp = (ball[s][f] - ball[s][fr[i - 1]]).xy.length if i else 0.0
+            pl[f] = ball[s][f].z < zmin + 0.04 and sp < 0.05
+        corr = {f: Vector((0, 0, 0)) for f in fr}
+        i = 0
+        while i < len(fr):
+            if pl[fr[i]]:
+                j = i
+                while j + 1 < len(fr) and pl[fr[j + 1]]:
+                    j += 1
+                seg = fr[i:j + 1]
+                anchor = sum((ank[s][f] for f in seg), Vector()) / len(seg)
+                for f in seg:
+                    d = anchor - ank[s][f]
+                    corr[f] = Vector((d.x, d.y, 0))
+                # ease in/out over 2 frames outside the plant (foot in the air)
+                for k, w in ((1, 0.5), (2, 0.2)):
+                    if i - k >= 0 and not pl[fr[i - k]]:
+                        corr[fr[i - k]] = corr[seg[0]] * w
+                    if j + k < len(fr) and not pl[fr[j + k]]:
+                        corr[fr[j + k]] = corr[seg[-1]] * w
+                i = j + 1
+            else:
+                i += 1
+        out[s] = corr
+        out.setdefault("_planted", {})[s] = pl
     return out
 
 
-def lock(ch, f0, f1):
+def lock(ch, f0, f1, mode="drift"):
     sc = bpy.context.scene
     rig = ch.rig
-    drift = _drift(ch, f0, f1)
+    if mode == "plant":
+        P = _plants(ch, f0, f1)
+        drift = {s: {f: -v for f, v in P[s].items()} for s in ("l", "r")}
+        _, lift = _drift(ch, f0, f1)          # swing clearance: a fast-moving foot never skims the floor
+        for s in ("l", "r"):                  # ...but a planted foot is never lifted (no floating)
+            for f in lift[s]:
+                if P["_planted"][s].get(f):
+                    lift[s][f] = 0.0
+    else:
+        drift, lift = _drift(ch, f0, f1)
     tg, pole = {}, {}
     for s in ("l", "r"):
         t = bpy.data.objects.new(f"ZC_IK_{rig.name}_{s}", None); sc.collection.objects.link(t)
@@ -60,7 +122,7 @@ def lock(ch, f0, f1):
         sc.frame_set(f)
         for s in ("l", "r"):
             fm = rig.matrix_world @ rig.pose.bones[f"foot_{s}"].matrix
-            m = Matrix.Translation(-drift[s][f]) @ fm
+            m = Matrix.Translation(-drift[s][f] + Vector((0, 0, lift[s][f]))) @ fm
             tg[s].matrix_world = m
             tg[s].keyframe_insert("location", frame=f)
             tg[s].keyframe_insert("rotation_euler", frame=f)
