@@ -28,10 +28,12 @@
 - No hijab on anyone. No flags, emblems, logos or anything that ties a shot to a real place.
 - The story never depends on the audience; a film may end with one question to the viewer.
 - **Voices and sound effects always come from ElevenLabs** (the connected ElevenLabs MCP tools, `mcp__ElevenLabs__*`):
-  Claude generates every spoken line **only with voices the user created himself in ElevenLabs** (his account
-  «aryan.mohammad»). Never design/save a voice (`creative_design_voice`/`creative_save_designed_voice`) and never pick a
-  library/premade voice on your own; if a character has no matching user voice, ask the user. Films made with other
-  voices get their lines regenerated with the user's voices (one fixed voice per character, never a voice_id from memory) and every sound effect
+  Claude generates every spoken line **only with the Persian (فارسی) voices already in the user's ElevenLabs account** — Aidin Podcast, Amin.GS,
+  Amitis, Aramofen, Aran - Parsi, Arash, Danesh, Farshad, Hengameh, Javid, Mard, Mitra, MohammadHossein, Najib, Rashnow,
+  Sara, amir, mohsen, «خشن», «معلم» (check `creative_list_voices`, language fa). Never a non-Persian voice (no German/English/
+  Dari), never design/save a new voice (`creative_design_voice`/`creative_save_designed_voice`; the Claude-made ZC …/Wagon …
+  voices are not to be used). Films voiced otherwise get their lines regenerated with these voices (one fixed voice per
+  character, never a voice_id from memory) and every sound effect
   (no synthesised numpy effects any more). Keep `talking=True` lip movement on the lines in `captions.py` and fit
   captions + lips to the generated lengths. Also keep a version without sound. If the ElevenLabs tools are not
   available in a chat, say so to the user instead of falling back silently.
