@@ -46,6 +46,16 @@ Check poses fast: `../cast/bpy.sh test_clips.py --clips a,b,c` -> `test/clips_<n
 | pointing | 2.8 | standing, right arm rises across the body and points to the character's left, holds, lowers | "look there!" — rotate `facing` so the arm aims at the target |
 | crying | 6.3 | standing, hands to the face, wipes the eyes, shoulders shake, one arm drops open in despair | grief, crying |
 | driving | 5.0 | seated, both hands forward at wheel height, small steering turns (loop) | bus / car driver |
+| looking_around | 6.5 | standing, knees a little bent, arms half out, scans wide left and right, wary | searching a place, listening |
+| walking_backwards | 1.2 | steps backwards facing forward (in place) | backing away from danger |
+| picking_up | 9.6 | bends down, picks something off the floor with both hands, straightens and holds it in front | picking up a bag / radio / toy |
+| throw | 2.2 | winds up and throws with the right arm, follows through, back to standing | throwing a stone / bottle |
+| kneeling_idle | 4.3 | kneeling on both knees, upright, hands on the thighs, small breathing moves | kneeling by someone, praying-free waiting |
+| crawling | 1.8 | on hands and knees, crawling forward (loop, in place) | crawling under seats / through a gap |
+| falling_down | 2.3 | stands, stumbles, drops and lands on the back propped on an elbow, legs up | tripping, thrown by a braking bus |
+| laying_idle | 2.1 | lying on the back, one arm behind the head, still (loop) | sleeping / resting on the floor |
+| laying_breathless | 0.8 | lying on the back, chest heaving (loop) | exhausted on the ground, wounded |
+| climbing_ladder | 0.8 | climbing rung by rung, seen from behind (loop, in place: move the body up yourself) | ladders, hatch, bunk |
 | zombie_idle | 4.3 | hunched, swaying | zombies |
 | zombie_walk | 4.0 | hunched lurching walk, arms forward | zombies |
 | zombie_run | 0.8 | hunched run, arms back | zombies |
