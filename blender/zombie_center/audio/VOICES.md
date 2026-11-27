@@ -1,12 +1,15 @@
-# THE ZOMBIE CENTER — fixed ElevenLabs voices (designed 2026-11-27, reuse in every episode)
+# THE ZOMBIE CENTER — fixed ElevenLabs voices (reuse in every episode)
 
-| Character | ElevenLabs name | voice_id | Notes |
+Rule (user, CLAUDE.md 2026-11-27): only the Persian voices already in the user's ElevenLabs account; never design new
+voices; the earlier Claude-designed "ZC Arin / ZC Nika / ZC Mark" voices are NOT used.
+
+| Character | ElevenLabs voice | voice_id | why |
 |---|---|---|---|
-| Arin (001) | ZC Arin | `esUiLHlOC7xxPj76NPct` | young, tense, clear; f0 ≈ 113 Hz |
-| Nika (002) | ZC Nika | `7f6ZfcsK6yFC46DmasB8` | soft, breathy, clearest of 3 (whisper logprob −0.24); f0 ≈ 222 Hz |
-| Mark (unknown caller) | ZC Mark | `J1hbNXzUMAwyHYkHyltM` | low, rough, calm; in EP01 heard through a light voice changer (band-pass + slight pitch-down) |
+| Arin (001), 19 | Arash - Clear, Confident Narrator | `Mn0jJ3FC9Ijz7lQe8ELI` | young, clearest of the auditions (whisper lp −0.47, f0 ≈ 129 Hz) |
+| Nika (002), 16 | Amitis - Young & Soft | `C2wYIMnQQbFDm3qaosBN` | young, soft, whispery — a frightened video message |
+| Mark (the unknown caller), 52 | «خشن» | `iHeRnhwgi9L0gzVK2VUe` | low, rough, older (f0 ≈ 78 Hz); EP01: heard through a light voice changer |
 
-Rules: Persian lines with `eleven_multilingual_v2` (emotion in wording/punctuation, v2 ignores [tags]);
-loudnorm I=-16 per line; effects ducked ≈ −13 dB under speech; final mix checked with faster-whisper (small, fa).
-Not designed yet: Elena, Sara, Sam, Kaveh (design when their episodes start, same method; save the id here).
-Design previews (audition files) are in `voice_design/`.
+Rules: Persian lines with `eleven_multilingual_v2` (emotion in wording/punctuation); loudnorm I=-16 per line;
+effects ducked ≈ −13 dB under speech; final mix checked with faster-whisper (small/medium, fa).
+Still to cast (from the same list, when their episodes start): Elena, Sara, Sam, Kaveh. Sara (the voice) is used for
+Kian in «پرنده» — avoid it here.
