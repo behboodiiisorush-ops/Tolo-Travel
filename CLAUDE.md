@@ -40,6 +40,12 @@
   (no synthesised numpy effects any more). Keep `talking=True` lip movement on the lines in `captions.py` and fit
   captions + lips to the generated lengths. Also keep a version without sound. If the ElevenLabs tools are not
   available in a chat, say so to the user instead of falling back silently.
+- **Every sound is a real ElevenLabs sound effect — never a fake/synthesised one** (the user: door sounds so far were
+  bad). Make one effect per action with a precise prompt: what it is made of, size, distance, how it moves, e.g.
+  "heavy steel bunker door, latch clicks, slow creaking open, metal echo in a concrete room, close" or
+  "old wooden apartment door handle turns, door creaks open slowly, quiet hallway". Separate clips for unlock, open,
+  creak, slam, knock, footsteps, breathing etc.; place each exactly on the frame it happens; listen to the take
+  and regenerate a bad one. Never reuse a generic "door" sound for every door.
 - **Branding on every video** (all versions, every frame): the film's name in the top-right corner and the channel
   logo (`blender/brand/agetobudi_logo_round.png`, the user's «داستان‌های POV — Agetobudi» logo) in the top-left,
   plus the credit «ساخته شده توسط بلندر» (channel «agetobudi»). Use `overlay(img, title)` from `blender/brand/brand.py`
