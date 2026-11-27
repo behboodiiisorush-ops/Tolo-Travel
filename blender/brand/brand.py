@@ -3,7 +3,7 @@
     from brand import overlay
     overlay(img, "هشدار")      # PIL RGB image of any size (vertical or 16:9), drawn in place
 
-Top-right: the film's name (big) and «ساخته شده توسط بلندر» under it.
+Top-right: the film's name (big). (The user removed the «ساخته شده توسط بلندر» text — CREDIT is empty.)
 Top-left:  the round channel logo (agetobudi_logo_round.png, the user's logo).
 Use it on every frame of every delivered version (with and without captions, with and without sound).
 """
@@ -13,7 +13,7 @@ from PIL import Image, ImageDraw, ImageFont
 HERE = os.path.dirname(os.path.abspath(__file__))
 FONT = os.path.join(HERE, "..", "fonts", "Vazirmatn-FD-ExtraBold.ttf")
 LOGO = os.path.join(HERE, "agetobudi_logo_round.png")
-CREDIT, CHANNEL = "ساخته شده توسط بلندر", "agetobudi"
+CREDIT, CHANNEL = "", "agetobudi"     # no «ساخته شده توسط بلندر» text any more (user)
 _cache = {}
 
 
@@ -39,6 +39,7 @@ def overlay(img, title):
     d = ImageDraw.Draw(img)
     d.text((W - m, m + int(52 * u)), title, font=_font(int(78 * u)), fill=(255, 255, 255), anchor="rm",
            direction="rtl", language="fa", stroke_width=max(2, int(7 * u)), stroke_fill=(0, 0, 0))
-    d.text((W - m, m + int(122 * u)), CREDIT, font=_font(int(32 * u)), fill=(235, 235, 235), anchor="rm",
-           direction="rtl", language="fa", stroke_width=max(1, int(4 * u)), stroke_fill=(0, 0, 0))
+    if CREDIT:
+        d.text((W - m, m + int(122 * u)), CREDIT, font=_font(int(32 * u)), fill=(235, 235, 235), anchor="rm",
+               direction="rtl", language="fa", stroke_width=max(1, int(4 * u)), stroke_fill=(0, 0, 0))
     return img
