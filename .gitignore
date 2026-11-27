@@ -70,3 +70,5 @@ blender/bird/post_tmp/
 blender/bird/*.blend
 blender/bird/out/*.wav
 blender/zombie_center/01_CHARACTERS/sheets/_*.png
+blender/ANIMATION_STUDIO/12_EPISODES/EP_002_SAYEH/frames_oldlips/
+blender/ANIMATION_STUDIO/12_EPISODES/EP_002_SAYEH/relips.txt
