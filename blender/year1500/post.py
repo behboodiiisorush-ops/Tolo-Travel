@@ -99,7 +99,9 @@ def badge(img):
 
 CHANNEL = "agetobudi"
 MADE = "ساخته شده توسط بلندر"
-LOGO = os.path.join(HERE, "..", "brand", "logo.png")      # the channel logo (optional until it is in the repo)
+LOGO = os.path.join(HERE, "..", "brand", "agetobudi_logo_round.png")   # the channel logo
+sys.path.insert(0, os.path.join(HERE, "..", "brand"))
+from brand import overlay  # noqa: E402  (title top-right, logo top-left, on every frame)
 
 
 def _logo(h):
@@ -125,13 +127,13 @@ def credit(img, a=0.8):
     return Image.alpha_composite(img.convert("RGBA"), ov).convert("RGB")
 
 
-def big_credit(img, a, y):
+def big_credit(img, a, y, logo=True):
     """The opening / closing credit: logo, «ساخته شده توسط بلندر» and the channel name, centred."""
     if a <= 0:
         return img
     ov = Image.new("RGBA", img.size, (0, 0, 0, 0))
     d = ImageDraw.Draw(ov)
-    lg = _logo(150)
+    lg = _logo(150) if logo else None
     if lg is not None:
         lg.putalpha(lg.getchannel("A").point(lambda v: int(v * a)))
         ov.alpha_composite(lg, (W // 2 - lg.width // 2, y - 230))
@@ -220,16 +222,13 @@ def main():
             img = Image.composite(img, Image.blend(black, img, 0.55), vig)
             if t < 6.8:
                 img = title(img, t)
-                img = big_credit(img, min(1.0, (t - 1.0) / 0.8, (6.6 - t) / 0.6), 760)
-            elif t > 7.2:
-                badge(img)
+                img = big_credit(img, min(1.0, (t - 1.0) / 0.8, (6.6 - t) / 0.6), 700, logo=False)
             fade = min(1.0, max(0.0, (END - t) / 0.8))
             if fade < 1:
                 img = Image.blend(black, img, fade)
         else:
             img = card(t - n_pic / FPS)
-        if i < n_pic:
-            img = credit(img)
+        overlay(img, TITLE)
         img.save(os.path.join(TMP, f"n_{i:04d}.jpg"), quality=94)
         if i < n_pic:
             for a, b, who, text in LINES:
