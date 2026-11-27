@@ -36,27 +36,58 @@ def thunder(length=4.0, k=1.0):
     return x
 
 
+def clip(name):
+    """an ElevenLabs sound effect from sfx_el/ (stereo-folded to mono float)"""
+    return read(os.path.join(HERE, "sfx_el", name + ".mp3"))
+
+
+def onset(x, th=0.15):
+    """seconds into the clip where the sound really starts, so it lands on the exact frame"""
+    i = np.argmax(np.abs(x) > th * np.abs(x).max())
+    return i / S.SR
+
+
+def at(name, t, gain=1.0, pan=0.0, length=None, fade=0.3):
+    x = clip(name)
+    x = x / max(1e-9, np.abs(x).max())
+    if length:
+        x = x[:int(length * S.SR)]
+        f = int(fade * S.SR)
+        x[-f:] *= np.linspace(1, 0, f)
+    S.put(x, max(0.0, t - onset(x)), gain, pan)
+
+
+def bed(name, t0, t1, gain, fade=1.5):
+    """loop a clip with crossfades from t0 to t1 (rain, hum)"""
+    x = clip(name)
+    x = x / max(1e-9, np.abs(x).max())
+    n, xf = int((t1 - t0) * S.SR), int(fade * S.SR)
+    out, pos = np.zeros(n + len(x)), 0
+    while pos < n:
+        y = x.copy()
+        y[:xf] *= np.linspace(0, 1, xf)
+        y[-xf:] *= np.linspace(1, 0, xf)
+        out[pos:pos + len(y)] += y
+        pos += len(y) - xf
+    out = out[:n]
+    out[:xf] *= np.linspace(0, 1, xf)
+    out[-xf:] *= np.linspace(1, 0, xf)
+    S.put(out, t0, gain, 0.0)
+
+
 def build():
+    """every effect is a real ElevenLabs sound effect (sfx_el/, flow "Spark SFX")"""
     n = int(TOTAL * S.SR)
-    rain = S.band(S.noise(n), 800, 7000) * 0.06 + S.band(S.noise(n), 150, 800) * 0.03
-    rain *= np.minimum(1.0, S.tt(n) / 1.5)
-    S.L[:n] += rain
-    S.R[:n] += rain * 0.95
+    bed("rain", 0.0, TOTAL, 0.35)
     for t, k in FLASH:
-        S.put(thunder(4.5, k), t + 0.35, 0.9 * k)
-    S.put(hum(10.0, 50) * 0.04, 0.0, 0.5)                                # fridge/electrics until the cut
-    S.put(S.tone(90, 0.9, 0.5) * np.linspace(1, 0, int(0.9 * S.SR)), 10.0, 0.4)   # power dies
-    S.put(crackle(0.6, 1.0), 19.05, 1.0, 0.3)                            # the spark
-    S.put(crackle(0.3, 0.7), 19.4, 0.8, 0.3)
-    glow = hum(15.0, 110) * 0.05                                          # the glow in his hand
-    S.put(glow * S.env(len(glow), 1.0, 2.0), 19.5, 0.6)
-    for k in (26.6, 26.85):                                               # knock before mom calls
-        S.put(S.knock(0.8), k, 0.7, -0.5)
-    S.put(crackle(0.5, 1.0), 38.2, 1.0, 0.3)                              # surge back into the lamp
-    S.put(S.tone(70, 1.0, 0.5) * np.linspace(0, 1, S.SR), 38.0, 0.35)     # power comes back
-    S.put(hum(18.0, 50) * 0.04, 38.5, 0.5)
-    S.footsteps(43.2, 46.0, 1.9, 0.35)
-    S.put(S.tone(55, 4.0, 0.2) * S.env(int(4.0 * S.SR), 0.8, 1.5), END - 0.5, 1.0)
+        at("thunder", t + 0.35, 0.8 * k)
+    at("power_down", 10.4, 0.7)
+    at("spark", 19.05, 1.0, 0.3)
+    bed("glow", 19.5, 38.2, 0.25)
+    at("knock", 26.6, 0.8, -0.5)
+    at("surge", 38.2, 0.9, 0.3)
+    at("steps", 43.2, 0.6)
+    at("drone", END - 1.0, 0.5)
     return np.stack([S.L[:n], S.R[:n]], axis=1)
 
 
