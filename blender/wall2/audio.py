@@ -32,6 +32,8 @@ def add(track, x, t, g=1.0, fade_out=0.0, max_len=None):
         x[-n:] *= np.linspace(1, 0, n)
     i = int((OPEN + t) * SR)
     j = min(len(track), i + len(x))
+    if j <= i:
+        return
     track[i:j] += g * x[:j - i]
 
 
