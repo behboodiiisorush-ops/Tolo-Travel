@@ -230,7 +230,7 @@ if MODE == "s2test":     # candidate framings for the establishing wide (shot 2)
         sc.render.filepath = os.path.join(OUT, f"s2_{k}.png"); bpy.ops.render.render(write_still=True)
 
 if MODE == "preview":    # real-speed check of the whole scene: every 2nd frame, 480x270, shown at 12 fps
-    sc.frame_start = int(os.environ.get("PREV_START", 1))
+    sc.frame_start = int(os.environ.get("PREV_START", 1)); sc.frame_end = int(os.environ.get("PREV_END", 1080))
     sc.eevee.use_raytracing = False
     sc.eevee.volumetric_samples = 16
     sc.eevee.taa_render_samples = 6

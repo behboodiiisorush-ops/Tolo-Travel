@@ -24,7 +24,7 @@ ZC = {
         fa="نیکا", role="Subject 002. 16, slight, long loose black hair, pale hospital gown, barefoot, red-thread bracelet.",
         gender=0.0, age=0.37, height=0.35, weight=0.35, muscle=0.3, skin="young_caucasian_female", skin_tint=OLIVE,
         hair="long01", hair_col=(0.035, 0.03, 0.03), brow="eyebrow010", brow_col=(0.04, 0.03, 0.025), dark_eyes=True,
-        clothes={"toigo_shift_dress": (0.78, 0.84, 0.86)}),
+        clothes={"toigo_shift_dress": (0.78, 0.84, 0.86)}, outer=("toigo_shift_dress",)),   # no skin poke-through
     "zc_elena": dict(
         fa="دکتر النا", role="Scientist, 48. Dark-blonde jaw-length bob, white lab coat over grey top, dark trousers.",
         gender=0.0, age=0.68, height=0.5, weight=0.45, muscle=0.35, skin="middleage_caucasian_female", skin_tint=WARM,

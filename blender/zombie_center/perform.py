@@ -96,6 +96,20 @@ def place(obj, f, loc, quat):
     obj.keyframe_insert("location", frame=f); obj.keyframe_insert("rotation_quaternion", frame=f)
 
 
+def face_axis(ch):
+    """The head bone's local axis that points out of the FACE (the bone's own Y runs up the neck to the crown,
+    so tracking Y would point the top of the head at the target). Measured from the eyes in the rest pose."""
+    rig = ch.rig
+    b = rig.data.bones["head"]
+    eyes = ch.parts["Eyes"][0]
+    ec = sum((eyes.matrix_world @ v.co for v in eyes.data.vertices), Vector()) / len(eyes.data.vertices)
+    hm = rig.matrix_world @ b.matrix_local
+    d = (hm.inverted() @ ec)                    # eye centre in head-bone space (rest)
+    d.y = 0.0                                   # ignore the along-the-neck part
+    ax = max((abs(d.x), "X", d.x), (abs(d.z), "Z", d.z))
+    return ("TRACK_" if ax[2] > 0 else "TRACK_NEGATIVE_") + ax[1]
+
+
 def look(ch, f0, f1, target_fn, weight=0.7):
     """Turn the head toward target_fn(f) (world point) by `weight` — a damped track layered on the mocap."""
     rig = ch.rig
@@ -105,7 +119,7 @@ def look(ch, f0, f1, target_fn, weight=0.7):
     if tg.name not in bpy.context.scene.collection.objects:
         bpy.context.scene.collection.objects.link(tg)
     c = pb.constraints.get("ZC_Look") or pb.constraints.new("DAMPED_TRACK")
-    c.name = "ZC_Look"; c.target = tg; c.track_axis = "TRACK_Y"
+    c.name = "ZC_Look"; c.target = tg; c.track_axis = face_axis(ch)
     for f in range(f0, f1 + 1, 2):
         tg.location = Vector(target_fn(f)); tg.keyframe_insert("location", frame=f)
     c.influence = 0.0; c.keyframe_insert("influence", frame=f0 - 8)
@@ -114,8 +128,9 @@ def look(ch, f0, f1, target_fn, weight=0.7):
     c.influence = 0.0; c.keyframe_insert("influence", frame=f1 + 8)
 
 
-def aim_hand(ch, side, f0, f1, point, ease=8):
-    """Point the fingers (hand bone +Y) at a world point between f0 and f1 (e.g. palm over the mouth)."""
+def aim_hand(ch, side, f0, f1, point, ease=8, palm_to=None):
+    """Point the fingers (hand bone +Y) at a world point between f0 and f1 (e.g. palm over the mouth).
+    palm_to: also roll the hand about the fingers so the PALM faces this world point (e.g. a camera)."""
     rig = ch.rig
     pb = rig.pose.bones[f"hand_{side}"]
     name = f"ZC_AIM_{rig.name}_{side}"
@@ -127,3 +142,20 @@ def aim_hand(ch, side, f0, f1, point, ease=8):
     c.name = "ZC_Aim"; c.target = tg; c.track_axis = "TRACK_Y"
     for f, v in ((f0 - ease, 0.0), (f0, 1.0), (f1, 1.0), (f1 + ease, 0.0)):
         c.influence = v; c.keyframe_insert("influence", frame=f)
+    if palm_to is not None:
+        b = rig.data.bones[f"hand_{side}"]
+        mw = rig.matrix_world @ b.matrix_local
+        fing = (rig.matrix_world @ rig.data.bones[f"middle_01_{side}"].head_local) - (rig.matrix_world @ b.head_local)
+        thumb = (rig.matrix_world @ rig.data.bones[f"thumb_01_{side}"].head_local) - (rig.matrix_world @ b.head_local)
+        palm = fing.cross(thumb).normalized() * (1 if side == "l" else -1)      # rest: palms down -> palm normal
+        loc = mw.to_3x3().inverted() @ palm
+        ax = max((abs(loc.x), "X", loc.x), (abs(loc.z), "Z", loc.z))
+        tp = bpy.data.objects.get(name + "_palm") or bpy.data.objects.new(name + "_palm", None)
+        if tp.name not in bpy.context.scene.collection.objects:
+            bpy.context.scene.collection.objects.link(tp)
+        tp.location = Vector(palm_to)
+        r = pb.constraints.get("ZC_Palm") or pb.constraints.new("LOCKED_TRACK")
+        r.name = "ZC_Palm"; r.target = tp; r.lock_axis = "LOCK_Y"
+        r.track_axis = ("TRACK_" if ax[2] > 0 else "TRACK_NEGATIVE_") + ax[1]
+        for f, v in ((f0 - ease, 0.0), (f0, 1.0), (f1, 1.0), (f1 + ease, 0.0)):
+            r.influence = v; r.keyframe_insert("influence", frame=f)
