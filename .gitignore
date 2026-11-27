@@ -72,3 +72,9 @@ blender/bird/out/*.wav
 blender/zombie_center/01_CHARACTERS/sheets/_*.png
 blender/ANIMATION_STUDIO/12_EPISODES/EP_002_SAYEH/frames_oldlips/
 blender/ANIMATION_STUDIO/12_EPISODES/EP_002_SAYEH/relips.txt
+blender/door_noir/frames/
+blender/door_noir/test/
+blender/door_noir/post_tmp/
+blender/door_noir/*.blend
+blender/door_noir/out/*.wav
+blender/door_noir/out/part_*.mp4
