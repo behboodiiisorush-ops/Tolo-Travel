@@ -7,7 +7,7 @@ fade, question card; then the ElevenLabs sound (audio.py) is laid under it.
     out/wall2_clean.mp4         no captions, no sound
 Every version carries the credit «ساخته شده توسط بلندر» + «agetobudi» (opening card, corner, end card).
 """
-import os, shutil, subprocess, sys
+import os, subprocess, sys
 from PIL import Image, ImageDraw, ImageFont
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -112,59 +112,75 @@ def card(t):
     return img
 
 
-def encode(pattern, out, audio=None):
-    cmd = ["ffmpeg", "-v", "error", "-y", "-framerate", str(FPS), "-i", pattern]
-    if audio:
-        cmd += ["-i", audio, "-c:a", "aac", "-b:a", "192k", "-shortest"]
-    cmd += ["-c:v", "libx264", "-crf", "18", "-pix_fmt", "yuv420p", "-movflags", "+faststart", out]
-    subprocess.run(cmd, check=True)
+def encoder(out):
+    return subprocess.Popen(["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}",
+                             "-r", str(FPS), "-i", "-", "-c:v", "libx264", "-crf", "18", "-pix_fmt", "yuv420p",
+                             "-movflags", "+faststart", out], stdin=subprocess.PIPE)
+
+
+def mux(video, audio, out):
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", video, "-i", audio, "-map", "0:v", "-map", "1:a",
+                    "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart", out],
+                   check=True)
     print(out)
 
 
+def source():
+    """Film frames, already fisheye + upscaled, streamed (no frames on disk). SRC = frames/ or out/film.mp4."""
+    film = os.path.join(OUT, "film.mp4")
+    inp = ["-i", film] if os.path.exists(film) else ["-framerate", str(FPS), "-i", os.path.join(SRC, "f_%04d.png")]
+    p = subprocess.Popen(["ffmpeg", "-v", "error"] + inp + [
+        "-frames:v", str(int(END * FPS)),
+        "-vf", f"scale={W}:{H}:flags=lanczos,lenscorrection=k1=0.22:k2=0.05:i=bilinear,"
+               f"scale={int(W * 1.2)}:{int(H * 1.2)}:flags=lanczos,crop={W}:{H},vignette=PI/5",
+        "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], stdout=subprocess.PIPE)
+    while True:
+        buf = p.stdout.read(W * H * 3)
+        if len(buf) < W * H * 3:
+            break
+        yield Image.frombytes("RGB", (W, H), buf)
+    p.wait()
+
+
 def main():
-    shutil.rmtree(TMP, ignore_errors=True)
-    os.makedirs(TMP)
     os.makedirs(OUT, exist_ok=True)
-    n_pic = int(END * FPS)
-    subprocess.run(["ffmpeg", "-v", "error", "-y", "-framerate", str(FPS), "-i", os.path.join(SRC, "f_%04d.png"),
-                    "-frames:v", str(n_pic),
-                    "-vf", f"scale={W}:{H}:flags=lanczos,lenscorrection=k1=0.22:k2=0.05:i=bilinear,"
-                           f"scale={int(W * 1.2)}:{int(H * 1.2)}:flags=lanczos,crop={W}:{H},vignette=PI/5",
-                    "-q:v", "2", os.path.join(TMP, "u_%04d.jpg")], check=True)
-    names = sorted(n for n in os.listdir(TMP) if n.startswith("u_"))
+    cap_mp4, cln_mp4 = os.path.join(OUT, "wall2_captions.mp4"), os.path.join(OUT, "wall2_clean.mp4")
+    ec, en = encoder(cap_mp4), encoder(cln_mp4)
+
+    def put(clean, capt):
+        en.stdin.write(clean.tobytes())
+        ec.stdin.write(capt.tobytes())
+
     n_open = int(OPEN * FPS)
-    total = n_open + len(names) + int(CARD * FPS)
-    for i in range(total):
-        if i < n_open:
-            img = opening(i / FPS)
-            img.save(os.path.join(TMP, f"n_{i:04d}.jpg"), quality=95)
-            img.save(os.path.join(TMP, f"c_{i:04d}.jpg"), quality=95)
-            continue
-        j = i - n_open
+    for i in range(n_open):
+        img = opening(i / FPS)
+        put(img, img)
+    j = 0
+    for img in source():
         t = j / FPS
-        if j < len(names):
-            img = Image.open(os.path.join(TMP, names[j])).convert("RGB")
-            os.remove(os.path.join(TMP, names[j]))
-            fade = min(1.0, max(0.0, (END - t) / 0.6), t / 0.4)
-            if fade < 1:
-                img = Image.blend(Image.new("RGB", img.size), img, fade)
-            if MESSAGE[0] <= t <= MESSAGE[1]:
-                img = message(img, t)
-            img = credit_corner(img)
-        else:
-            img = card(t - len(names) / FPS)
-        img.save(os.path.join(TMP, f"n_{i:04d}.jpg"), quality=95)
+        fade = min(1.0, max(0.0, (END - t) / 0.6), t / 0.4)
+        if fade < 1:
+            img = Image.blend(Image.new("RGB", img.size), img, fade)
+        if MESSAGE[0] <= t <= MESSAGE[1]:
+            img = message(img, t)
+        img = credit_corner(img)
+        capt = img.copy()
         for a, b, who, text in LINES:
-            if a <= t <= b and j < len(names):
-                caption(img, who, text)
-        img.save(os.path.join(TMP, f"c_{i:04d}.jpg"), quality=95)
-    encode(os.path.join(TMP, "c_%04d.jpg"), os.path.join(OUT, "wall2_captions.mp4"))
-    encode(os.path.join(TMP, "n_%04d.jpg"), os.path.join(OUT, "wall2_clean.mp4"))
+            if a <= t <= b:
+                caption(capt, who, text)
+        put(img, capt)
+        j += 1
+    for k in range(int(CARD * FPS)):
+        img = card(k / FPS)
+        put(img, img)
+    for e in (ec, en):
+        e.stdin.close()
+        e.wait()
+    print(cap_mp4, cln_mp4, "film frames:", j)
     mix = os.path.join(OUT, "wall2_mix.wav")
     if os.path.exists(mix):
-        encode(os.path.join(TMP, "c_%04d.jpg"), os.path.join(OUT, "wall2_full.mp4"), mix)
-        encode(os.path.join(TMP, "n_%04d.jpg"), os.path.join(OUT, "wall2_full_clean.mp4"), mix)
-    shutil.rmtree(TMP, ignore_errors=True)
+        mux(cap_mp4, mix, os.path.join(OUT, "wall2_full.mp4"))
+        mux(cln_mp4, mix, os.path.join(OUT, "wall2_full_clean.mp4"))
 
 
 if __name__ == "__main__":
