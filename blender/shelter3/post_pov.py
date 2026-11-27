@@ -26,7 +26,7 @@ W, H = 1080, 1920
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(HERE, "..", "brand"))
 from captions import CAPTIONS, CARD_SECONDS, END, NARRATION, QUESTION, TITLE  # noqa: E402
-from brand import overlay as brand, CREDIT, CHANNEL  # noqa: E402
+from brand import overlay as brand, CHANNEL  # noqa: E402
 
 FILM = "پناهگاه ۳"
 LAST = int(END * FPS)
@@ -96,7 +96,7 @@ def final_card(img, k):
             d.ellipse((170, y - 45, 260, y + 45), fill=(255, 255, 255))
             d.text((215, y), "AB"[i], font=font(56), fill=col, anchor="mm")
         draw_text(d, (W // 2, 1480), "جوابت رو کامنت کن", 64, fill=(255, 230, 120), stroke=9)
-        draw_text(d, (W // 2, 1640), f"{CREDIT}  —  {CHANNEL}", 40, fill=(230, 230, 230), stroke=6)
+        draw_text(d, (W // 2, 1640), CHANNEL, 40, fill=(230, 230, 230), stroke=6)   # no credit line (user rule)
     return brand(img, FILM)
 
 

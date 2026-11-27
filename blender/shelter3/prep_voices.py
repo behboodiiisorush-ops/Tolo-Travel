@@ -6,12 +6,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from captions import LINES  # noqa: E402
 from el_lines import VOICES  # noqa: E402
-from voice_fx import PRESETS  # noqa: E402
 TRIM = ("silenceremove=start_periods=1:start_threshold=-45dB,areverse,"
         "silenceremove=start_periods=1:start_threshold=-45dB,areverse")
-EXTRA = {"resc1": "highpass=f=300,lowpass=f=4000,acrusher=bits=12:mix=0.15,aecho=0.8:0.5:90|200:0.3|0.2",
-         "resc2": "highpass=f=300,lowpass=f=4000,acrusher=bits=12:mix=0.15,aecho=0.8:0.5:90|200:0.3|0.2",
-         "radio1": PRESETS["radio"], "radio2": PRESETS["radio"]}
+SPEAKER = "highpass=f=220,lowpass=f=6000,aecho=0.8:0.35:80:0.18"          # light loudspeaker outside
+RADIO = "highpass=f=280,lowpass=f=4800,acrusher=bits=14:mix=0.06"          # light walkie-talkie colour
+EXTRA = {"resc1": SPEAKER, "resc2": SPEAKER, "radio1": RADIO, "radio2": RADIO}
+SRC = os.path.join(HERE, "el2")   # eleven_multilingual_v2 takes (el_v3/ keeps the old v3 takes)
 os.makedirs(os.path.join(HERE, "voices", "clips"), exist_ok=True)
 for key, who, _ in LINES:
     af = [TRIM]
@@ -19,7 +19,8 @@ for key, who, _ in LINES:
         af.append(VOICES[who][2])
     if key in EXTRA:
         af.append(EXTRA[key])
+    af.append("loudnorm=I=-16:TP=-1.5:LRA=11")
     af.append("afade=t=in:d=0.02,areverse,afade=t=in:d=0.05,areverse")
-    subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", os.path.join(HERE, "el", key + ".mp3"), "-af", ",".join(af),
+    subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", os.path.join(SRC, key + ".mp3"), "-af", ",".join(af),
                     "-ar", "48000", "-ac", "1", os.path.join(HERE, "voices", "clips", key + ".wav")], check=True)
 print("clips ready")

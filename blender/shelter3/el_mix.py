@@ -1,7 +1,7 @@
 """Sound of «پناهگاه ۳» from ElevenLabs only (voices + effects in el/, generated with the ElevenLabs MCP tools,
 flow HpUe7Y4z5ieVYxp4gmq6; see el_lines.py and voice_script.md).
     python3 el_mix.py   ->  out/sfx.wav (effects only)  and  out/voice.wav (voices + effects)
-Event times come from out/events.json (written by scene.py) and the line times from times.py."""
+Event times come from out/events.json (written by pov.py) and the line times from times.py."""
 import json, os, subprocess, sys
 import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -13,17 +13,17 @@ TOTAL = END + CARD_SECONDS
 N = int(TOTAL * SR)
 rng = np.random.default_rng(3)
 T_IN = json.load(open(os.path.join(OUT, "events.json")))["T_IN"]
-MASK = "lowpass=f=3400,equalizer=f=1100:t=q:w=1.2:g=3,equalizer=f=250:t=q:w=1:g=-3"
+MASK = "lowpass=f=5200,equalizer=f=1100:t=q:w=1.2:g=3,equalizer=f=250:t=q:w=1:g=-3"
 
 
-def load(path, af=None):
+def load(path, af=None, norm=True):
     flt = "aformat=channel_layouts=mono"
     if af:
         flt += "," + af
     raw = subprocess.run(["ffmpeg", "-v", "error", "-i", path, "-af", flt, "-ac", "1", "-ar", str(SR), "-f", "f32le", "-"],
                          capture_output=True, check=True).stdout
     x = np.frombuffer(raw, np.float32).copy()
-    return x / max(1e-6, np.abs(x).max())
+    return x / max(1e-6, np.abs(x).max()) if norm else x
 
 
 def fx(name, af=None):
@@ -102,7 +102,7 @@ def effects():
     dg = fx("dogs")
     put(buf, dg, dogs, 0.6, 0.0, length=min(len(dg) / SR, bang - dogs + 1.5))
     put(buf, fx("chew"), T["me5"][0] - 0.3, 0.6, -0.3)
-    put(buf, fx("burst"), bang, 0.95, -0.2)
+    put(buf, fx("burst"), bang, 0.95, -0.2, length=1.2, fade=0.3)   # short, so «لاستیک ترکید!» stays clear
     put(buf, fx("bus_stop"), stop - 3.0, 0.7)
     cl = fx("claws")
     put(buf, cl, stop + 0.5, 0.5)
@@ -131,15 +131,15 @@ def voices():
     duck = np.ones(N, np.float32)
     for key, who, _ in LINES:
         a, b = KEY_OF[key]
-        af = "aecho=0.8:0.4:35:0.12" if who in ("Mom", "Lena", "Guard", "Me", "Old man") else None
+        af = "aecho=0.8:0.3:30:0.06" if who in ("Mom", "Lena", "Guard", "Me", "Old man") else None   # light room
         if key[0] != "n" and who != "Radio" and key not in ("resc1", "resc2") and \
                 (who in ("Rescuer", "Old man") or a >= T_IN):      # talking through a radiation mask
             af = (af + "," if af else "") + MASK
-        x = load(os.path.join(HERE, "voices", "clips", key + ".wav"), af)
-        g = 0.85 if key.startswith("n") else 0.95
+        x = load(os.path.join(HERE, "voices", "clips", key + ".wav"), af, norm=False)   # clips are loudnorm'd
+        g = 1.0
         put(buf, x, a, g, {"Lena": 0.12, "Mom": -0.12, "Guard": 0.2, "Old man": 0.15}.get(who, 0.0), fade=0.02)
         i, j = int((a - 0.15) * SR), int((a + len(x) / SR + 0.15) * SR)
-        duck[max(0, i):j] = 0.5
+        duck[max(0, i):j] = 10 ** (-13 / 20)          # effects -13 dB under every line
     duck = np.convolve(duck, np.ones(4800) / 4800, mode="same").astype(np.float32)
     return buf, duck
 
@@ -157,4 +157,16 @@ if __name__ == "__main__":
     fxb = effects()
     write(os.path.join(OUT, "sfx.wav"), fxb)
     vo, duck = voices()
-    write(os.path.join(OUT, "voice.wav"), vo * 1.0 + fxb * duck[:, None] * 0.6)
+    fxd = fxb * duck[:, None]
+    # speech must sit >= 10 dB above the effects in every line: measure each line, lower the effects if needed
+    def db(x):
+        return 20 * np.log10(max(1e-9, float(np.sqrt(np.mean(x ** 2)))))
+    worst, g = 99.0, 0.6
+    for key, who, _ in LINES:
+        a, b = KEY_OF[key]
+        i, j = int(a * SR), int(b * SR)
+        worst = min(worst, db(vo[i:j]) - db(fxd[i:j] * g))
+    if worst < 12.0:                       # aim for 12 dB so the quietest line still clears 10 dB
+        g *= 10 ** ((worst - 12.0) / 20)
+    print(f"effects gain {g:.3f}; worst speech-over-effects before {worst:.1f} dB, after {worst - 20*np.log10(g/0.6):.1f} dB")
+    write(os.path.join(OUT, "voice.wav"), vo + fxd * g)

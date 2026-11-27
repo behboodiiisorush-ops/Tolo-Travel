@@ -28,7 +28,6 @@ from captions import END, KEY_OF  # noqa: E402
 
 random.seed(8)
 T = KEY_OF
-EV = json.load(open(os.path.join(HERE, "out", "events.json")))
 N = int(END * FPS)
 
 
@@ -72,6 +71,11 @@ T_DOGS = at("resc6") - 2.0
 T_BANG = at("resc7") - 1.4
 T_STOP = at("n6") - 0.2
 T_LIGHTS = at("n7") + 2.2
+T_ARRIVE = (at("resc2") - 1.2, at("resc2") + 3.0)   # the bus rolls in and stops outside the door
+EV = {"T_BANG": T_BANG, "T_LOUD": T_LOUD, "T_GO": T_GO, "T_DOOR": T_DOOR, "T_DOGS": T_DOGS, "T_STOP": T_STOP,
+      "T_ARRIVE": list(T_ARRIVE), "T_FOREST": T_FOREST, "T_LIGHTS": T_LIGHTS, "T_IN": T_IN, "T_OUT": T_OUT}
+os.makedirs(os.path.join(HERE, "out"), exist_ok=True)
+json.dump(EV, open(os.path.join(HERE, "out", "events.json"), "w"), indent=1)   # el_mix.py reads the same times
 
 # ================================================================== layout
 # The bunker (episodes 1-2): door in its front wall at y = DOOR_Y facing -Y, the room behind it (+Y).

@@ -13,6 +13,15 @@
   (read `blender/mocap/CLIPS.md` — clips are described by what they really show, not their file names).
   EEVEE render with auto-restart (`chain.sh` + `render.py`), then `sound.py` and `post.py`.
   Use this style for new episodes and series (e.g. «زنگ آخر») unless the user asks otherwise.
+- **Mixamo library (the user keeps adding clips):** every new film uses the clips in `blender/mocap/` for body motion
+  — read `CLIPS.md` first and pick the clip that really shows the action (sitting_talking, driving, pointing, crying,
+  picking_up, falling_down, crawling, laying_idle, …). Pull the newest clips from `claude/great-newton-w2xf6z`
+  (`git checkout FETCH_HEAD -- blender/mocap`). Mixamo has no hug: make hugs by hand (two characters close, arms
+  posed with IK around the other's back, blended in from `breathing_idle`).
+- **Faces:** blinks are automatic (`anim.blink`); lips follow the real ElevenLabs voices with
+  `blender/cast/lipsync.py` (`talking=LS.level(who, t)` instead of `True`). No paid face add-ons (Faceit, Super Easy).
+  Extra motion from **Rokoko Motion Library** (head nods, listening, hand gestures, sit-and-talk transitions) is welcome
+  when the user downloads it as FBX — add it to `blender/mocap/` like the Mixamo clips and describe it in `CLIPS.md`.
 - Older cartoon (toon) films: `blender/school_pov/`, `blender/train_pov/` — workflow skill `/film-toon`.
 
 ## Rules the user set
@@ -24,10 +33,22 @@
   (no synthesised numpy effects any more). Keep `talking=True` lip movement on the lines in `captions.py` and fit
   captions + lips to the generated lengths. Also keep a version without sound. If the ElevenLabs tools are not
   available in a chat, say so to the user instead of falling back silently.
+- **Voices must be clear and easy to understand** (the user rejected «واگن آخر ۶» v1): for Persian use
+  `eleven_multilingual_v2` (much clearer than v3; put emotion in punctuation/wording since v2 ignores [tags]),
+  loudness-match every line (`loudnorm=I=-16`), pitch child voices gently with `formant=preserved` (≤ +3 st),
+  duck music/effects to about −13 dB under every line, keep radio/phone colour light. Before delivery transcribe the
+  final mix with faster-whisper (`HF_HUB_DISABLE_XET=1`, model small, language fa) and regenerate any line that
+  comes out garbled; speech should sit ≥ 10 dB above the effects.
+- **Every sound is a real ElevenLabs sound effect — never a fake/synthesised one** (the user: door sounds so far were
+  bad). Make one effect per action with a precise prompt: what it is made of, size, distance, how it moves, e.g.
+  "heavy steel bunker door, latch clicks, slow creaking open, metal echo in a concrete room, close" or
+  "old wooden apartment door handle turns, door creaks open slowly, quiet hallway". Separate clips for unlock, open,
+  creak, slam, knock, footsteps, breathing etc.; place each exactly on the frame it happens; listen to the take
+  and regenerate a bad one. Never reuse a generic "door" sound for every door.
 - **Branding on every video** (all versions, every frame): the film's name in the top-right corner and the channel
-  logo (`blender/brand/agetobudi_logo_round.png`, the user's «داستان‌های POV — Agetobudi» logo) in the top-left,
-  plus the credit «ساخته شده توسط بلندر» (channel «agetobudi»). Use `overlay(img, title)` from `blender/brand/brand.py`
-  in post (works for vertical and 16:9); the closing card also shows the credit.
+  logo (`blender/brand/agetobudi_logo_round.png`, the user's «داستان‌های POV — Agetobudi» logo) in the top-left.
+  Use `overlay(img, title)` from `blender/brand/brand.py` in post (works for vertical and 16:9).
+  **Never write «ساخته شده توسط بلندر» (or "Blender") on screen** — the user removed it from every film.
 - Voice scripts: give each line in its own copyable block, per speaker. Put the delivery (how to say it)
   inside the line as ElevenLabs v3 audio tags in square brackets, in English, e.g. `[whispers]`, `[shouting]`,
   `[scared]`, `[sighs]` — ElevenLabs performs these and does not read them aloud. Never write the delivery

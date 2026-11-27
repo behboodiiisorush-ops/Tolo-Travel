@@ -9,7 +9,7 @@ sys.path.insert(0, HERE)
 from captions import LINES  # noqa: E402
 
 TEMPO = 1.0
-GAP = 0.35
+GAP = 0.55          # v2 voices speak faster than v3: a little more air between lines
 TITLE = 2.6           # «یک هفته بعد...» on black first
 EXTRA = {"n1": TITLE + 0.6,
          "resc1": 1.6,    # a loudspeaker crackle outside; everyone looks up
@@ -33,6 +33,7 @@ EXTRA = {"n1": TITLE + 0.6,
          "radio2": 2.2,   # claws, silence
          "me6": 0.4,
          "n7": 1.0}
+STRETCH = 1.3         # story pauses a bit longer for the v2 takes
 TAIL = 3.0            # the far headlights hold before the question card
 
 
@@ -47,7 +48,7 @@ def dur(name, text=""):
 
 t, times = 0.0, {}
 for key, who, text in LINES:
-    s = t + (GAP if times else 0) + EXTRA.get(key, 0)
+    s = t + (GAP if times else 0) + (EXTRA.get(key, 0) * (1.0 if key == "n1" else STRETCH))
     e = s + dur(f"{key}.wav", text)
     times[key] = (round(s, 2), round(e, 2))
     t = e

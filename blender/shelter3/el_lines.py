@@ -3,7 +3,7 @@ Generated with the ElevenLabs MCP tools (flow HpUe7Y4z5ieVYxp4gmq6), saved as el
 VOICES = {   # voice_id from creative_list_voices
     "Me": ("Aramofen", "QMSZ0tTD0GwA4wrqCGak", ""),
     "Mom": ("Hengameh - Warm, Expressive, Storyteller", "9HVxKdwDzPJv4huwQfAt", ""),     # same Mom voice as «هشدار»
-    "Lena": ("Amitis - Young & Soft", "C2wYIMnQQbFDm3qaosBN", "rubberband=pitch=1.26:formant=shifted"),  # +4 semitones -> a girl
+    "Lena": ("Amitis - Young & Soft", "C2wYIMnQQbFDm3qaosBN", "rubberband=pitch=1.19:formant=preserved"),  # +3 semitones, formants kept (clear)
     "Guard": ("mohsen", "rexsZJO2OhnY5Ihuqj89", ""),
     "Rescuer": ("Najib - Cinematic Global", "kPvNckaRrVKKOdG48z3b", ""),
     "Old man": ("Mard - Narrator, Actor, Storyteller", "vJZ82xJdoy9JqX5RmoBD", ""),
