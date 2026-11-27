@@ -219,7 +219,7 @@ act("kian", "breathing_idle", 36.6, 38.0, tuple(KI_D), 0, src_from=1.0)
 act("kian", "picking_up", 38.0, 47.6, tuple(KI_D), 0)
 act("kian", "breathing_idle", 47.6, 52.0, tuple(KI_D), 20, src_from=3.0)
 # ---- E: the loudspeaker: fear
-act("me", "terrified", 52.0, 59.0, tuple(ME_D), 20, src_from=0.4)
+act("me", "nervously_look_around", 52.0, 59.0, tuple(ME_D), 20)   # (terrified puts my own hands over the camera)
 act("kian", "terrified", 52.0, 59.0, tuple(KI_D), -40, src_from=0.6)
 # ---- F: run out
 ME_F1, ME_F2 = Vector((HX + 0.4, 5.6, 0)), Vector((1.0, 0.8, 0))
@@ -437,7 +437,7 @@ pov.data.clip_end = 800
 LOOK = [  # (t, pitch up deg, yaw left deg) on top of where my head points
     (7.0, 2, 0), (9.6, 2, -22), (12.0, 4, 24), (14.2, 2, 0), (19.0, 2, 0), (22.3, -10, 0), (25.0, -12, 30),
     (26.5, 0, 34), (30.0, 0, 0), (36.6, -4, 20), (39.0, -26, 40), (41.6, -8, -6), (44.6, -10, 0), (46.5, -22, 34),
-    (50.2, 24, 58), (57.4, 22, 58), (58.2, 0, 40), (59.4, 0, 0), (64.6, 0, 0), (68.6, 1, 8), (79.6, 1, 10),
+    (50.2, 22, 112), (57.4, 22, 112), (58.2, 0, 40), (59.4, 0, 0), (64.6, 0, 0), (68.6, 1, 8), (79.6, 1, 10),
     (80.2, -6, 42), (82.6, 1, 10)]
 
 
@@ -472,8 +472,8 @@ sc.collection.objects.link(cam)
 cam.data.clip_start, cam.data.clip_end = 0.05, 800
 cam.data.sensor_fit, cam.data.sensor_height = "VERTICAL", 36
 mid0 = (ME0 + KI0) / 2
-KEYS = [(fr(0.0), Vector((22, -3.2, 9.5)), mid0 + Vector((0, 0, 0.8)), 20),        # inside the vault, high,
-        (fr(7.0) - 1, Vector((16, -2.6, 5.5)), mid0 + Vector((-8.4, 0, 0.9)), 20),    # they walk towards us
+KEYS = [(fr(0.0), Vector((22, -3.2, 9.5)), mid0 + Vector((0, 0, 0.8)), 32),        # inside the vault, high,
+        (fr(7.0) - 1, Vector((16, -2.6, 5.5)), mid0 + Vector((-8.4, 0, 0.9)), 30),    # they walk towards us
         (fr(73.0), Vector((-15.2, -2.2, 1.75)), HOUSE + Vector((0.3, 0.2, 1.25)), 28),
         (fr(79.6) - 1, Vector((-16.0, -3.0, 1.6)), HOUSE + Vector((0.3, 0.2, 1.15)), 28)]
 for f, c, a, lens in KEYS:

@@ -1,0 +1,2 @@
+door_touch 71.583
+bread_grab 39.000

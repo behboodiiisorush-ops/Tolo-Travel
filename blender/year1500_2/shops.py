@@ -12,7 +12,7 @@ import city
 R = random.Random(21)
 WALL_Y, DEPTH, H_OPEN, W_OPEN = 6.5, 4.0, 3.0, 2.2
 NORTH = [-22.5, -16.5, -10.5, -4.5, 4.5, 10.5, 16.5, 22.5]
-SOUTH = [-25.5, -13.5, -7.5, -1.5, 7.5, 13.5, 19.5]
+SOUTH = [-25.5, -19.5, -13.5, -7.5, -1.5, 7.5, 13.5, 19.5]     # -19.5: the house door
 HERO = (4.5, 1)                    # x, side (+1 north)
 HOUSE = (-19.5, -1)
 FOOD = {}
