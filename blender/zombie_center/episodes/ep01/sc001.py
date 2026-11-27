@@ -19,7 +19,7 @@ sys.path[:0] = [ZC, os.path.join(ZC, "sets")]
 import env_city, phone, zc_cast, mocap, motion_qc as Q, footlock
 from mathutils import Vector, Euler
 
-MODE = sys.argv[-1] if sys.argv[-1] in ("layout", "preview", "final", "side") else "layout"
+MODE = sys.argv[-1] if sys.argv[-1] in ("layout", "preview", "final", "side", "quality") else "layout"
 MOCAP = os.path.join(ZC, "..", "mocap")
 FPS = 24
 SHOTS = [(1, 144), (145, 288), (289, 408), (409, 504), (505, 888), (889, 1008), (1009, 1080)]
@@ -126,7 +126,7 @@ c7 = cam("CAM_S07_CU", eyec + fwd * 0.35 + Vector((0, -0.25, 0)), eyec, 50, 1009
 # shots 6–7: the phone is held above his face (hand IK comes in the animation pass)
 ph.keyframe_insert("location", frame=888); ph.keyframe_insert("rotation_euler", frame=888)
 ph.location = eyec + fwd * 0.32
-ph.rotation_euler = (fwd.to_track_quat("Z", "Y").to_euler())
+ph.rotation_euler = ((-fwd).to_track_quat("Z", "Y").to_euler())
 ph.keyframe_insert("location", frame=889); ph.keyframe_insert("rotation_euler", frame=889)
 # ---- render settings
 sc.render.engine = "BLENDER_EEVEE"
@@ -158,3 +158,10 @@ if MODE == "side":       # orthographic cross-section: is Arin really in the gap
             o.hide_render = True
     sc.render.resolution_x = sc.render.resolution_y = 480; sc.eevee.taa_render_samples = 4
     sc.render.filepath = os.path.join(OUT, "side_check.png"); bpy.ops.render.render(write_still=True)
+
+if MODE == "quality":    # noise check: two shots at the final sample count
+    sc.eevee.taa_render_samples = 48
+    sc.render.resolution_x, sc.render.resolution_y = 1280, 720
+    for i in (3, 5):
+        a, b = SHOTS[i]; f = (a + b) // 2; sc.frame_set(f)
+        sc.render.filepath = os.path.join(OUT, f"quality_s{i + 1:02d}.png"); bpy.ops.render.render(write_still=True)
