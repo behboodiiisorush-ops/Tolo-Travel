@@ -143,8 +143,8 @@ print("REACH with", SIDE, "hand; reach dist", round((min(hl, hr, key=lambda h: (
 grab = pv + Vector((0, 0, 0.03))
 # palm across the mouth: wrist beside the mouth on the hand's own side, fingers pointing across the lips
 sgn = 1.0 if (hrest - mouth).dot(right) > 0 else -1.0
-MW = mouth + fwd * 0.05 + right * (sgn * 0.085) - up * 0.01
-MA = mouth - right * (sgn * 0.08) + fwd * 0.03
+MW = mouth + fwd * 0.09 - up * 0.17          # (tested: the across-the-mouth variant crossed the arm over the face)
+MA = mouth - up * 0.035 + fwd * 0.03
 A.hand(arin, SIDE, [
     (300, hrest), (318, (hrest + grab) / 2 + Vector((0, 0, 0.06))), (345, grab), (352, grab),     # reach out, grab
     (395, chest), (404, chest),                                                                   # pull it in to the chest
@@ -211,3 +211,11 @@ if MODE == "quality":    # noise check: two shots at the final sample count
     for i in (3, 5):
         a, b = SHOTS[i]; f = (a + b) // 2; sc.frame_set(f)
         sc.render.filepath = os.path.join(OUT, f"quality_s{i + 1:02d}.png"); bpy.ops.render.render(write_still=True)
+
+if MODE == "preview":    # real-speed check of the whole scene: every 2nd frame, 480x270, shown at 12 fps
+    sc.eevee.taa_render_samples = 6
+    sc.render.resolution_x, sc.render.resolution_y = 480, 270
+    sc.frame_step = 2
+    sc.render.image_settings.file_format = "PNG"
+    sc.render.filepath = os.path.join(OUT, "prev_")
+    bpy.ops.render.render(animation=True)
