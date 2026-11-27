@@ -81,7 +81,8 @@ def centre_part_hair(ch, n=20000, seed=1, colour=(0.012, 0.010, 0.010), name=Non
     tot = sum(areas)
     roots = []
     for f, a in zip(faces, areas):
-        k = a / tot * n
+        fyc = (f.calc_center_median().y - front_y) / max(1e-6, (back_y - front_y))
+        k = a / tot * n * (2.6 if fyc < 0.38 else 1.0)      # dense front: the fringe must hide the forehead
         cnt = int(k) + (1 if rnd.random() < k - int(k) else 0)
         vs = [v.co for v in f.verts]
         for _ in range(cnt):
