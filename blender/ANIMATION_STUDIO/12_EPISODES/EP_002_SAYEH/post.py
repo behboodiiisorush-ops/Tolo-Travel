@@ -1,13 +1,17 @@
-"""Post for «سایه‌ی دانیال» (EP_002): upscale, Persian captions, fade to black, question card.
-    out/sayeh_captions.mp4   captions, no sound (for the user's ElevenLabs voices)
-    out/sayeh_clean.mp4      no captions, no sound
-    out/sayeh_sfx.mp4        captions + synthesised sound effects (if out/sayeh_sfx.wav exists)
+"""Post for «سایه‌ی دانیال» (EP_002): upscale, night grade, Persian captions, fades, question card, and the channel
+branding on every frame (film name top-right + credit, logo top-left: blender/brand/brand.py).
+    out/sayeh_final.mp4      captions + ElevenLabs voices and effects (out/sayeh_mix.wav from audio.py)
+    out/sayeh_captions.mp4   captions, no sound
+    out/sayeh_clean.mp4      no captions, voices and effects
 """
 import os, shutil, subprocess, sys
 from PIL import Image, ImageDraw, ImageFont
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from lines import LINES, NAMES, END, QUESTION, COLD, COLD_CARD  # noqa: E402
+sys.path.insert(0, os.path.join(HERE, "..", "..", "..", "brand"))
+from brand import overlay, CREDIT, CHANNEL  # noqa: E402
+TITLE = "سایه‌ی دانیال"
 FONT = os.path.join(HERE, "..", "..", "..", "fonts", "Vazirmatn-FD-ExtraBold.ttf")
 FPS, W, H = 24, 1080, 1920
 CARD = 4.0
@@ -63,6 +67,9 @@ def card(t):
     for k, ln in enumerate(lines):
         d.text((W // 2, y0 + k * 120), ln, font=f, fill=(c, c, c), anchor="mm", direction="rtl", language="fa")
     d.text((W // 2, y0 - 190), "؟", font=font(140), fill=(int(230 * a), int(40 * a), int(50 * a)), anchor="mm")
+    g = int(170 * a)
+    d.text((W // 2, H - 260), f"{CREDIT} — {CHANNEL}", font=font(40), fill=(g, g, g), anchor="mm",
+           direction="rtl", language="fa")
     return img
 
 
@@ -132,6 +139,7 @@ def main():
             img = title_card(t, COLD_CARD[1])
         else:
             img = card(t)
+        overlay(img, TITLE)
         img.save(os.path.join(TMP, f"n_{i:04d}.jpg"), quality=95)
         if kind == "film":
             for a, b, who, text in LINES:
@@ -141,11 +149,10 @@ def main():
     for n in os.listdir(TMP):
         if n.startswith("u_"):
             os.remove(os.path.join(TMP, n))
+    mix = os.path.join(OUT, "sayeh_mix.wav")
+    encode(os.path.join(TMP, "c_%04d.jpg"), os.path.join(OUT, "sayeh_final.mp4"), mix)
     encode(os.path.join(TMP, "c_%04d.jpg"), os.path.join(OUT, "sayeh_captions.mp4"))
-    encode(os.path.join(TMP, "n_%04d.jpg"), os.path.join(OUT, "sayeh_clean.mp4"))
-    sfx = os.path.join(OUT, "sayeh_sfx.wav")
-    if os.path.exists(sfx):
-        encode(os.path.join(TMP, "c_%04d.jpg"), os.path.join(OUT, "sayeh_sfx.mp4"), sfx)
+    encode(os.path.join(TMP, "n_%04d.jpg"), os.path.join(OUT, "sayeh_clean.mp4"), mix)
     shutil.rmtree(TMP, ignore_errors=True)
 
 
