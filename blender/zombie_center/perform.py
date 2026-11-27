@@ -104,3 +104,18 @@ def look(ch, f0, f1, target_fn, weight=0.7):
     c.influence = weight; c.keyframe_insert("influence", frame=f0)
     c.keyframe_insert("influence", frame=f1)
     c.influence = 0.0; c.keyframe_insert("influence", frame=f1 + 8)
+
+
+def aim_hand(ch, side, f0, f1, point, ease=8):
+    """Point the fingers (hand bone +Y) at a world point between f0 and f1 (e.g. palm over the mouth)."""
+    rig = ch.rig
+    pb = rig.pose.bones[f"hand_{side}"]
+    name = f"ZC_AIM_{rig.name}_{side}"
+    tg = bpy.data.objects.get(name) or bpy.data.objects.new(name, None)
+    if tg.name not in bpy.context.scene.collection.objects:
+        bpy.context.scene.collection.objects.link(tg)
+    tg.location = Vector(point)
+    c = pb.constraints.get("ZC_Aim") or pb.constraints.new("DAMPED_TRACK")
+    c.name = "ZC_Aim"; c.target = tg; c.track_axis = "TRACK_Y"
+    for f, v in ((f0 - ease, 0.0), (f0, 1.0), (f1, 1.0), (f1 + ease, 0.0)):
+        c.influence = v; c.keyframe_insert("influence", frame=f)

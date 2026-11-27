@@ -146,6 +146,7 @@ A.hand(arin, SIDE, [
     (900, chest + Vector((0, 0, 0.02))), (906, chest + Vector((0, 0, 0.02))),                     # takes the phone off his chest
     (935, eyec + fwd * 0.28 - up * 0.2), (1080, eyec + fwd * 0.28 - up * 0.2),
 ])
+A.aim_hand(arin, SIDE, 418, 880, mouth + up * 0.06)       # fingers across the mouth
 # the phone: lies in the puddle -> carried 352–404 -> rests face-down on his chest -> lifted and turned to his face
 q_down = ph.rotation_euler.to_quaternion()
 A.place(ph, 1, Vector(PHONE_POS) + Vector((0, 0, 0.009)), q_down)
