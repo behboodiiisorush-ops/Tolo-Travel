@@ -36,7 +36,7 @@ def _darken_scalp(body, on_scalp, rgb=(0.012, 0.01, 0.01)):
     M.recolor(body, lambda nt, c: M.mix(nt, c, rgb, M.attr(nt, "zc_scalp")[0]))
 
 
-def centre_part_hair(ch, n=32000, seed=1, colour=(0.012, 0.010, 0.010), name=None):
+def centre_part_hair(ch, n=20000, seed=1, colour=(0.012, 0.010, 0.010), name=None):
     rnd = random.Random(seed)
     body, rig = ch.body, ch.rig
     bpy.context.view_layer.update()
@@ -69,7 +69,10 @@ def centre_part_hair(ch, n=32000, seed=1, colour=(0.012, 0.010, 0.010), name=Non
             return False
         return p.z > ear_z - 0.035 - 0.05 * max(0.0, fy - 0.62)     # nape goes a bit lower
 
-    faces = [f for f in bm.faces if on_scalp(f.calc_center_median())]
+    def root_ok(p):      # no sideburn / ear-side roots: those strands hang beside the face
+        fy = (p.y - front_y) / max(1e-6, (back_y - front_y))
+        return on_scalp(p) and (abs(p.x - cx) < 0.055 or p.z > ear_z + 0.05 or (fy > 0.68 and p.z > ear_z - 0.01))
+    faces = [f for f in bm.faces if root_ok(f.calc_center_median())]
     _darken_scalp(body, on_scalp)
     areas = [f.calc_area() for f in faces]
     tot = sum(areas)
@@ -102,14 +105,14 @@ def centre_part_hair(ch, n=32000, seed=1, colour=(0.012, 0.010, 0.010), name=Non
     for p0, nrm in roots:
         fy = (p0.y - front_y) / (back_y - front_y)
         dx = p0.x - cx
-        side = math.copysign(1.0, dx) if abs(dx) > 0.004 else rnd.choice((-1, 1))
+        side = math.copysign(1.0, dx) if abs(dx) > 0.008 else rnd.choice((-1, 1))
         top_region = p0.z > ear_z + 0.06 and abs(dx) < 0.065
         if top_region and fy < 0.5:
             L = 0.095 + 0.02 * rnd.random()          # fringe / top: long, falls to the sides
         elif top_region:
             L = 0.07 + 0.015 * rnd.random()          # crown
         elif fy > 0.6:
-            L = 0.04 + 0.01 * rnd.random()           # back / nape
+            L = 0.028 + 0.008 * rnd.random()         # back / nape: short, tapered
         else:
             L = 0.022 + 0.008 * rnd.random()         # sides above the ears: short
         if fy < 0.35:
@@ -140,10 +143,17 @@ def centre_part_hair(ch, n=32000, seed=1, colour=(0.012, 0.010, 0.010), name=Non
                 want = layer * min(1.0, 0.3 + t_)
                 if h < want or h > want + 0.006:
                     p = loc + nor * (want if h < want else want + 0.006)
-            if p.z < stop_z:                       # never below the brows (front) / ear tops (sides)
+            if abs(p.x - cx) > 0.068 and p.z < ear_z + 0.03:   # nothing hangs down beside the face
+                p = pts[-1] + (p - pts[-1]) * 0.15
+                step *= 0.3
+            elif p.z < stop_z:                       # never below the brows (front) / ear tops (sides)
                 p = pts[-1] + (p - pts[-1]) * 0.15
                 step *= 0.3
             pts.append(p.copy())
+        for i in range(1, len(pts)):           # hard guard: nothing beside the face, nothing over the eyes
+            q = pts[i]
+            if (abs(q.x - cx) > 0.058 and q.z < ear_z + 0.045) or (fy < 0.45 and abs(q.x - cx) < 0.058 and q.z < brow_z + 0.025):
+                pts[i] = pts[i - 1].copy()
         strands.append(pts)
     bm.free()
 
@@ -157,7 +167,7 @@ def centre_part_hair(ch, n=32000, seed=1, colour=(0.012, 0.010, 0.010), name=Non
     rv = []
     for s in strands:
         for i in range(SEG):
-            rv.append(0.00013 * (1 - 0.7 * i / (SEG - 1)))
+            rv.append(0.00016 * (1 - 0.7 * i / (SEG - 1)))
     rad.data.foreach_set("value", rv)
     ob = bpy.data.objects.new(cname, cv)
     for c in body.users_collection:
@@ -167,8 +177,8 @@ def centre_part_hair(ch, n=32000, seed=1, colour=(0.012, 0.010, 0.010), name=Non
     out = nt.nodes.new("ShaderNodeOutputMaterial")
     pb = nt.nodes.new("ShaderNodeBsdfPrincipled")     # EEVEE renders the hair BSDF brown: use Principled
     pb.inputs["Base Color"].default_value = (*colour, 1)
-    pb.inputs["Roughness"].default_value = 0.45
-    pb.inputs["Specular IOR Level"].default_value = 0.35
+    pb.inputs["Roughness"].default_value = 0.55
+    pb.inputs["Specular IOR Level"].default_value = 0.2
     nt.links.new(pb.outputs[0], out.inputs["Surface"])
     cv.materials.append(m)
     # follow the head
