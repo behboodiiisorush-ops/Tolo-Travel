@@ -141,14 +141,18 @@ SIDE = "l" if (hl - pv).length < (hr - pv).length else "r"
 hrest = hl if SIDE == "l" else hr
 print("REACH with", SIDE, "hand; reach dist", round((min(hl, hr, key=lambda h: (h - pv).length) - pv).length, 2))
 grab = pv + Vector((0, 0, 0.03))
+# palm across the mouth: wrist beside the mouth on the hand's own side, fingers pointing across the lips
+sgn = 1.0 if (hrest - mouth).dot(right) > 0 else -1.0
+MW = mouth + fwd * 0.05 + right * (sgn * 0.085) - up * 0.01
+MA = mouth - right * (sgn * 0.08) + fwd * 0.03
 A.hand(arin, SIDE, [
     (300, hrest), (318, (hrest + grab) / 2 + Vector((0, 0, 0.06))), (345, grab), (352, grab),     # reach out, grab
     (395, chest), (404, chest),                                                                   # pull it in to the chest
-    (418, mouth + fwd * 0.09 - up * 0.17), (880, mouth + fwd * 0.09 - up * 0.17),                                         # hand clamped over his mouth
+    (418, MW), (880, MW),                                         # hand clamped over his mouth
     (900, chest + Vector((0, 0, 0.02))), (906, chest + Vector((0, 0, 0.02))),                     # takes the phone off his chest
     (935, eyec + fwd * 0.28 - up * 0.2), (1080, eyec + fwd * 0.28 - up * 0.2),
 ])
-A.aim_hand(arin, SIDE, 418, 880, mouth - up * 0.035 + fwd * 0.03)       # fingers across the mouth
+A.aim_hand(arin, SIDE, 418, 880, MA)       # fingers across the mouth
 # the phone: lies in the puddle -> carried 352–404 -> rests face-down on his chest -> lifted and turned to his face
 q_down = ph.rotation_euler.to_quaternion()
 A.place(ph, 1, Vector(PHONE_POS) + Vector((0, 0, 0.009)), q_down)
