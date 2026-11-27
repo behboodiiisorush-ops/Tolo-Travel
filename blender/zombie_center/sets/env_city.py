@@ -269,10 +269,26 @@ def building_block(x0, x1, y0, y1, h, colour, seed):
     return o
 
 
+def _bag(xy, m, rr):
+    """A tied bin bag: lumpy, slumped on the ground, creased plastic (not a ball)."""
+    sz = rr.uniform(0.26, 0.34); sq = rr.uniform(0.5, 0.62)
+    o = P.sphere((xy[0], xy[1], sz * sq * 0.78), sz, m, "ENV_TrashBag", scale=(1, rr.uniform(0.75, 1.2), sq))
+    o.rotation_euler.z = rr.uniform(0, 6.28)
+    tx = bpy.data.textures.new("TX_Bag", "CLOUDS"); tx.noise_scale = rr.uniform(0.09, 0.13); tx.noise_depth = 2
+    sub = o.modifiers.new("sub", "SUBSURF"); sub.levels = sub.render_levels = 2
+    d = o.modifiers.new("lumps", "DISPLACE"); d.texture = tx; d.strength = 0.07; d.mid_level = 0.5
+    tx2 = bpy.data.textures.new("TX_BagCrease", "STUCCI"); tx2.noise_scale = 0.04
+    d2 = o.modifiers.new("creases", "DISPLACE"); d2.texture = tx2; d2.strength = 0.012
+    knot = P.sphere((xy[0], xy[1], sz * sq * 1.5), 0.045, m, "ENV_TrashBagKnot", scale=(1, 1, 1.6))
+    knot.parent = o; knot.matrix_parent_inverse = o.matrix_world.inverted()
+    _own(knot)
+    return o
+
+
 def debris(n, area, seed=3):
     rr = random.Random(seed)
     paper = P.mat("MAT_Paper", (0.6, 0.58, 0.52), rough=0.8)
-    bag = P.mat("MAT_Bag", (0.02, 0.02, 0.02), rough=0.25)
+    bag = P.mat("MAT_Bag", (0.025, 0.025, 0.027), rough=0.42)
     (xa, xb), (ya, yb) = area
     for i in range(n):
         x, y = rr.uniform(xa, xb), rr.uniform(ya, yb)
@@ -280,7 +296,7 @@ def debris(n, area, seed=3):
             o = P.plane((x, y, 0.004), (rr.uniform(0.15, 0.3), rr.uniform(0.2, 0.3)), paper,
                         (0, 0, rr.uniform(0, 6.28)), "ENV_Paper")
         else:
-            o = P.sphere((x, y, 0.2), 0.32, bag, "ENV_TrashBag", scale=(1, rr.uniform(0.8, 1.3), 0.6))
+            o = _bag((x, y), bag, rr)
         _own(o)
 
 

@@ -19,7 +19,7 @@ sys.path[:0] = [ZC, os.path.join(ZC, "sets")]
 import env_city, phone, zc_cast, mocap, motion_qc as Q, footlock, perform as A
 from mathutils import Vector, Euler
 
-MODE = sys.argv[-1] if sys.argv[-1] in ("layout", "preview", "final", "side", "quality") else "layout"
+MODE = sys.argv[-1] if sys.argv[-1] in ("layout", "preview", "final", "side", "quality", "s2test") else "layout"
 MOCAP = os.path.join(ZC, "..", "mocap")
 FPS = 24
 SHOTS = [(1, 144), (145, 288), (289, 408), (409, 504), (505, 888), (889, 1008), (1009, 1080)]
@@ -119,7 +119,7 @@ up = ((arin.rig.matrix_world @ _hb.tail) - (arin.rig.matrix_world @ _hb.head)).n
 print("FACE fwd", tuple(round(v, 2) for v in fwd))
 zfeet = Vector((ZX, ZSTOP, 0.15))
 c1 = cam("CAM_S01_ECU_phone", pv + Vector((0.08, 0.5, 0.1)), pv + Vector((0, -1.0, 0.05)), 50, 1, (0.5, 1.4))
-c2 = cam("CAM_S02_wide", (1.2, -16.0, 0.32), (0.4, edge_y + 0.8, 1.2), 24, 145)
+c2 = cam("CAM_S02_wide", (-3.5, edge_y - 9.0, 1.6), (1.6, edge_y - 0.5, 0.8), 28, 145)   # bus on its side, Arin in the gap
 c3 = cam("CAM_S03_insert", pv + Vector((0.5, -0.5, 0.22)), pv + Vector((-0.15, 0.3, 0.03)), 50, 289)
 c4 = cam("CAM_S04_CU", eyec + fwd * 0.6 - up * 0.28 + Vector((0, -0.2, 0)), eyec - up * 0.06, 35, 409)
 c5 = cam("CAM_S05_track", head + Vector((0.05, -0.35, -0.3)), zfeet, 35, 505)
@@ -212,7 +212,27 @@ if MODE == "quality":    # noise check: two shots at the final sample count
         a, b = SHOTS[i]; f = (a + b) // 2; sc.frame_set(f)
         sc.render.filepath = os.path.join(OUT, f"quality_s{i + 1:02d}.png"); bpy.ops.render.render(write_still=True)
 
+if MODE == "s2test":     # candidate framings for the establishing wide (shot 2)
+    sc.eevee.taa_render_samples = 6
+    sc.render.resolution_x, sc.render.resolution_y = 480, 270
+    sc.frame_set(216)
+    zp = z1.rig.matrix_world @ z1.rig.pose.bones["pelvis"].head
+    print("Z1 at f216", tuple(round(v, 2) for v in zp))
+    cands = {
+        "a": ((-5.0, edge_y - 5.5, 0.7), (2.0, edge_y - 1.0, 0.9), 24),
+        "b": ((-3.5, edge_y - 9.0, 1.6), (1.6, edge_y - 0.5, 0.8), 28),
+        "c": ((ARIN_POS[0] - 1.2, edge_y - 0.6, 0.25), (ZX, zp.y, 1.0), 24),
+        "d": ((6.5, edge_y - 7.5, 1.2), (0.8, edge_y + 0.2, 0.6), 28),
+    }
+    for k, (lo, tg, ln) in cands.items():
+        c = cam("T" + k, lo, tg, ln, 2000 + ord(k)); sc.camera = c
+        sc.timeline_markers.clear()
+        sc.render.filepath = os.path.join(OUT, f"s2_{k}.png"); bpy.ops.render.render(write_still=True)
+
 if MODE == "preview":    # real-speed check of the whole scene: every 2nd frame, 480x270, shown at 12 fps
+    sc.frame_start = int(os.environ.get("PREV_START", 1))
+    sc.eevee.use_raytracing = False
+    sc.eevee.volumetric_samples = 16
     sc.eevee.taa_render_samples = 6
     sc.render.resolution_x, sc.render.resolution_y = 480, 270
     sc.frame_step = 2
