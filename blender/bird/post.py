@@ -3,7 +3,7 @@
     out/bird_clean.mp4      no captions, no sound
     out/bird_sfx.mp4        captions + ElevenLabs sound effects (out/bird_sfx.wav, from el_mix.py)
     out/bird_voice.mp4      captions + ElevenLabs voices and sound effects (out/bird_voice.wav, from el_mix.py)
-Every version carries the credit «ساخته شده توسط بلندر» + «agetobudi» (corner + question card).
+Every version carries the film name + channel logo (blender/brand/brand.py) and the credit «ساخته شده توسط بلندر» + «agetobudi».
 """
 import os, shutil, subprocess, sys
 from PIL import Image, ImageDraw, ImageFont
@@ -56,13 +56,14 @@ def caption(img, who, text, alpha=1.0):
 CREDIT, CHANNEL = "ساخته شده توسط بلندر", "agetobudi"
 
 
+sys.path.insert(0, os.path.join(HERE, "..", "brand"))
+from brand import overlay  # noqa: E402
+TITLE = "هشدار"
+
+
 def corner(img):
-    """Small credit in the top corner, on every frame of every version."""
-    d = ImageDraw.Draw(img)
-    d.text((W - 40, 52), CHANNEL, font=font(40), fill=(255, 255, 255), anchor="rm", stroke_width=4,
-           stroke_fill=(0, 0, 0))
-    d.text((W - 40, 104), CREDIT, font=font(30), fill=(235, 235, 235), anchor="rm", direction="rtl", language="fa",
-           stroke_width=3, stroke_fill=(0, 0, 0))
+    """Film name top-right + channel logo top-left + credit, on every frame of every version."""
+    overlay(img, TITLE)
 
 
 def card(t):

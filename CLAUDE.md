@@ -24,8 +24,10 @@
   (no synthesised numpy effects any more). Keep `talking=True` lip movement on the lines in `captions.py` and fit
   captions + lips to the generated lengths. Also keep a version without sound. If the ElevenLabs tools are not
   available in a chat, say so to the user instead of falling back silently.
-- **Credit in every film:** every film shows the text «ساخته شده توسط بلندر» and the channel name «agetobudi»
-  (Vazirmatn; e.g. a short opening/closing card plus a small corner credit), in every delivered version.
+- **Branding on every video** (all versions, every frame): the film's name in the top-right corner and the channel
+  logo (`blender/brand/agetobudi_logo_round.png`, the user's «داستان‌های POV — Agetobudi» logo) in the top-left,
+  plus the credit «ساخته شده توسط بلندر» (channel «agetobudi»). Use `overlay(img, title)` from `blender/brand/brand.py`
+  in post (works for vertical and 16:9); the closing card also shows the credit.
 - Voice scripts: give each line in its own copyable block, per speaker. Put the delivery (how to say it)
   inside the line as ElevenLabs v3 audio tags in square brackets, in English, e.g. `[whispers]`, `[shouting]`,
   `[scared]`, `[sighs]` — ElevenLabs performs these and does not read them aloud. Never write the delivery
