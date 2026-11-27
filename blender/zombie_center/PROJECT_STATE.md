@@ -120,6 +120,7 @@ dying, grabbing, crawling, arguing, sitting down/standing up…); provide GPU re
 optional: open the .blend files in desktop Blender to review.
 
 ## 7. Approved changes
+- (user, via CLAUDE.md) Clear voices: Persian lines with eleven_multilingual_v2, loudness-matched, effects ducked ~13 dB under speech, final mix transcribed with faster-whisper before delivery; garbled lines regenerated.
 - (user, via CLAUDE.md) Every sound is a real ElevenLabs sound effect, never synthesised — doors above all: one precise effect per action (material, size, distance, motion), separate clips for unlock / open / creak / slam / knock, placed on the exact frame; bad takes are regenerated.
 - (user, via CLAUDE.md) **Branding on every frame of every delivered episode:** `overlay(img, title)` from `blender/brand/brand.py` in the post step — episode name top-right + «ساخته شده توسط بلندر» under it, Agetobudi round logo top-left.
 - 2026-11-26 (user) **Render method for every episode:** split the render over new chats made with create_session (model **sonnet**), **~140 frames each**; each worker renders its range, encodes its piece as **mp4** and pushes it to its own branch (`claude/zc-ep<NN>-part-<k>`); this chat renders from the **start** of the episode and, after its own piece, keeps going into the following pieces so any failed worker's range is already covered; at the end all mp4 pieces are checked (frame count, no black/broken frames) and joined in order. (720p episode ≈ 7,200 frames ≈ 50 workers.)
