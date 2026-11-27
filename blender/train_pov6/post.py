@@ -27,7 +27,7 @@ sys.path.insert(0, HERE)
 from captions import CAPTIONS, CARD_SECONDS, END, KEY_OF, NARRATION, NOTIFS, QUESTION, TITLE  # noqa: E402
 from part6_times import SEARCH_T  # noqa: E402
 sys.path.insert(0, os.path.join(HERE, "..", "brand"))
-from brand import overlay as brand_overlay, CREDIT, CHANNEL  # noqa: E402
+from brand import overlay as brand_overlay  # noqa: E402
 
 TITLE_END = 0.0   # (no opening title)
 LAST = int(END * FPS)
@@ -155,7 +155,6 @@ def final_card(img, k):
         d.ellipse((170, y - 45, 260, y + 45), fill=(255, 255, 255))
         d.text((215, y), "AB"[i], font=font(56), fill=col, anchor="mm")
     draw_text(d, (W // 2, 1480), "جوابت رو کامنت کن", 64, fill=(255, 230, 120), stroke=9)
-    draw_text(d, (W // 2, 1700), CREDIT + "\n" + CHANNEL, 46, fill=(235, 235, 235), stroke=7)
     return img
 
 
