@@ -121,7 +121,7 @@ zfeet = Vector((ZX, ZSTOP, 0.15))
 c1 = cam("CAM_S01_ECU_phone", pv + Vector((0.08, 0.5, 0.1)), pv + Vector((0, -1.0, 0.05)), 50, 1, (0.5, 1.4))
 c2 = cam("CAM_S02_wide", (1.2, -16.0, 0.32), (0.4, edge_y + 0.8, 1.2), 24, 145)
 c3 = cam("CAM_S03_insert", pv + Vector((0.5, -0.5, 0.22)), pv + Vector((-0.15, 0.3, 0.03)), 50, 289)
-c4 = cam("CAM_S04_CU", eyec + fwd * 0.5 - up * 0.3 + Vector((0, -0.2, 0)), eyec - up * 0.04, 35, 409)
+c4 = cam("CAM_S04_CU", eyec + fwd * 0.6 - up * 0.28 + Vector((0, -0.2, 0)), eyec - up * 0.06, 35, 409)
 c5 = cam("CAM_S05_track", head + Vector((0.05, -0.35, -0.3)), zfeet, 35, 505)
 c6 = cam("CAM_S06_POV", eyec + fwd * 0.03, eyec + fwd * 0.3 - (eyec - (arin.rig.matrix_world @ arin.rig.pose.bones["spine_03"].head)).normalized() * 0.12, 35, 889)
 c7 = None   # placed after the hand side is known (below)
@@ -144,11 +144,11 @@ grab = pv + Vector((0, 0, 0.03))
 A.hand(arin, SIDE, [
     (300, hrest), (318, (hrest + grab) / 2 + Vector((0, 0, 0.06))), (345, grab), (352, grab),     # reach out, grab
     (395, chest), (404, chest),                                                                   # pull it in to the chest
-    (418, mouth + fwd * 0.07 - up * 0.13), (880, mouth + fwd * 0.07 - up * 0.13),                                         # hand clamped over his mouth
+    (418, mouth + fwd * 0.09 - up * 0.17), (880, mouth + fwd * 0.09 - up * 0.17),                                         # hand clamped over his mouth
     (900, chest + Vector((0, 0, 0.02))), (906, chest + Vector((0, 0, 0.02))),                     # takes the phone off his chest
     (935, eyec + fwd * 0.28 - up * 0.2), (1080, eyec + fwd * 0.28 - up * 0.2),
 ])
-A.aim_hand(arin, SIDE, 418, 880, mouth + up * 0.01 + fwd * 0.02)       # fingers across the mouth
+A.aim_hand(arin, SIDE, 418, 880, mouth - up * 0.035 + fwd * 0.03)       # fingers across the mouth
 # the phone: lies in the puddle -> carried 352–404 -> rests face-down on his chest -> lifted and turned to his face
 q_down = ph.rotation_euler.to_quaternion()
 A.place(ph, 1, Vector(PHONE_POS) + Vector((0, 0, 0.009)), q_down)
