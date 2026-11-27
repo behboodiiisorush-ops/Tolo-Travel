@@ -105,10 +105,13 @@ if not os.path.exists(first):                                 # no screen frames
     phone.screen_off(first)
 ph = phone.build(first, strength=0.55)
 img = bpy.data.images[bpy.data.materials[ph["screen_mat"]].node_tree.nodes[ph["screen_tex"]].image.name]
-img.source = "SEQUENCE"
-tex = bpy.data.materials[ph["screen_mat"]].node_tree.nodes[ph["screen_tex"]]
-tex.image_user.frame_start = F0; tex.image_user.frame_offset = F0 - 1
-tex.image_user.frame_duration = F1 - F0 + 1; tex.image_user.use_auto_refresh = True
+# one screen image per frame, swapped by a frame-change handler (image sequences don't refresh on still renders)
+def _screen(scene, *_):
+    f = min(F1, max(F0, scene.frame_current))
+    path = os.path.join(screen_dir, f"s_{f:04d}.png")
+    if os.path.exists(path) and bpy.path.abspath(img.filepath) != path:
+        img.filepath = path; img.reload()
+bpy.app.handlers.frame_change_pre.append(_screen)
 
 sc.frame_set(F0 + 200)
 eyes = arin.parts["Eyes"][0]
@@ -128,7 +131,7 @@ ph.hide_render = False; ph.keyframe_insert("hide_render", frame=F0 + N_CRAWL + 1
 A.place(ph, F0 + N_CRAWL + 18, HOLD, q_face)
 A.place(ph, F1, HOLD, q_face)
 for side, s in (("l", -1), ("r", 1)):
-    grip = HOLD + right * (0.045 * s) - (HOLD - eyec).normalized() * 0.012
+    grip = HOLD + right * (0.085 * s) - up * 0.035 - (HOLD - eyec).normalized() * 0.01   # wrists at the phone's sides, a little below
     sh = arin.rig.matrix_world @ arin.rig.pose.bones[f"upperarm_{side}"].head
     elbow_aim = sh - up * 0.55 + right * (0.32 * s) - fwd * 0.05          # elbows down and a little out
     A.hand(arin, side, [(F0 + N_CRAWL, None), (F0 + N_CRAWL + 18, grip), (F1, grip)], ease=14, pole_at=elbow_aim)
@@ -218,6 +221,9 @@ if MODE == "layout":
     picks = [int(x) for x in frames.split(",")] if frames else [(a + b) // 2 for a, b in SHOTS]
     for f in picks:
         sc.frame_set(f)
+        mk = max((m for m in sc.timeline_markers if m.frame <= f and m.camera), key=lambda m: m.frame, default=None)
+        if mk:
+            sc.camera = mk.camera
         sc.render.filepath = os.path.join(OUT, f"layout_f{f:04d}.png")
         bpy.ops.render.render(write_still=True)
 if MODE in ("preview", "final"):
