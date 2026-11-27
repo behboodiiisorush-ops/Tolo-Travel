@@ -53,6 +53,35 @@ ZC = {
         clothes={"mindfront_knitted_sweater_02": (0.55, 0.12, 0.1), "mindfront_male_trousers_1": (0.45, 0.4, 0.3),
                  "punkduck_comfortable_sneakers": (0.2, 0.2, 0.2), "jujube_newsboy_cap": None},
         flat={"jujube_newsboy_cap": (0.28, 0.28, 0.3)}),
+    # ---------------------------------------------------------------- infected (EP01) — real people they once were
+    "zc_z6_driver": dict(
+        fa="راننده (آلوده Z6)", role="The night-bus driver of route «۴». Fresh infection (hours): sprints. Plain light-blue short-sleeve shirt, dark trousers.",
+        gender=1.0, age=0.62, height=0.55, weight=0.6, muscle=0.5, skin="middleage_caucasian_male", skin_tint=WARM,
+        hair="short02", hair_col=(0.1, 0.08, 0.07), brow="eyebrow005", dark_eyes=False,
+        clothes={"namuhekam_male_polo_shirt": None, "mindfront_male_trousers_2": (0.13, 0.13, 0.15), "shoes03": (0.08, 0.07, 0.07)},
+        flat={"namuhekam_male_polo_shirt": (0.55, 0.65, 0.75)}, zombie=0.55, zseed=6),
+    "zc_z1_office": dict(
+        fa="زن کارمند (آلوده Z1)", role="Shambler, days old: drags one foot. Torn office coat over a blouse, dark skirt-suit.",
+        gender=0.0, age=0.6, height=0.45, weight=0.45, muscle=0.35, skin="middleage_caucasian_female", skin_tint=WARM,
+        hair="bob01", hair_col=(0.2, 0.14, 0.1), brow="eyebrow011",
+        clothes={"female_elegantsuit01": (0.32, 0.3, 0.3), "mindfront_cardigan_long_open_front": None,
+                 "toigo_flats": (0.1, 0.08, 0.08)},
+        flat={"mindfront_cardigan_long_open_front": (0.42, 0.38, 0.32)}, outer=("mindfront_cardigan_long_open_front",),
+        zombie=1.0, zseed=1),
+    "zc_z3_crawler": dict(
+        fa="پیک (آلوده Z3)", role="Crawler: young delivery rider, both legs broken, drags himself on his arms. Plain dark-orange hooded jacket (no logo), cargo trousers.",
+        gender=1.0, age=0.45, height=0.5, weight=0.42, muscle=0.5, skin="young_caucasian_male", skin_tint=OLIVE,
+        hair="short01", hair_col=(0.06, 0.05, 0.04), brow="eyebrow003",
+        clothes={"elvs_hooded_sweat_jacket1": (0.55, 0.28, 0.1), "cortu_cargo_pants": (0.2, 0.2, 0.18),
+                 "punkduck_comfortable_sneakers": (0.15, 0.15, 0.15)},
+        zombie=0.9, zseed=3),
+    "zc_z5_tracksuit": dict(
+        fa="مرد ورزشی (آلوده Z5)", role="Aggressive infected at the pharmacy door: grey tracksuit, bare-handed, slams the door.",
+        gender=1.0, age=0.5, height=0.6, weight=0.55, muscle=0.75, skin="young_caucasian_male2", skin_tint=WARM,
+        hair="short04", hair_col=(0.05, 0.04, 0.04), brow="eyebrow006",
+        clothes={"elvs_hooded_sweat_jacket1": (0.38, 0.38, 0.4), "mindfront_male_trousers_1": (0.36, 0.36, 0.38),
+                 "punkduck_running_shoes_01": (0.3, 0.3, 0.32)},
+        zombie=0.8, zseed=5),
 }
 cast.CAST.update(ZC)
 
@@ -93,6 +122,9 @@ def finish(ch, d):
     for asset in d.get("outer", ()):                  # outer layer pushed out a few mm: no poke-through
         for o in ch.parts.get("by_asset", {}).get(asset, []):
             dm = o.modifiers.new("ZC_Outer", "DISPLACE"); dm.strength = 0.01; dm.mid_level = 0.0
+    if d.get("zombie"):
+        import cast as C
+        C.zombify(ch, d["zombie"], d.get("zseed", 0))
     for o in ch.parts.get("Clothes", []):          # no plastic shoes / clothes
         for ms in o.material_slots:
             m = ms.material
