@@ -2,7 +2,7 @@
 
 Each line is its own block for copying into ElevenLabs. The delivery is in [ ] as English v3 tags.
 Times = where the line starts in the film (the captions and lips are already fitted to them).
-Voices used in the film: Mom = Hengameh (`9HVxKdwDzPJv4huwQfAt`), Arian = Amin.GS (`fvCP6Z9Dzulf2E6NsM8a`, pitched up a little).
+Voices used in the film: Mom = Hengameh (`9HVxKdwDzPJv4huwQfAt`), Arian = Danesh (`yPRQMUW8csecd8blHFfA`, +1.5 semitones) — the fixed voices in `blender/voices/VOICES.md`.
 
 ## مامان (پشت تلفن)
 
