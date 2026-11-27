@@ -28,3 +28,7 @@
 - Branding on every video (all versions, every frame): the film's name top-right and the channel logo
   (`blender/brand/agetobudi_logo_round.png`) top-left via `overlay(img, title)` from `blender/brand/brand.py`,
   plus the channel name «agetobudi». No «ساخته شده توسط بلندر» line (the user dropped it).
+- Every new film uses the Mixamo clips in `blender/mocap` (read `CLIPS.md`). The user keeps adding clips on
+  branch `claude/great-newton-w2xf6z`: pull the newest first with
+  `git fetch origin claude/great-newton-w2xf6z && git checkout FETCH_HEAD -- blender/mocap`.
+  Mixamo has no hug: pose hugs by hand (two characters close, arms with IK around the other's back).
