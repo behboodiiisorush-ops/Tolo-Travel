@@ -131,7 +131,7 @@ def voices():
     duck = np.ones(N, np.float32)
     for key, who, _ in LINES:
         a, b = KEY_OF[key]
-        af = "aecho=0.8:0.3:30:0.06" if who in ("Mom", "Lena", "Guard", "Me", "Old man") else None   # light room
+        af = "aecho=0.8:0.3:30:0.06" if who in ("Mom", "Guard", "Me", "Old man") else None   # light room (Lena dry: clearer)
         if key[0] != "n" and who != "Radio" and key not in ("resc1", "resc2") and \
                 (who in ("Rescuer", "Old man") or a >= T_IN):      # talking through a radiation mask
             af = (af + "," if af else "") + MASK

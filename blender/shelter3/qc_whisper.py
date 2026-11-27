@@ -19,7 +19,10 @@ def norm(s):
 
 
 rows, bad = [], []
+ONLY = sys.argv[1:]
 for key, who, text in LINES:
+    if ONLY and key not in ONLY:
+        continue
     a, b = KEY_OF[key]
     seg = audio[int((a - 0.2) * SR):int((b + 0.3) * SR)]
     out = " ".join(s.text for s in model.transcribe(seg, language="fa", beam_size=5, vad_filter=False)[0])
