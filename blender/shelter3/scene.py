@@ -1246,6 +1246,14 @@ gh = CH["guard"].rig.matrix_world @ CH["guard"].rig.pose.bones["head"].matrix
 _l, _r, _s = gh.decompose()
 hat.matrix_world = Matrix.LocRotScale(_l + _r @ Vector((0, 0.2, 0.01)), _r @ Matrix.Rotation(-math.pi / 2, 4, "X").to_quaternion(), (1, 1, 1))
 in_hand(hat, "guard", "head", 0.0)
+# radiation masks (the user: the air is still radioactive, so everyone on the rescue bus wears one).
+# The rescuer, the old man and the passengers wear theirs all the time; we put ours on when we board.
+import masks as MK  # noqa: E402
+MKM = MK.materials()
+for who in ["rescuer", "oldman"] + PASSENGERS + ["me", "mom", "lena", "guard"]:
+    kind = "dust" if who in ("p2", "p4") else "resp"
+    on = 1 if who in ["rescuer", "oldman"] + PASSENGERS else fr(T_IN)
+    MK.follow(MK.mask(CH[who].rig, kind, MKM, who), CH[who].body, on)
 # driver's hands on the steering wheel (IK) while he drives
 WHL = {}
 for side, dy in (("l", 0.16), ("r", -0.16)):

@@ -12,6 +12,8 @@ SR = 48000
 TOTAL = END + CARD_SECONDS
 N = int(TOTAL * SR)
 rng = np.random.default_rng(3)
+T_IN = json.load(open(os.path.join(OUT, "events.json")))["T_IN"]
+MASK = "lowpass=f=3400,equalizer=f=1100:t=q:w=1.2:g=3,equalizer=f=250:t=q:w=1:g=-3"
 
 
 def load(path, af=None):
@@ -126,6 +128,9 @@ def voices():
     for key, who, _ in LINES:
         a, b = KEY_OF[key]
         af = "aecho=0.8:0.4:35:0.12" if who in ("Mom", "Lena", "Guard", "Me", "Old man") else None
+        if key[0] != "n" and who != "Radio" and key not in ("resc1", "resc2") and \
+                (who in ("Rescuer", "Old man") or a >= T_IN):      # talking through a radiation mask
+            af = (af + "," if af else "") + MASK
         x = load(os.path.join(HERE, "voices", "clips", key + ".wav"), af)
         g = 0.85 if key.startswith("n") else 0.95
         put(buf, x, a, g, {"Lena": 0.12, "Mom": -0.12, "Guard": 0.2, "Old man": 0.15}.get(who, 0.0), fade=0.02)
