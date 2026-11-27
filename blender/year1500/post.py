@@ -1,7 +1,7 @@
 """Post for «سال ۱۵۰۰»: upscale, flashback grade, white flash and black, title, Persian captions, question card.
     out/year1500_captions.mp4   captions, no sound (for the user's ElevenLabs voices)
     out/year1500_clean.mp4      no captions, no sound
-    out/year1500_sfx.mp4        captions + synthesised sound effects (if out/year1500_sfx.wav exists)
+    out/year1500_sfx.mp4        captions + ElevenLabs sound effects only (sound_el.py -> out/year1500_sfx.wav)
     out/year1500.mp4            the finished film: captions + ElevenLabs voices + effects (voices.py -> year1500_mix.wav)
 """
 import os, shutil, subprocess, sys
@@ -97,6 +97,51 @@ def badge(img):
     pill(ImageDraw.Draw(img), W - 150, 150, TITLE, (200, 40, 40), 46)
 
 
+CHANNEL = "agetobudi"
+MADE = "ساخته شده توسط بلندر"
+LOGO = os.path.join(HERE, "..", "brand", "logo.png")      # the channel logo (optional until it is in the repo)
+
+
+def _logo(h):
+    if not os.path.exists(LOGO):
+        return None
+    lg = Image.open(LOGO).convert("RGBA")
+    return lg.resize((max(1, int(lg.width * h / lg.height)), h), Image.LANCZOS)
+
+
+def credit(img, a=0.8):
+    """Small corner credit on every frame of every version: logo (if any), channel name, «made with Blender»."""
+    ov = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    d = ImageDraw.Draw(ov)
+    x, y = 48, H - 70
+    lg = _logo(84)
+    if lg is not None:
+        lg.putalpha(lg.getchannel("A").point(lambda v: int(v * a)))
+        ov.alpha_composite(lg, (x, y - 84 - 66))
+    d.text((x, y - 38), CHANNEL, font=font(40), fill=(255, 255, 255, int(255 * a)), anchor="lm",
+           stroke_width=4, stroke_fill=(15, 15, 15, int(200 * a)))
+    d.text((x, y + 8), MADE, font=font(28), fill=(235, 235, 235, int(230 * a)), anchor="lm", direction="rtl",
+           language="fa", stroke_width=3, stroke_fill=(15, 15, 15, int(200 * a)))
+    return Image.alpha_composite(img.convert("RGBA"), ov).convert("RGB")
+
+
+def big_credit(img, a, y):
+    """The opening / closing credit: logo, «ساخته شده توسط بلندر» and the channel name, centred."""
+    if a <= 0:
+        return img
+    ov = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    d = ImageDraw.Draw(ov)
+    lg = _logo(150)
+    if lg is not None:
+        lg.putalpha(lg.getchannel("A").point(lambda v: int(v * a)))
+        ov.alpha_composite(lg, (W // 2 - lg.width // 2, y - 230))
+    d.text((W // 2, y), MADE, font=font(56), fill=(255, 255, 255, int(255 * a)), anchor="mm", direction="rtl",
+           language="fa", stroke_width=6, stroke_fill=(15, 15, 15, int(255 * a)))
+    d.text((W // 2, y + 80), CHANNEL, font=font(64), fill=(255, 210, 90, int(255 * a)), anchor="mm",
+           stroke_width=6, stroke_fill=(15, 15, 15, int(255 * a)))
+    return Image.alpha_composite(img.convert("RGBA"), ov).convert("RGB")
+
+
 def card(t):
     img = Image.new("RGB", (W, H), (0, 0, 0))
     d = ImageDraw.Draw(img)
@@ -108,7 +153,7 @@ def card(t):
     for k, ln in enumerate(lines):
         d.text((W // 2, y0 + k * 115), ln, font=f, fill=(c, c, c), anchor="mm", direction="rtl", language="fa")
     d.text((W // 2, y0 - 190), "؟", font=font(140), fill=(int(120 * a), int(190 * a), int(255 * a)), anchor="mm")
-    return img
+    return big_credit(img, a, H - 330)
 
 
 def encode(pattern, out, audio=None):
@@ -175,6 +220,7 @@ def main():
             img = Image.composite(img, Image.blend(black, img, 0.55), vig)
             if t < 6.8:
                 img = title(img, t)
+                img = big_credit(img, min(1.0, (t - 1.0) / 0.8, (6.6 - t) / 0.6), 760)
             elif t > 7.2:
                 badge(img)
             fade = min(1.0, max(0.0, (END - t) / 0.8))
@@ -182,6 +228,8 @@ def main():
                 img = Image.blend(black, img, fade)
         else:
             img = card(t - n_pic / FPS)
+        if i < n_pic:
+            img = credit(img)
         img.save(os.path.join(TMP, f"n_{i:04d}.jpg"), quality=94)
         if i < n_pic:
             for a, b, who, text in LINES:
