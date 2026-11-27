@@ -250,15 +250,17 @@ walk(ME, 10.6, 14.2, ROOM_P[:2], DOOR_P[:2], 180)
 hold(ME, "breathing_idle", 14.2, 26.6, DOOR_P, 180, blend=8)
 hold(ME, "breathing_idle", 26.6, 38.7, DOOR_P, 180, src_from=4.0, blend=8)
 TURN = (38.7, 39.25)
-hold(ME, "breathing_idle", 38.7, 41.0, DOOR_P, 0, blend=4, src_from=5.0)
-hold(ME, "kneeling_idle", 41.0, END + 0.1, CLOSET_P, 0, speed=0.6)
+hold(ME, "breathing_idle", 38.7, END + 0.1, DOOR_P, 0, blend=4, src_from=5.0)
 # the fake mom: in the corridor, facing the door (+Y), until she is gone; then inside, between me and the room
 FAKE_C, FAKE_IN = (0.0, -0.62, 0), (0.0, 1.3, 0)
 hold(FAKE, "breathing_idle", 0.0, 9.9, FAKE_C, 0, speed=0.6)
 hold(FAKE, "breathing_idle", 9.9, 19.8, FAKE_C, 0, speed=0.6, src_from=0.2, blend=10)
 hold(FAKE, "breathing_idle", 19.8, 33.5, FAKE_C, 0, speed=0.5, src_from=0.4, blend=10)
-hold(FAKE, "breathing_idle", 36.0, 41.0, FAKE_IN, 180, speed=0.5)
-for ch in (ME, FAKE):                                # every segment holds its place (jumps only at cuts)
+# my little brother (Kian) was in the hallway behind me all along, scared
+KIAN = PP.spawn("kian")
+KIAN_P = (0.0, 1.65, 0)
+hold(KIAN, "nervously_look_around", 36.0, END + 0.1, KIAN_P, 180, speed=0.45)
+for ch in (ME, FAKE, KIAN):                          # every segment holds its place (jumps only at cuts)
     for fc in fcurves_of(ch.rig):
         if fc.data_path in ("location", "rotation_euler"):
             for kp in fc.keyframe_points:
@@ -286,10 +288,10 @@ def tilt_head(ch, spans):
         fc.update()
 
 
-tilt_head(FAKE, [(26.6, 33.5, 0.0, 24.0), (36.0, 41.0, 28.0, 30.0)])
+tilt_head(FAKE, [(26.6, 33.5, 0.0, 24.0)])
 
 # who is where (hidden otherwise)
-PRESENT = {"me": [(0, END + 1)], "fake": [(0, 33.4), (36.0, 40.3)]}
+PRESENT = {"me": [(0, END + 1)], "fake": [(0, 33.4)], "kian": [(36.0, END + 1)]}
 
 # ------------------------------------------------------------------ the phone (follows my hands, faces my eyes)
 scr_m = {}
@@ -305,9 +307,9 @@ for nm in ("msg", "incoming", "call", "ended", "record", "sent"):
     e_.inputs["Strength"].default_value = 1.4
     nt.links.new(e_.outputs[0], o_.inputs[0])
     scr_m[nm] = m
-SCREENS = {"msg": [(0.0, 3.6)], "incoming": [(17.7, 19.0)], "call": [(19.0, 33.2)], "ended": [(33.2, BLACK[0])],
-           "record": [(41.0, 45.0)], "sent": [(45.0, END + 1)]}
-PHONE_ON = [(0.0, 3.6), (17.7, BLACK[0]), (BLACK[1], END + 1)]
+SCREENS = {"msg": [(0.0, 3.6)], "incoming": [(17.7, 19.0)], "call": [(19.0, 33.2)], "ended": [(33.2, END + 1)],
+           }
+PHONE_ON = [(0.0, 3.6), (17.7, END + 1)]
 phone = P.empty("Phone")
 body = P.box((0, 0, -0.005), (0.075, 0.155, 0.008), P.mat("Phone body", (0.05, 0.05, 0.06), 0.3), "Phone body")
 body.parent = phone
@@ -334,7 +336,7 @@ nb = mrig.pose.bones["neck_01"]
 nb.scale = (0.2, 0.2, 0.2)
 nb.keyframe_insert("scale", frame=1)
 PHONE_T = "phone"
-FAKE_FACE = (FAKE_IN[0], FAKE_IN[1], 1.48)
+FAKE_FACE = (0.0, 1.65, 1.45)                           # my brother's face
 LOOK = [  # (t, where I look, seconds to turn there)
     (0.0, PHONE_T, 0.0),
     (3.0, (0.0, 0.0, 1.0), 0.9),             # up at the door: a strip of light under it
@@ -346,8 +348,7 @@ LOOK = [  # (t, where I look, seconds to turn there)
     (31.6, (0.0, 0.0, 1.5), 0.5),
     (36.0, PHONE_T, 0.4),
     (36.9, (0.3, 0.0, 1.35), 0.5),            # the whisper: a half turn of the head
-    (38.7, FAKE_FACE, 0.55),                  # she is inside
-    (41.0, PHONE_T, 0.0),
+    (38.7, FAKE_FACE, 0.55),                  # it is my little brother
 ]
 
 
@@ -475,15 +476,15 @@ sc["peep"] = json.dumps(PEEP)
 # ------------------------------------------------------------------ faces
 LS = lipsync.Voices(fps=FPS)
 for a, b, who, text, fn, how in LINES:
-    if who == "fake":
-        LS.add("fake", os.path.join(HERE, "voices", fn + ".mp3"), a)
+    if who in ("fake", "brother"):
+        LS.add(who, os.path.join(HERE, "voices", fn + ".mp3"), a)
 
 
 def present(who, t):
     return any(a <= t < b for a, b in PRESENT[who])
 
 
-for who, ch in (("me", ME), ("fake", FAKE)):
+for who, ch in (("me", ME), ("fake", FAKE), ("kian", KIAN)):
     for f in range(1, N + 1):
         t = (f - 1) / FPS
         if f == 1 or present(who, t) != present(who, t - 1 / FPS):
@@ -501,14 +502,20 @@ for f in range(1, N + 1):
               smile=smile, brows="neutral")
     if t > 26.6:
         st["mouth"] = {"wide": 0.2 * seg(t, 26.6, 28.0)}
-    if t > 36.0:
-        st["mouth"] = {"wide": 0.35}
     FAKE.face_pose(f, t, st)
 FAKE.flush()
+for f in range(fr(36.0), N + 1):                               # my brother: frightened, looking up at me
+    t = (f - 1) / FPS
+    sc.frame_set(f)
+    lv = LS.level("brother", t)
+    KIAN.face_pose(f, t, dict(t=t, seed=KIAN.seed, worry=1.9, talking=lv if lv > 0.05 else False,
+                              look_at=Vector(EYE[f]), brows="worried"))
+KIAN.flush()
 ME.flush()
 sc.frame_set(1)
 PP.finish(ME, outline=0.0016, smile=0, keep_head=True)
 PP.finish(FAKE, outline=0.006, smile=0)
+PP.finish(KIAN, outline=0.006, smile=0)
 # noir: the toon materials only show what the light hits (low self-glow), the set is toon too
 import colorsys
 for o in list(bpy.data.objects):

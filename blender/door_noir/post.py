@@ -19,7 +19,8 @@ W, H = 1080, 1920
 CARD = 4.0
 SRC = os.path.join(HERE, "frames")
 TMP, OUT = os.path.join(HERE, "post_tmp"), os.path.join(HERE, "out")
-COL = {"me_msg": (200, 200, 200), "fake": (235, 40, 50), "me": (200, 200, 200), "mom": (200, 200, 200)}
+COL = {"me_msg": (200, 200, 200), "fake": (235, 40, 50), "me": (200, 200, 200), "mom": (200, 200, 200),
+       "brother": (200, 200, 200)}
 POV_VF = f"scale={W}:{H}:flags=lanczos,lenscorrection=k1=0.2:k2=0.04:i=bilinear,scale={int(W * 1.18)}:{int(H * 1.18)}:flags=lanczos,crop={W}:{H}"
 PEEP_VF = f"scale={W}:{H}:flags=lanczos,lenscorrection=k1=0.55:k2=0.25:i=bilinear"
 
@@ -46,7 +47,7 @@ def caption(img, who, text, t):
     f, fs = font(74), font(42)
     lines = wrap(d, text, f, W - 140)
     y = 1400 - 45 * (len(lines) - 1)
-    name = NAMES[who] if not (who == "fake" and t > 36) else "؟"
+    name = NAMES[who] if not (who == "brother" and t < 38.7) else "؟"     # behind me: I do not know yet who
     d.text((W // 2, y - 80), name, font=fs, fill=COL[who], anchor="mm", direction="rtl", language="fa",
            stroke_width=6, stroke_fill=(0, 0, 0))
     for k, ln in enumerate(lines):
