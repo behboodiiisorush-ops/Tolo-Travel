@@ -69,7 +69,10 @@ def centre_part_hair(ch, n=20000, seed=1, colour=(0.012, 0.010, 0.010), name=Non
             return False
         return p.z > ear_z - 0.035 - 0.05 * max(0.0, fy - 0.62)     # nape goes a bit lower
 
-    faces = [f for f in bm.faces if on_scalp(f.calc_center_median())]
+    def root_ok(p):      # no sideburn / ear-side roots: those strands hang beside the face
+        fy = (p.y - front_y) / max(1e-6, (back_y - front_y))
+        return on_scalp(p) and (abs(p.x - cx) < 0.055 or p.z > ear_z + 0.05 or fy > 0.68)
+    faces = [f for f in bm.faces if root_ok(f.calc_center_median())]
     _darken_scalp(body, on_scalp)
     areas = [f.calc_area() for f in faces]
     tot = sum(areas)
