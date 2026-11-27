@@ -101,7 +101,7 @@ def badge(img):
 
 
 CHANNEL = "agetobudi"
-MADE = "ساخته شده توسط بلندر"
+MADE = ""                                # (the user removed «ساخته شده توسط بلندر»)
 LOGO = os.path.join(HERE, "..", "brand", "agetobudi_logo_round.png")   # the channel logo
 sys.path.insert(0, os.path.join(HERE, "..", "brand"))
 from brand import overlay  # noqa: E402  (title top-right, logo top-left, on every frame)
@@ -140,9 +140,10 @@ def big_credit(img, a, y, logo=True):
     if lg is not None:
         lg.putalpha(lg.getchannel("A").point(lambda v: int(v * a)))
         ov.alpha_composite(lg, (W // 2 - lg.width // 2, y - 230))
-    d.text((W // 2, y), MADE, font=font(56), fill=(255, 255, 255, int(255 * a)), anchor="mm", direction="rtl",
-           language="fa", stroke_width=6, stroke_fill=(15, 15, 15, int(255 * a)))
-    d.text((W // 2, y + 80), CHANNEL, font=font(64), fill=(255, 210, 90, int(255 * a)), anchor="mm",
+    if MADE:
+        d.text((W // 2, y), MADE, font=font(56), fill=(255, 255, 255, int(255 * a)), anchor="mm", direction="rtl",
+               language="fa", stroke_width=6, stroke_fill=(15, 15, 15, int(255 * a)))
+    d.text((W // 2, y + 80 if MADE else y), CHANNEL, font=font(64), fill=(255, 210, 90, int(255 * a)), anchor="mm",
            stroke_width=6, stroke_fill=(15, 15, 15, int(255 * a)))
     return Image.alpha_composite(img.convert("RGBA"), ov).convert("RGB")
 
