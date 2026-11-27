@@ -6,8 +6,8 @@ N=${1:-1392}; shift; BR=${@:-b c d e f g h i j}
 LOG=/tmp/claude-0/spark_fill.log
 pull() {
   for x in $BR; do
-    git fetch -q origin claude/spark-frames-$x 2>/dev/null || continue
-    d=$(mktemp -d); git archive FETCH_HEAD blender/spark/frames 2>/dev/null | tar -x -C $d 2>/dev/null
+    git -C ../.. fetch -q origin claude/spark-frames-$x 2>/dev/null || continue
+    d=$(mktemp -d); git -C ../.. archive FETCH_HEAD blender/spark/frames 2>/dev/null | tar -x -C $d 2>/dev/null
     cp --update=none $d/blender/spark/frames/*.png frames/ 2>/dev/null; rm -rf $d
   done
 }
