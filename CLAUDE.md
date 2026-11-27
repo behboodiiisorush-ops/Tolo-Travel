@@ -13,6 +13,11 @@
   (read `blender/mocap/CLIPS.md` — clips are described by what they really show, not their file names).
   EEVEE render with auto-restart (`chain.sh` + `render.py`), then `sound.py` and `post.py`.
   Use this style for new episodes and series (e.g. «زنگ آخر») unless the user asks otherwise.
+- **Mixamo library (the user keeps adding clips):** every new film uses the clips in `blender/mocap/` for body motion
+  — read `CLIPS.md` first and pick the clip that really shows the action (sitting_talking, driving, pointing, crying,
+  picking_up, falling_down, crawling, laying_idle, …). Pull the newest clips from `claude/great-newton-w2xf6z`
+  (`git checkout FETCH_HEAD -- blender/mocap`). Mixamo has no hug: make hugs by hand (two characters close, arms
+  posed with IK around the other's back, blended in from `breathing_idle`).
 - Older cartoon (toon) films: `blender/school_pov/`, `blender/train_pov/` — workflow skill `/film-toon`.
 
 ## Rules the user set
