@@ -8,6 +8,8 @@ from PIL import Image, ImageDraw, ImageFont
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from captions import LINES, NAMES, END, QUESTION  # noqa: E402
+sys.path.insert(0, os.path.join(HERE, "..", "brand"))
+from brand import overlay  # noqa: E402
 FONT = os.path.join(HERE, "..", "fonts", "Vazirmatn-FD-ExtraBold.ttf")
 FPS, W, H = 24, 1080, 1920
 CARD = 5.6
@@ -132,6 +134,7 @@ def main():
             title(img, t)
         if i < len(names):
             credit(img)
+        overlay(img, TITLE[1])
         img.save(os.path.join(TMP, f"n_{i:04d}.jpg"), quality=95)
         for a, b, who, text in LINES:
             if a <= t <= b and i < len(names):

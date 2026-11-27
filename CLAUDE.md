@@ -25,3 +25,6 @@
   `[scared]`, `[sighs]` — ElevenLabs performs these and does not read them aloud. Never write the delivery
   as plain text, and never put Persian words in brackets.
 - Persian captions: Vazirmatn font in `blender/fonts/`, Pillow with raqm.
+- Branding on every video (all versions, every frame): the film's name top-right and the channel logo
+  (`blender/brand/agetobudi_logo_round.png`) top-left via `overlay(img, title)` from `blender/brand/brand.py`,
+  plus the channel name «agetobudi». No «ساخته شده توسط بلندر» line (the user dropped it).
