@@ -32,6 +32,7 @@ import toon_look as T     # noqa: E402
 import city               # noqa: E402
 import screen_frames as SF  # noqa: E402
 from captions import END, speaking, FLASHBACK, FALL, WAKE  # noqa: E402
+import lips  # noqa: E402  (lips follow the real ElevenLabs takes)
 
 cast.STYLE = cast.CARTOON
 FPS = 24
@@ -247,15 +248,15 @@ CROWD = [("x0", (0.0, 1.9, 0), 90, 0.9), ("x1", (4.0, -1.7, 0), 90, 1.0), ("x2",
 for who, p, fac, k in CROWD:
     end = walk(who, FB0, FALL + rnd.uniform(0.0, 0.4), p, fac, V[who] * k)
     act(who, "terrified", LASTSEG[who], FALL + 1.6, tuple(end), fac + rnd.uniform(-40, 40), src_from=rnd.uniform(0, 1))
-    act(who, "zombie_dying", FALL + 1.6, FB1, tuple(end), fac, speed=1.2)
+    act(who, "falling_down", FALL + 1.6, FB1, tuple(end), fac)          # Mixamo: stumble and drop
 # ---- E: on the floor. Kian next to me wakes and gets up
 KI_E = (12.3, -0.55, 0)
-act("kian", "zombie_dying", WAKE, 22.4, KI_E, 150, src_from=3.25, speed=0.01)
+act("kian", "laying_breathless", WAKE, 22.4, KI_E, 150, loop=True)   # Mixamo: on his back, chest heaving
 act("kian", "pushing", 22.4, 26.0, KI_E, 150, follow=False)
 # ---- F..J standing
 ME_S, KI_S = (11.0, 0.9, 0), (12.7, -0.4, 0)
 act("me", "nervously_look_around", 26.0, 31.0, ME_S, -95, src_from=1.0)
-act("kian", "nervously_look_around", 26.0, 31.0, KI_S, -75)
+act("kian", "looking_around", 26.0, 31.0, KI_S, -75)                 # Mixamo: wary, scanning the empty city
 # G: we walk towards the screen, then stand and watch
 ME_G1 = walk("me", 31.0, 34.4, ME_S, -90, 1.15)
 KI_G1 = walk("kian", 31.0, 34.4, KI_S, -90, 1.15)
@@ -268,7 +269,8 @@ to_k = Vector(KI_I) - Vector(ME_I)
 FAC_ME = math.degrees(math.atan2(-to_k.x, to_k.y))
 FAC_KI = math.degrees(math.atan2(to_k.x, -to_k.y))
 act("me", "breathing_idle", 43.0, 54.0, ME_I, FAC_ME, src_from=3.0)
-act("kian", "breathing_idle", 43.0, 52.6, KI_I, FAC_KI, src_from=3.0)
+act("kian", "crying", 43.0, 49.3, KI_I, FAC_KI)                        # Mixamo: hands to the face, crying
+act("kian", "breathing_idle", 49.3, 52.6, KI_I, FAC_KI, src_from=3.0)
 act("kian", "head_nod_yes", 52.6, 54.0, KI_I, FAC_KI)
 # K/L: we walk off; Kian a little ahead on my right
 WALK_V = 1.3
@@ -330,7 +332,7 @@ for who, ch in CH.items():
     for f in range(1, N + 1):
         t = (f - 1) / FPS
         st = dict(t=t, seed=ch.seed, worry=curve(WORRY.get(who, [(0, 0.3), (FALL, 2.0)]), t),
-                  talking=speaking(who, t), zombie=0.0)
+                  talking=lips.level(who, t), zombie=0.0)
         sm = curve(SMILE.get(who, []), t)
         if sm:
             st["smile"] = sm

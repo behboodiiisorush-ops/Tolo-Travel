@@ -25,7 +25,8 @@ SPEAK = [(a, b) for a, b, w, _ in LINES if w == "mom" and a > 30]
 n = int((T1 - T0) * FPS)
 for f in range(1, n + 1):
     t = T0 + (f - 1) / FPS
-    talk = any(a <= t <= b for a, b in SPEAK)
+    import lips  # noqa: E402
+    talk = lips.level("mom", t)
     mom.animate(f, t, (0.2, 0.05, 0), 195, crouch=0.75, arms="rest", smile=0.8 if not talk else 0.4, talking=talk,
                 look=(-8 + 6 * math.sin(t * 0.8), 18))
     wave = 1.0 if (t - T0) % 5.0 < 2.6 else 0.0
