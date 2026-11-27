@@ -37,7 +37,7 @@ for a, b, who, _, clip in LINES:
     dst = os.path.join(V, clip + ".wav")
     chain = ["silenceremove=start_periods=1:start_threshold=-50dB"]
     if who == "arian":
-        chain.append("rubberband=pitch=1.12:formant=preserved")
+        chain.append("rubberband=pitch=1.0905:formant=preserved")
     chain.append("loudnorm=I=-16:TP=-2:LRA=7")
     if who == "mom_phone":
         chain.append("highpass=f=320,lowpass=f=3400,acompressor=threshold=-20dB:ratio=3")
