@@ -223,20 +223,21 @@ m_ground = P.mat("Courtyard", (0.42, 0.4, 0.38), 0.85)
 P.box((CX, 0, -0.05), (40, 40, 0.1), m_ground, "Ground")
 m_fac_a = P.mat("Facade A", (0.78, 0.62, 0.5), 0.9)
 m_fac_b = P.mat("Facade B", (0.6, 0.66, 0.72), 0.9)
-P.box((CX, -6.5, 7), (20, 1, 14), m_fac_a, "Building A")
+P.box((CX, -6.5, 4.2), (20, 1, 8.4), m_fac_a, "Building A")
 P.box((CX, 9.0, 7), (20, 1, 14), m_fac_b, "Building B")
 win = P.mat("Window", (0.03, 0.04, 0.07), 0.1)
 win_lit = P.emit("Lit window", (1.0, 0.72, 0.42), 2.5)
 for ix in range(-5, 6):
     for iz in range(1, 5):
-        P.box((CX + ix * 1.7, -5.99, iz * 3.0), (0.9, 0.02, 1.3), win_lit if (ix * 5 + iz * 3) % 4 == 0 else win, "Win A")
+        if iz < 3:
+            P.box((CX + ix * 1.7, -5.99, iz * 3.0), (0.9, 0.02, 1.3), win_lit if (ix * 5 + iz * 3) % 4 == 0 else win, "Win A")
         P.box((CX + ix * 1.7, 8.49, iz * 3.0), (0.9, 0.02, 1.3), win_lit if (ix * 3 + iz) % 3 == 0 else win, "Win B")
 lamp("Entrance lamp", (CX, -5.7, 2.5), 60, (1.0, 0.8, 0.55), 0.1)
 P.sphere((CX, -5.9, 2.5), 0.08, P.emit("Entrance bulb", (1.0, 0.85, 0.6), 8.0), "Entrance bulb")
 P.area_light((CX, 4.0, 6.0), (math.radians(40), 0, 0), 120, 8.0, (0.5, 0.6, 1.0), name="Night fill")
 m_starlet = P.emit("Star", (0.9, 0.92, 1.0), 6.0)
-for i in range(160):
-    P.sphere((CX + random.uniform(-55, 55), -39, random.uniform(12, 48)), random.uniform(0.04, 0.1), m_starlet, "Star")
+for i in range(420):
+    P.sphere((CX + random.uniform(-75, 75), -39, random.uniform(9, 95)), random.uniform(0.05, 0.12), m_starlet, "Star")
 P.box((CX, -5.98, 1.05), (1.0, 0.04, 2.1), P.wood("Entrance door", (0.45, 0.3, 0.18), planks=False), "Entrance")
 for k in range(5):                                       # a few planters + a bench
     P.box((CX - 6 + k * 3.2, 7.6, 0.3), (1.2, 0.6, 0.6), P.mat(f"Planter{k}", (0.5, 0.5, 0.48), 0.8), "Planter")
@@ -261,14 +262,14 @@ world.use_nodes = True
 world.node_tree.nodes["Background"].inputs[0].default_value = (0.015, 0.02, 0.05, 1)
 world.node_tree.nodes["Background"].inputs[1].default_value = 1.0
 # far sky backdrop behind building A's roofline so the object in the sky reads clearly
-P.plane((CX, -40, 20), (120, 60), P.emit("Sky", (0.02, 0.03, 0.08), 1.0), (math.pi / 2, 0, 0), "Sky")
+P.plane((CX, -40, 45), (160, 110), P.emit("Sky", (0.02, 0.03, 0.08), 1.0), (math.pi / 2, 0, 0), "Sky")
 
 # ---------------- the thing in the sky: a streak like a meteor that slows down and stops (only a hint)
-m_star = P.emit("Visitor", (0.75, 0.9, 1.0), 80.0)
-star = P.sphere((0, 0, 0), 0.6, m_star, "Visitor")
+m_star = P.emit("Visitor", (0.75, 0.9, 1.0), 150.0)
+star = P.sphere((0, 0, 0), 1.1, m_star, "Visitor")
 m_trail = P.emit("Trail", (1.0, 0.85, 0.6), 25.0)
-trail = P.cyl((0, 0, 0), (0, 0, 1), 0.25, m_trail, "Trail")
-STAR_A, STAR_B = Vector((CX - 40, -36, 32)), Vector((CX + 3, -30, 17))
+trail = P.cyl((0, 0, 0), (0, 0, 1), 0.5, m_trail, "Trail")
+STAR_A, STAR_B = Vector((CX - 40, -36, 44)), Vector((CX + 3, -30, 30))
 STAR_T0, STAR_T1 = 36.0, 40.0
 
 
@@ -403,7 +404,7 @@ for f in range(1, N + 1, 2):
     if t < 4.6:
         tgt = mh                                           # listening to mom
     elif t < 6.8:
-        tgt = GLASS + Vector((0, 0.3, 0.1))                # avoids her eyes
+        tgt = (mh + GLASS) / 2                             # half avoids her eyes
     elif t < 7.6:
         tgt = GLASS
     elif t < 10.0:
@@ -544,7 +545,7 @@ for f in range(1, N + 1):
     for path in ("location", "rotation_euler", "scale"):
         trail.keyframe_insert(path, frame=f)
     st_s = strength(m_star)
-    st_s.default_value = 80 * (1 + 0.3 * math.sin(t * 9)) if vis else 0.0
+    st_s.default_value = 150 * (1 + 0.3 * math.sin(t * 9)) if vis else 0.0
     st_s.keyframe_insert("default_value", frame=f)
 
 m_arc = P.emit("Arc", (0.6, 0.85, 1.0), 60.0)
