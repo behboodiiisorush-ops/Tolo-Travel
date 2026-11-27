@@ -2,13 +2,14 @@
 # Pull the mp4 chunks rendered by the cloud workers (branches render-y1500-<a>-<b>, chunks/chunk_<a>-<b>.mp4)
 # and unpack each into frames/ (only frames not already rendered here). Ends when every frame exists.
 cd "$(dirname "$0")"
-T=/tmp/claude-0/y1500_collect; mkdir -p $T/chunks
-RANGES="701-847 848-994 995-1141 1142-1288 1289-1435 1436-1582 1583-1728"
+T=/tmp/claude-0/y1500_collect_v2; mkdir -p $T/chunks
+RANGES=${RANGES:-"141-293 294-446 481-619 620-758 759-897 898-1036 1037-1175 1176-1314 1315-1453 1454-1592 1593-1728"}
+PFX=${PFX:-render-y1500v2-}
 while true; do
   for r in $RANGES; do
     c=$T/chunks/chunk_$r.mp4
     [ -s $c ] && continue
-    git fetch -q origin render-y1500-$r 2>/dev/null || continue
+    git fetch -q origin $PFX$r 2>/dev/null || continue
     git show FETCH_HEAD:chunks/chunk_$r.mp4 > $c.part 2>/dev/null && mv $c.part $c || { rm -f $c.part; continue; }
     a=${r%-*}; rm -rf $T/x; mkdir -p $T/x
     ffmpeg -v error -i $c -start_number $a $T/x/f_%04d.png
