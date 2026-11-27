@@ -83,3 +83,6 @@ blender/shelter3/test/
 blender/shelter3/voices/fitted/
 blender/shelter3/*.blend
 blender/shelter3/*.blend1
+blender/nila/frames/
+blender/nila/nila.blend
+blender/nila/*.log
