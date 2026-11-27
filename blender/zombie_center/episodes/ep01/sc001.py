@@ -107,14 +107,27 @@ def cam(name, loc, tgt, lens, f0, dof=None):
 pv = Vector(PHONE_POS)
 sc.frame_set(456)
 head = arin.rig.matrix_world @ arin.rig.pose.bones["head"].head
+eyes = arin.parts["Eyes"][0]
+dg = bpy.context.evaluated_depsgraph_get()
+_e = eyes.evaluated_get(dg).to_mesh()
+eyec = sum((eyes.matrix_world @ v.co for v in _e.vertices), Vector()) / len(_e.vertices)
+eyes.evaluated_get(dg).to_mesh_clear()
+fwd = (eyec - head).normalized()                      # where his face points (lying on his back: mostly up)
+side = fwd.cross(Vector((0, 0, 1))).normalized() if abs(fwd.z) < 0.95 else Vector((1, 0, 0))
+print("FACE fwd", tuple(round(v, 2) for v in fwd))
 zfeet = Vector((ZX, ZSTOP, 0.15))
-c1 = cam("CAM_S01_ECU_phone", pv + Vector((0.04, 0.3, 0.07)), pv + Vector((0, -0.6, 0.02)), 60, 1, (0.3, 1.4))
-c2 = cam("CAM_S02_wide", (1.2, -16.0, 0.32), (0.9, edge_y + 1.0, 1.2), 24, 145)
+c1 = cam("CAM_S01_ECU_phone", pv + Vector((0.08, 0.5, 0.1)), pv + Vector((0, -1.0, 0.05)), 50, 1, (0.5, 1.4))
+c2 = cam("CAM_S02_wide", (1.2, -16.0, 0.32), (0.4, edge_y + 0.8, 1.2), 24, 145)
 c3 = cam("CAM_S03_insert", pv + Vector((0.5, -0.5, 0.22)), pv + Vector((-0.15, 0.3, 0.03)), 50, 289)
-c4 = cam("CAM_S04_CU", head + Vector((0.25, -0.75, -0.25)), head, 35, 409)
+c4 = cam("CAM_S04_CU", eyec + fwd * 0.45 + Vector((0, -0.35, 0)), eyec, 35, 409)
 c5 = cam("CAM_S05_track", head + Vector((0.05, -0.35, -0.3)), zfeet, 35, 505)
-c6 = cam("CAM_S06_POV", head + Vector((0, -0.05, 0.1)), head + Vector((0, -0.2, 0.45)), 28, 889)
-c7 = cam("CAM_S07_CU", head + Vector((0.35, -0.5, 0.0)), head, 50, 1009)
+c6 = cam("CAM_S06_POV", eyec + fwd * 0.03, eyec + fwd * 0.4, 28, 889)
+c7 = cam("CAM_S07_CU", eyec + fwd * 0.35 + Vector((0, -0.25, 0)), eyec, 50, 1009)
+# shots 6–7: the phone is held above his face (hand IK comes in the animation pass)
+ph.keyframe_insert("location", frame=888); ph.keyframe_insert("rotation_euler", frame=888)
+ph.location = eyec + fwd * 0.32
+ph.rotation_euler = (fwd.to_track_quat("Z", "Y").to_euler())
+ph.keyframe_insert("location", frame=889); ph.keyframe_insert("rotation_euler", frame=889)
 # ---- render settings
 sc.render.engine = "BLENDER_EEVEE"
 sc.view_settings.view_transform = "AgX"; sc.view_settings.look = "AgX - Base Contrast"; sc.view_settings.exposure = 2.0
