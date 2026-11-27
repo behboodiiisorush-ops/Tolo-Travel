@@ -24,7 +24,7 @@ def face(ch, f0, f1, state):
     ch.flush()
 
 
-def hand(ch, side, keys, ease=6, pole_offset=(0.0, -0.4, -0.3)):
+def hand(ch, side, keys, ease=6, pole_offset=(0.0, -0.4, -0.3), pole_at=None):
     """keys: [(frame, Vector world position or None)] — None = follow the mocap (IK off).
     The IK target moves smoothly between keyed positions; influence eases in/out over `ease` frames."""
     rig = ch.rig
@@ -64,7 +64,7 @@ def hand(ch, side, keys, ease=6, pole_offset=(0.0, -0.4, -0.3)):
     f_ref = min(f for f, p in keys if p is not None) - ease - 1
     sc.frame_set(f_ref)
     m_sh = rig.matrix_world @ sh.matrix @ Matrix.Translation((0, sh.length, 0))
-    world = m_sh @ Vector(pole_offset)
+    world = Vector(pole_at) if pole_at is not None else m_sh @ Vector(pole_offset)   # pole_at: world point (elbow aim)
     cl = rig.pose.bones.get(f"clavicle_{side}") or sh.parent
     pole.parent = rig; pole.parent_type = "BONE"; pole.parent_bone = cl.name
     bpy.context.view_layer.update()
