@@ -129,5 +129,19 @@ optional: open the .blend files in desktop Blender to review.
 - 2026-11-26 (user): phone only; one episode every 2 days at 720p; YouTube release 19:00 Berlin; ElevenLabs connected for Claude to use; PERMANENT QUALITY LAW (§0).
 - 2026-11-26 (user): format changes to a **series of 12 × ~5 min long-form episodes**, released one by one (`docs/SERIES_PLAN.md`). Release time, pace and visual style still open.
 
-## 8. Next task
-PHASE 02 — build and test the six main characters (MPFB + Rigify), reference sheets, then 02_CHARACTER_BIBLE.md from the built models. Then rigs + Mixamo retarget + motion QC tests (walk/run/foot contact) before any episode scene.
+## 8. Current state (2026-11-27, update every session)
+**EP01 in production.** Done: cast sheets (6 + 4 zombies), motion QC/foot lock, city set, SC001 scene script
+(`episodes/ep01/sc001.py`, 7 shots, acting layer), Nika video scene (`episodes/ep01/sc002_video.py`: white room
+`sets/nika_room.py`, selfie cam, forearm veins `zc_look.veins`, red-thread bracelet, cannula, lipsync), designed
+voices (`audio/VOICES.md`: Arin, Nika, Mark), all 14 EP01 lines (`episodes/ep01/audio/voice/LINES.md`, whisper-checked),
+SC001 sound effects (`episodes/ep01/audio/sfx/SFX.md`).
+Fixed bugs (do not reintroduce): head look tracked the bone Y (crown) -> now `perform.face_axis`; hand-IK pole
+parented to the upper arm (dependency cycle) -> clavicle; glossy eyes in bright rooms wash the iris out.
+**Local machine limit:** EEVEE runs on CPU (llvmpipe); one SC001 frame ≈ 50–70 s even at 480x270 and a process
+needs 5–6 GB — never run more than 2 Blender processes here (OOM kills). Previews and finals go to worker chats:
+`tools/render_part.sh <scene.py> <preview|final> A B <outdir>` (setup + crash-restart), each worker pushes PNGs to
+`claude/zc-ep01-prev-*` / `claude/zc-ep01-part-*`.
+Workers running (2026-11-27 ~19:00 Berlin): SC001 preview a1 (1–179), a2 (181–359), b (361–719), c (721–1079).
+**Next:** QC the SC001 preview (motion, hands, phone, face, cuts); SC002 scene (`sc002.py`: Arin behind the bus,
+POV phone playing the video frames, scrub-back, the Driver Z6 stops far down the avenue and turns his head);
+then SC003–SC005, captions, sound mix, branding, QC report, final render split over workers.
