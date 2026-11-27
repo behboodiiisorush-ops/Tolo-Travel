@@ -53,7 +53,7 @@ def caption(img, who, text, alpha=1.0):
                stroke_width=9, stroke_fill=(0, 0, 0))
 
 
-CREDIT, CHANNEL = "ساخته شده توسط بلندر", "agetobudi"
+CREDIT, CHANNEL = "", "agetobudi"   # no «ساخته شده توسط بلندر» (user)
 
 
 sys.path.insert(0, os.path.join(HERE, "..", "brand"))
@@ -78,7 +78,6 @@ def card(t):
         d.text((W // 2, y0 + k * 120), ln, font=f, fill=(c, c, c), anchor="mm", direction="rtl", language="fa")
     d.text((W // 2, y0 - 190), "؟", font=font(140), fill=(int(230 * a), int(40 * a), int(50 * a)), anchor="mm")
     g = int(200 * a)
-    d.text((W // 2, H - 300), CREDIT, font=font(52), fill=(g, g, g), anchor="mm", direction="rtl", language="fa")
     d.text((W // 2, H - 220), CHANNEL, font=font(64), fill=(int(255 * a), int(200 * a), int(60 * a)), anchor="mm")
     return img
 
