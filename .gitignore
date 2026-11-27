@@ -54,3 +54,11 @@ blender/wall2/post_tmp/
 blender/wall2/*.blend*
 blender/wall2/out/*.wav
 blender/wall2/out/part_*.mp4
+blender/ANIMATION_STUDIO/12_EPISODES/EP_002_SAYEH/frames/
+blender/ANIMATION_STUDIO/12_EPISODES/EP_002_SAYEH/stills/
+blender/ANIMATION_STUDIO/12_EPISODES/EP_002_SAYEH/post_tmp/
+blender/ANIMATION_STUDIO/12_EPISODES/EP_002_SAYEH/out/*.wav
+blender/ANIMATION_STUDIO/12_EPISODES/EP_002_SAYEH/*.log
+blender/ANIMATION_STUDIO/12_EPISODES/EP_002_SAYEH/EP_002.blend
+blender/ANIMATION_STUDIO/12_EPISODES/EP_002_SAYEH/stills*/
+blender/ANIMATION_STUDIO/12_EPISODES/EP_002_SAYEH/row*.png

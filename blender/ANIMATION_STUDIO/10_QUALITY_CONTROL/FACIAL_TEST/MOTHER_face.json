@@ -1,0 +1,138 @@
+{
+ "expressions": {
+  "Neutral": {
+   "mouth": {
+    "open": 0.0,
+    "smile": 0.0,
+    "frown": 0.0,
+    "wide": 0.0,
+    "o": 0.0
+   },
+   "lid_deg": 0.0,
+   "brow_lift_mm": 0.0,
+   "pass_": true
+  },
+  "Happy": {
+   "mouth": {
+    "open": 0.0,
+    "smile": 1.0,
+    "frown": 0.0,
+    "wide": 0.0,
+    "o": 0.0
+   },
+   "lid_deg": 0.0,
+   "brow_lift_mm": 2.7,
+   "pass_": true
+  },
+  "Sad": {
+   "mouth": {
+    "open": 0.0,
+    "smile": 0.0,
+    "frown": 0.8,
+    "wide": 0.0,
+    "o": 0.0
+   },
+   "lid_deg": 25.0,
+   "brow_lift_mm": 5.4,
+   "pass_": true
+  },
+  "Angry": {
+   "mouth": {
+    "open": 0.0,
+    "smile": 0.0,
+    "frown": 0.4,
+    "wide": 0.3,
+    "o": 0.0
+   },
+   "lid_deg": 20.0,
+   "brow_lift_mm": 4.5,
+   "pass_": true
+  },
+  "Surprise": {
+   "mouth": {
+    "open": 0.6,
+    "smile": 0.0,
+    "frown": 0.0,
+    "wide": 0.0,
+    "o": 0.5
+   },
+   "lid_deg": 0.0,
+   "brow_lift_mm": 11.7,
+   "pass_": true
+  },
+  "Fear": {
+   "mouth": {
+    "open": 0.35,
+    "smile": 0.0,
+    "frown": 0.0,
+    "wide": 0.6,
+    "o": 0.0
+   },
+   "lid_deg": 0.0,
+   "brow_lift_mm": 7.2,
+   "pass_": true
+  },
+  "Blink": {
+   "mouth": {
+    "open": 0.0,
+    "smile": 0.0,
+    "frown": 0.0,
+    "wide": 0.0,
+    "o": 0.0
+   },
+   "lid_deg": 95.0,
+   "brow_lift_mm": 0.0,
+   "pass_": true
+  },
+  "Wink": {
+   "mouth": {
+    "open": 0.0,
+    "smile": 0.6,
+    "frown": 0.0,
+    "wide": 0.0,
+    "o": 0.0
+   },
+   "lid_deg": 95.0,
+   "brow_lift_mm": 0.0,
+   "pass_": true
+  },
+  "Talk_A": {
+   "mouth": {
+    "open": 0.8,
+    "smile": 0.0,
+    "frown": 0.0,
+    "wide": 0.0,
+    "o": 0.0
+   },
+   "lid_deg": 0.0,
+   "brow_lift_mm": 0.0,
+   "pass_": true
+  },
+  "Talk_O": {
+   "mouth": {
+    "open": 0.4,
+    "smile": 0.0,
+    "frown": 0.0,
+    "wide": 0.0,
+    "o": 1.0
+   },
+   "lid_deg": 0.0,
+   "brow_lift_mm": 0.0,
+   "pass_": true
+  },
+  "Talk_E": {
+   "mouth": {
+    "open": 0.3,
+    "smile": 0.0,
+    "frown": 0.0,
+    "wide": 0.8,
+    "o": 0.0
+   },
+   "lid_deg": 0.0,
+   "brow_lift_mm": 0.0,
+   "pass_": true
+  }
+ },
+ "eye_tracking": true,
+ "pass_": true
+}

@@ -52,9 +52,25 @@ Headless renders of Workbench/EEVEE need Mesa's software OpenGL: `apt-get instal
 - `UHS_STAND_UpFromFloor` 6 cm: kneeling, the toes pivot and slide.
 
 **Not done:** cloth and hair simulation, collision setup; STAND_TO_SIT and TURNING transitions (need captures);
-the other five characters (DANIEL, LINA, FATHER, MOTHER, SHADOW): following the spec, they are reused only after
-CHAR_001 passes — their designs are ready in `project_config.EXTRA_PUPPETS` and one command builds each
-(`create_character.py DANIEL`).
+nothing else.
+
+## Characters
+
+![lineup](01_CHARACTER_LIBRARY/lineup.png)
+
+| character | library actions passing QC | face | weights |
+|---|---|---|---|
+| CHAR_001_ARIAN (آرین) | 12 / 17 | 11/11 | pass |
+| CHAR_002_DANIEL (دانیال) | 11 / 17 | 11/11 | pass |
+| CHAR_003_LINA (لینا) | 11 / 17 | 11/11 | pass |
+| CHAR_004_FATHER (بابا) | 10 / 17 | 11/11 | pass |
+| CHAR_005_MOTHER (مامان) | 10 / 17 | 11/11 | pass |
+| CHAR_006_SHADOW (سایه) | 11 / 17 | 11/11 | pass |
+
+Every character: `Rig.blend`, `Model.blend`, `Face.blend`, `Materials.blend`, `Animation_Library.blend`,
+`REFERENCES/` (front/side/back), QC in `10_QUALITY_CONTROL/FINAL_REVIEW/<KEY>_report.md`. Group picture:
+`01_CHARACTER_LIBRARY/lineup.py`. The failing actions are the same family as Arian's (non-looping travel clips,
+getting up from the floor, the walk's heel landing).
 
 ## Bugs the tests found (and that are fixed)
 1. Child Of bakes moved nested controls twice (feet 1–3 m away) → helper bones + world Copy Transforms.

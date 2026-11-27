@@ -1,0 +1,54 @@
+{
+ "action": "UHS_GESTURE_Thinking",
+ "frames": 102,
+ "loop": false,
+ "played": 102,
+ "root_mode": "none",
+ "speed_m_s": 0.0,
+ "raw_slip_cm": 3.97,
+ "foot_slip": {
+  "max_cm": 1.51,
+  "contacts": 3,
+  "pass_": false
+ },
+ "ground": {
+  "lowest_cm": -0.0,
+  "floating_contacts": 0,
+  "pass_": true
+ },
+ "limb_stretch": {
+  "max_dev": {
+   "knee.L": 0.0,
+   "knee.R": 0.0,
+   "elbow.L": 0.0,
+   "elbow.R": 0.0
+  },
+  "pass_": true
+ },
+ "joints": {
+  "max_deg": {
+   "knee.L": 59.1,
+   "knee.R": 28.1,
+   "elbow.L": 94.1,
+   "elbow.R": 150.0
+  },
+  "reverse_bend_frames": {},
+  "flips": {},
+  "pass_": true
+ },
+ "pops": {
+  "count": 0,
+  "worst": [],
+  "pass_": true
+ },
+ "ik_fk": {
+  "max_cm": 0.0,
+  "pass_": true
+ },
+ "balance": {
+  "frames": 102,
+  "com_outside_frac": 0.029,
+  "pass_": true
+ },
+ "pass": false
+}

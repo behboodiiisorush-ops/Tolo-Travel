@@ -1,0 +1,86 @@
+{
+ "meshes": {
+  "MOTHER_BODY": {
+   "verts": 19158,
+   "unweighted": 16
+  },
+  "MOTHER_CLOTH_elvs_flatshoe_plain1": {
+   "verts": 8712,
+   "unweighted": 0
+  },
+  "MOTHER_CLOTH_janexx_old_female_sweater": {
+   "verts": 1602,
+   "unweighted": 0
+  },
+  "MOTHER_CLOTH_toigo_wool_pants": {
+   "verts": 1372,
+   "unweighted": 0
+  },
+  "MOTHER_FACE_brow_l": {
+   "verts": 266,
+   "unweighted": 0
+  },
+  "MOTHER_FACE_brow_r": {
+   "verts": 266,
+   "unweighted": 0
+  },
+  "MOTHER_FACE_ear": {
+   "verts": 114,
+   "unweighted": 0
+  },
+  "MOTHER_FACE_ear.001": {
+   "verts": 114,
+   "unweighted": 0
+  },
+  "MOTHER_FACE_eye_l": {
+   "verts": 482,
+   "unweighted": 0
+  },
+  "MOTHER_FACE_eye_r": {
+   "verts": 482,
+   "unweighted": 0
+  },
+  "MOTHER_FACE_glint_l": {
+   "verts": 62,
+   "unweighted": 0
+  },
+  "MOTHER_FACE_glint_r": {
+   "verts": 62,
+   "unweighted": 0
+  },
+  "MOTHER_FACE_hair": {
+   "verts": 6198,
+   "unweighted": 0
+  },
+  "MOTHER_FACE_head": {
+   "verts": 1106,
+   "unweighted": 0
+  },
+  "MOTHER_FACE_lid_l": {
+   "verts": 161,
+   "unweighted": 0
+  },
+  "MOTHER_FACE_lid_r": {
+   "verts": 161,
+   "unweighted": 0
+  },
+  "MOTHER_FACE_mouth": {
+   "verts": 24,
+   "unweighted": 0
+  },
+  "MOTHER_FACE_nose": {
+   "verts": 114,
+   "unweighted": 0
+  },
+  "MOTHER_FACE_pupil_l": {
+   "verts": 266,
+   "unweighted": 0
+  },
+  "MOTHER_FACE_pupil_r": {
+   "verts": 266,
+   "unweighted": 0
+  }
+ },
+ "body_unweighted_visible": 0,
+ "pass_": true
+}

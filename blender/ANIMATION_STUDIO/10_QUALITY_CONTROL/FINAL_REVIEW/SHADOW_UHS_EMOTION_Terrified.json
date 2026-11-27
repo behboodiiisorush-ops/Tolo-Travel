@@ -1,0 +1,54 @@
+{
+ "action": "UHS_EMOTION_Terrified",
+ "frames": 144,
+ "loop": false,
+ "played": 144,
+ "root_mode": "none",
+ "speed_m_s": 0.0,
+ "raw_slip_cm": 11.45,
+ "foot_slip": {
+  "max_cm": 0.26,
+  "contacts": 2,
+  "pass_": true
+ },
+ "ground": {
+  "lowest_cm": -0.0,
+  "floating_contacts": 0,
+  "pass_": true
+ },
+ "limb_stretch": {
+  "max_dev": {
+   "knee.L": 0.0,
+   "knee.R": 0.0,
+   "elbow.L": 0.0,
+   "elbow.R": 0.0
+  },
+  "pass_": true
+ },
+ "joints": {
+  "max_deg": {
+   "knee.L": 92.8,
+   "knee.R": 72.6,
+   "elbow.L": 148.9,
+   "elbow.R": 137.4
+  },
+  "reverse_bend_frames": {},
+  "flips": {},
+  "pass_": true
+ },
+ "pops": {
+  "count": 0,
+  "worst": [],
+  "pass_": true
+ },
+ "ik_fk": {
+  "max_cm": 0.01,
+  "pass_": true
+ },
+ "balance": {
+  "frames": 144,
+  "com_outside_frac": 0.0,
+  "pass_": true
+ },
+ "pass": true
+}

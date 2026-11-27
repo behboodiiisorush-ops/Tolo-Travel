@@ -1,0 +1,27 @@
+{
+ "character": "FATHER",
+ "actions": 17,
+ "passed": 10,
+ "failed_imports": {},
+ "face": true,
+ "weights": true,
+ "per_action": {
+  "UHS_IDLE_Breathing": true,
+  "UHS_IDLE_Nervous": true,
+  "UHS_WALK_Natural": false,
+  "UHS_WALK_Sneak": true,
+  "UHS_RUN_Cartoon": true,
+  "UHS_JUMP_Forward": false,
+  "UHS_SIT_Idle": true,
+  "UHS_STAND_UpFromFloor": false,
+  "UHS_GESTURE_Yes": true,
+  "UHS_GESTURE_No": true,
+  "UHS_GESTURE_ForgetIt": true,
+  "UHS_GESTURE_Wait": true,
+  "UHS_GESTURE_Thinking": false,
+  "UHS_EMOTION_Terrified": true,
+  "UHS_INTERACT_OpenDoor": false,
+  "UHS_INTERACT_Punch": false,
+  "UHS_TRANS_IdleToWalk": false
+ }
+}
