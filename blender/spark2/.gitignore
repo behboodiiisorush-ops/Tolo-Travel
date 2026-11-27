@@ -1,0 +1,5 @@
+frames/
+test/
+*.blend
+post_tmp/
+out/*.wav
