@@ -75,18 +75,21 @@ def env(n, pts):
 def effects(buf, duck=()):
     n = buf.shape[0]
     # train rumble: full until the brakes, gone after the stop
-    tr = loop(load("sfx_train", trim=False), n / SR)
-    g = env(n, [(0, 0.5), (P.BRAKE0, 0.5), (P.BRAKE1, 0.0), (TOTAL, 0.0)])
+    tr = loop(load("sfx_train", trim=False, af="loudnorm=I=-20"), n / SR)
+    g = env(n, [(0, 0.8), (P.BRAKE0, 0.8), (P.BRAKE1, 0.0), (TOTAL, 0.0)])
     d = np.ones(n, np.float32)
     for a, b in duck:
         d[max(0, int((a - 0.25) * SR)):int((b + 0.25) * SR)] = 0.22
     d = np.convolve(d, np.ones(4800) / 4800, mode="same").astype(np.float32)
     put(buf, tr * g * d, 0.0, 1.0, fade=1.0)
     # helicopter: far, then loud overhead while it hovers, then away
-    he = loop(load("sfx_heli", trim=False), n / SR)
-    g = env(n, [(0, 0.15), (4, 0.3), (P.CURTAIN0 + 1, 0.15), (P.SEARCH_T - 1, 0.25), (P.DESC0, 0.35),
-                (P.DESC1, 0.55), (P.LEAVE_T, 0.5), (P.LEAVE_T + 8, 0.0), (TOTAL, 0.0)])
-    put(buf, he * g * d, 0.0, 1.0, -0.3, fade=1.0)
+    # helicopter: clearly audible the whole time it is over the train (the user missed it in v1)
+    he = loop(load("sfx_heli", trim=False, af="loudnorm=I=-18"), n / SR)
+    g = env(n, [(0, 0.45), (4, 0.6), (P.CURTAIN0 + 1, 0.5), (P.SEARCH_T - 1, 0.65), (P.DESC0, 0.8),
+                (P.DESC1, 1.0), (P.LEAVE_T, 0.9), (P.LEAVE_T + 1.5, 0.0), (TOTAL, 0.0)])
+    dh = 0.45 + 0.55 * d                                  # duck the helicopter less than the rest
+    put(buf, he * g * dh, 0.0, 1.0, -0.3, fade=1.0)
+    put(buf, load("sfx_heli_flyby", af="loudnorm=I=-18"), P.LEAVE_T - 3.0, 0.9, -0.3, fade=0.5)
     put(buf, load("sfx_curtain"), P.CURTAIN0, 0.7, -0.2)
     put(buf, load("sfx_curtain"), P.OPEN0, 0.6, -0.4)
     click = load("sfx_click")
