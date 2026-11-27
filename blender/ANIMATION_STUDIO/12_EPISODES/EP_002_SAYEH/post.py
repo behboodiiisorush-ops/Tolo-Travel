@@ -92,7 +92,7 @@ def night(img, t):
     elif t < 7.0 or t >= 27.6:
         return img
     else:
-            k = min(1.0, (t - 7.0) / 0.25) if t < 27.0 else max(0.0, 1 - (t - 27.0) / 0.6)
+        k = min(1.0, (t - 7.0) / 0.25) if t < 27.0 else max(0.0, 1 - (t - 27.0) / 0.6)
     r, g, b = img.split()
     m = [(1 - k) + k * c for c in (0.40, 0.47, 0.66)]
     return Image.merge("RGB", [ch.point(lambda v, q=q: int(v * q)) for ch, q in zip((r, g, b), m)])
