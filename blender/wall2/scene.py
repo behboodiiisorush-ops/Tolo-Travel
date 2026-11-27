@@ -432,12 +432,12 @@ act("kazemi", "nervously_look_around", 54.0, END, (P_KAZ[0], P_KAZ[1], 0), face(
 # ---- Arian (with the phone from 39.4)
 act("arian", "terrified", 0.0, 10.8, (10.7, 2.0, 0), -50, src_from=6.0, loop=True)
 act("arian", "terrified", 10.8, 39.4, (1.5, 1.4, 0), -80, src_from=2.0, loop=True)
-act("arian", "reloading", 39.4, 49.6, (P_ARI[0], P_ARI[1], 0), face(P_ARI, P_ME), src_from=0.3, speed=0.35, loop=True)
+act("arian", "reloading", 39.4, 49.6, (P_ARI[0], P_ARI[1], 0), face(P_ARI, P_ME), src_from=0.3, speed=0.35, loop=True, in_place=True)
 act("arian", "nervously_look_around", 49.6, END, (P_ARI[0], P_ARI[1], 0), face(P_ARI, P_ME), loop=True)
 # ---- Mahsa
 act("mahsa", "nervously_look_around", 0.0, 10.8, (11.0, 3.5, 0), -50, loop=True)
-act("mahsa", "terrified", 10.8, 39.4, (0.75, 2.2, 0), -90, loop=True)
-act("mahsa", "breathing_idle", 39.4, 54.0, (P_MAH[0], P_MAH[1], 0), face(P_MAH, P_ARI))
+act("mahsa", "terrified", 10.8, 37.6, (0.75, 2.2, 0), -90, loop=True)
+act("mahsa", "breathing_idle", 37.6, 54.0, (P_MAH[0], P_MAH[1], 0), face(P_MAH, P_ARI))
 act("mahsa", "hands_forward_gesture", 54.0, 57.6, (P_MAH[0], P_MAH[1], 0), face(P_MAH, P_ME), speed=0.9)
 act("mahsa", "terrified", 57.6, END, (P_MAH[0], P_MAH[1], 0), face(P_MAH, P_ME))
 # ---- Rezaei: on the bed, screams, gets up, follows us, beats on the sofa, gives up
@@ -612,7 +612,7 @@ for f in range(1, N + 1):
         if v == RHAND:
             p = bone_w(mrig, "hand_r")
         elif v == PHONE:
-            p = ph.matrix_world.translation.copy() if t >= 39.4 else bone_w(CH["arian"].rig, "head")
+            p = bone_w(CH["arian"].rig, "hand_r") + Vector((0, 0, 0.06)) if t >= 39.4 else bone_w(CH["arian"].rig, "head")
         elif v == REZ:
             p = bone_w(CH["rezaei"].rig, "head") - Vector((0, 0, 0.1))
         else:
