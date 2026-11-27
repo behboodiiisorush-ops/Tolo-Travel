@@ -56,3 +56,11 @@ Faces: `worry` (0–2, fear brows + wide eyes), `talking` (lip flap for dubbing)
 - `vendor/` — MPFB + assets (git-ignored; `setup.sh` recreates it)
 
 Assets: MakeHuman community assets (CC0 and CC-BY) — see `CREDITS.md`.
+
+## Fixed ElevenLabs voices (reuse in every film)
+| key | voice | voice_id | notes |
+|-----|-------|----------|-------|
+| `mom` | Hengameh – Warm, Expressive, Storyteller | `9HVxKdwDzPJv4huwQfAt` | Persian, middle-aged; on the phone: highpass 320 / lowpass 3400 |
+| `arian` | Amin.GS | `fvCP6Z9Dzulf2E6NsM8a` | young Persian male; `rubberband=pitch=1.12:formant=preserved` to sound like a boy |
+
+Model `eleven_multilingual_v2`, loudnorm I=-18 per line (see `blender/mom_voice/voice.py`).

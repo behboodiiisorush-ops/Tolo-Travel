@@ -48,3 +48,9 @@ blender/BLENDER_ANIMATION/_build/render.log
 # ANIMATION_STUDIO: keep scripts, .blend files, reports and final mp4s — not frames
 blender/ANIMATION_STUDIO/**/*_[0-9][0-9][0-9][0-9].png
 blender/ANIMATION_STUDIO/10_QUALITY_CONTROL/logs/
+blender/mom_voice/frames/
+blender/mom_voice/test/
+blender/mom_voice/post_tmp/
+blender/mom_voice/*.blend
+blender/mom_voice/*.blend1
+blender/mom_voice/out/*.mp4
