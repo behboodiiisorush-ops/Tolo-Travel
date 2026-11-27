@@ -29,9 +29,8 @@
 - The story never depends on the audience; a film may end with one question to the viewer.
 - **Voices and sound effects always come from ElevenLabs** (the connected ElevenLabs MCP tools, `mcp__ElevenLabs__*`):
   Claude generates every spoken line **only with the Persian (فارسی) voices already in the user's ElevenLabs account** — Aidin Podcast, Amin.GS,
-  Amitis, Aramofen, Aran - Parsi, Arash, Danesh, Farshad, Hengameh, Javid, Mard, Mitra, MohammadHossein, Najib, Rashnow,
-  Sara, amir, mohsen, «خشن», «معلم» (check `creative_list_voices`, language fa). Never a non-Persian voice (no German/English/
-  Dari), never design/save a new voice (`creative_design_voice`/`creative_save_designed_voice`; the Claude-made ZC …/Wagon …
+  Amitis, Aramofen, Aran - Parsi, Arash, Danesh, Farshad, Hengameh, Javid, Mard, Mitra, MohammadHossein, Najib, Omid, Rashnow,
+  Sara, amir, mohsen, «خشن», «معلم» (check `creative_list_voices`, language fa). Never a non-Persian voice (no German/English), never design/save a new voice (`creative_design_voice`/`creative_save_designed_voice`; the Claude-made ZC …/Wagon …
   voices are not to be used). Films voiced otherwise get their lines regenerated with these voices (one fixed voice per
   character, never a voice_id from memory) and every sound effect
   (no synthesised numpy effects any more). Keep `talking=True` lip movement on the lines in `captions.py` and fit
