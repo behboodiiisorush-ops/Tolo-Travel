@@ -81,12 +81,16 @@ def effects():
     # the loudspeaker outside, the bus arriving (muffled), the door
     put(buf, fx("megaphone", muff), E["T_LOUD"], 0.5)
     put(buf, fx("bus_arrive", muff), arr0 - 4.5, 0.45, 0.2)
-    put(buf, fx("door"), door - 0.3, 0.8)
+    # the steel door: separate unlock (wheel + bolts, when I grab the handle) and the slow heavy swing open
+    put(buf, fx("door_unlock"), KEY_OF["me2"][0] + 0.4, 0.75)
+    put(buf, fx("door_open"), door - 0.1, 0.85)
+    put(buf, fx("busdoor_open", muff), arr1 + 0.3, 0.4, 0.2)       # the bus doors fold open outside
     # outside: the dead city wind; footsteps to the bus; the bus idling then leaving
     bed(buf, fx("amb_city"), door + 0.2, t_in + 0.5, 0.35)
     put(buf, fx("footsteps"), out_ + 0.4, 0.5, 0.1)
     bed(buf, fx("amb_bus", "lowpass=f=1500"), out_, t_in, 0.15, pan=0.3)       # idling outside
-    put(buf, fx("bus_depart"), go - 1.0, 0.6)
+    put(buf, fx("busdoor_close"), go - 0.8, 0.7)                    # doors shut behind us, then we pull away
+    put(buf, fx("bus_depart", "atrim=start=1.2,asetpts=PTS-STARTPTS"), go - 0.2, 0.6)
     # inside the moving bus: engine rumble all the way, the city outside quieter
     bed(buf, fx("amb_bus"), t_in, stop + 0.5, 0.32)
     bed(buf, fx("amb_city", "lowpass=f=2500"), go, forest, 0.12)
