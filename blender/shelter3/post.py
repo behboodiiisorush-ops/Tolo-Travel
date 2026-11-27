@@ -22,6 +22,9 @@ W, H = 1920, 1080
 
 sys.path.insert(0, HERE)
 from captions import CAPTIONS, CARD_SECONDS, END, NARRATION, SPEAKERS, TITLE  # noqa: E402
+sys.path.insert(0, os.path.join(HERE, "..", "brand"))
+from brand import overlay as brand, CREDIT, CHANNEL  # noqa: E402
+FILM = "پناهگاه ۳"
 
 LAST = int(END * FPS)
 
@@ -50,10 +53,9 @@ def pill(d, cx, cy, text, color, size=36):
     d.text((cx, cy), text, font=f, fill=(255, 255, 255), anchor="mm", direction="rtl", language="fa")
 
 
-def overlay(img, t):
+def overlay(img, t, captions=True):
     d = ImageDraw.Draw(img)
-    pill(d, W - 150, 70, "پناهگاه ۳", (60, 60, 70), 38)
-    current = [c for c in CAPTIONS if c[0] <= t <= c[1]]
+    current = [c for c in CAPTIONS if c[0] <= t <= c[1]] if captions else []
     for start, end, who, text in current[-1:]:
         k = min(1.0, (t - start) / 0.15)
         lines = text.count("\n")
@@ -73,7 +75,7 @@ def overlay(img, t):
         if a > 0.02:
             col = tuple(int(c * a) for c in (255, 235, 150))
             draw_text(d2, (W // 2, H // 2), "یک هفته بعد...", int(110 * (0.92 + 0.08 * a)), fill=col, stroke=0)
-    return img
+    return brand(img, FILM)
 
 
 def final_card(img, k):
@@ -92,6 +94,7 @@ def final_card(img, k):
         d.ellipse((W // 2 - 495, y - 38, W // 2 - 419, y + 38), fill=(255, 255, 255))
         d.text((W // 2 - 457, y), "AB"[i], font=font(46), fill=col, anchor="mm")
     draw_text(d, (W // 2, 930), "جوابت رو کامنت کن", 56, fill=(255, 230, 120), stroke=8)
+    draw_text(d, (W // 2, 1020), f"{CREDIT}  —  {CHANNEL}", 34, fill=(230, 230, 230), stroke=5)
     return img
 
 
@@ -109,22 +112,32 @@ def main():
     names = sorted(n for n in os.listdir(TMP) if n.startswith("d_"))
     i = 0
     for n in names:
-        overlay(Image.open(os.path.join(TMP, n)).convert("RGB"), i / FPS).save(os.path.join(TMP, f"c_{i:05d}.png"))
+        src = Image.open(os.path.join(TMP, n)).convert("RGB")
+        overlay(src.copy(), i / FPS).save(os.path.join(TMP, f"c_{i:05d}.png"))
+        overlay(src, i / FPS, captions=False).save(os.path.join(TMP, f"k_{i:05d}.png"))
+        os.remove(os.path.join(TMP, n))
         i += 1
-    last = Image.open(os.path.join(TMP, names[-1])).convert("RGB")
+    last = Image.open(os.path.join(TMP, f"k_{i - 1:05d}.png")).convert("RGB")
     for j in range(CARD_SECONDS * FPS):
-        final_card(last.copy(), min(1.0, j / 12)).save(os.path.join(TMP, f"c_{i:05d}.png"))
+        card = brand(final_card(last.copy(), min(1.0, j / 12)), FILM)
+        card.save(os.path.join(TMP, f"c_{i:05d}.png"))
+        card.save(os.path.join(TMP, f"k_{i:05d}.png"))
         i += 1
-    out = os.path.join(OUT, "shelter3_full.mp4")
-    subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-framerate", str(FPS), "-i", os.path.join(TMP, "c_%05d.png"),
-                    "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "19", "-movflags", "+faststart", out], check=True)
-    print(out)
-    sfx = os.path.join(OUT, "sfx.wav")
-    if os.path.exists(sfx):
-        out_fx = os.path.join(OUT, "shelter3_sfx.mp4")
-        subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", out, "-i", sfx, "-map", "0:v", "-map", "1:a",
-                        "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest", out_fx], check=True)
-        print(out_fx)
+    enc = ["-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "19", "-movflags", "+faststart"]
+    cap = os.path.join(OUT, "shelter3_captions.mp4")
+    clean = os.path.join(OUT, "shelter3_clean.mp4")
+    for pre, out in (("c", cap), ("k", clean)):
+        subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-framerate", str(FPS), "-i",
+                        os.path.join(TMP, pre + "_%05d.png")] + enc + [out], check=True)
+        print(out)
+    for wav, name in (("sfx.wav", "shelter3_sfx.mp4"), ("voice.wav", "shelter3_voice.mp4")):
+        a = os.path.join(OUT, wav)
+        if os.path.exists(a):
+            subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", cap, "-i", a, "-map", "0:v", "-map", "1:a",
+                            "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest", os.path.join(OUT, name)],
+                           check=True)
+            print(os.path.join(OUT, name))
+    shutil.rmtree(TMP, ignore_errors=True)
 
 
 if __name__ == "__main__":

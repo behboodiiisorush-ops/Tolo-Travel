@@ -8,7 +8,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from captions import LINES  # noqa: E402
 
-TEMPO = 1.05
+TEMPO = 1.0
 GAP = 0.35
 TITLE = 2.6           # «یک هفته بعد...» on black first
 EXTRA = {"n1": TITLE + 0.6,
