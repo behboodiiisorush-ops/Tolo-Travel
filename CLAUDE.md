@@ -33,6 +33,12 @@
   (no synthesised numpy effects any more). Keep `talking=True` lip movement on the lines in `captions.py` and fit
   captions + lips to the generated lengths. Also keep a version without sound. If the ElevenLabs tools are not
   available in a chat, say so to the user instead of falling back silently.
+- **Voices must be clear and easy to understand** (the user rejected «واگن آخر ۶» v1): for Persian use
+  `eleven_multilingual_v2` (much clearer than v3; put emotion in punctuation/wording since v2 ignores [tags]),
+  loudness-match every line (`loudnorm=I=-16`), pitch child voices gently with `formant=preserved` (≤ +3 st),
+  duck music/effects to about −13 dB under every line, keep radio/phone colour light. Before delivery transcribe the
+  final mix with faster-whisper (`HF_HUB_DISABLE_XET=1`, model small, language fa) and regenerate any line that
+  comes out garbled; speech should sit ≥ 10 dB above the effects.
 - **Every sound is a real ElevenLabs sound effect — never a fake/synthesised one** (the user: door sounds so far were
   bad). Make one effect per action with a precise prompt: what it is made of, size, distance, how it moves, e.g.
   "heavy steel bunker door, latch clicks, slow creaking open, metal echo in a concrete room, close" or
