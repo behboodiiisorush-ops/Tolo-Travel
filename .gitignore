@@ -45,3 +45,4 @@ blender/storeroom/*.blend
 blender/storeroom/*.log
 blender/storeroom/voices/fitted/
 blender/storeroom/out/storeroom_voices.wav
+blender/storeroom/out/storeroom_sfx.mp4
