@@ -14,6 +14,8 @@ three layered cord necklaces with a small heart) is built **from code** in Blend
 | rigging & posing | MPFB `game_engine` rig, **Mixamo motion capture** retargeted (`shelter3/mocap2.py`), cross-faded at full 24 fps |
 | lighting & presenting | dark curved studio backdrop, warm key, cool fill, two rim lights, slow camera push-in, shallow focus on the eyes, Cycles + denoise |
 
+Motion follows `blender/STANDARD.md`: clips are joined with `cast/motion.py` (Timeline cross-fades + `foot_lock` IK planting) and `motion_check` must report CLEAN before rendering.
+
 Natural motion = real motion capture (breathing idle → thinking → nod "yes" → "listen…" gesture) plus life on
 top: blinks (also when the eyes jump to a new place), the head follows a look target that moves in quick darts
 with holds, brows lift while thinking, a smile that grows after the nod, and light lip movement during the gesture.
@@ -22,5 +24,5 @@ with holds, brows lift while thinking, a smile that grows after the nod, and lig
 ../cast/bpy.sh scene.py --still 1,130 --cycles --pct 50     # look checks -> out/
 ../cast/bpy.sh scene.py --still 1 --face --pct 50           # face close-up
 PCT=67 SAMPLES=16 ./chain.sh 1 264                          # full clip -> frames/ (≈45 s/frame on 4 CPUs)
-ffmpeg -framerate 24 -i frames/f_%04d.png -c:v libx264 -crf 17 -pix_fmt yuv420p nila.mp4
+ffmpeg -framerate 24 -i frames/f_%04d.png -vf scale=720:1280 -c:v libx264 -crf 17 -pix_fmt yuv420p nila.mp4
 ```
