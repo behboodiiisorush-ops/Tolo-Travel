@@ -25,6 +25,10 @@
   picking_up, falling_down, crawling, laying_idle, …). Pull the newest clips from `claude/great-newton-w2xf6z`
   (`git checkout FETCH_HEAD -- blender/mocap`). Mixamo has no hug: make hugs by hand (two characters close, arms
   posed with IK around the other's back, blended in from `breathing_idle`).
+- **Faces:** blinks are automatic (`anim.blink`); lips follow the real ElevenLabs voices with
+  `blender/cast/lipsync.py` (`talking=LS.level(who, t)` instead of `True`). No paid face add-ons (Faceit, Super Easy).
+  Extra motion from **Rokoko Motion Library** (head nods, listening, hand gestures, sit-and-talk transitions) is welcome
+  when the user downloads it as FBX — add it to `blender/mocap/` like the Mixamo clips and describe it in `CLIPS.md`.
 - Older cartoon (toon) films: `blender/school_pov/`, `blender/train_pov/` — workflow skill `/film-toon`.
 
 ## Rules the user set
