@@ -1,4 +1,4 @@
-"""«پناهگاه ۳ — اتوبوس نجات» (16:9, long). Comic look (EEVEE cel shading + ink outlines) on the cast, bodies
+"""«پناهگاه ۳ — اتوبوس نجات» (16:9, long). Soft cinematic look (soft_look.py, built on the cel pass) on the cast, bodies
 driven by Mixamo clips. All times come from captions.py (times.py, written by layout.py from the voices).
 
     ../cast/bpy.sh scene.py --still 40,120,...      -> test/s_XXXX.png
@@ -1734,6 +1734,8 @@ for attr, v in (("use_raytracing", False), ("shadow_ray_count", 1), ("shadow_ste
     if hasattr(sc.eevee, attr):
         setattr(sc.eevee, attr, v)
 sc.render.film_transparent = False
+import soft_look  # noqa: E402   the user's chosen look (27 Nov): soft cinematic 3D, no outlines
+soft_look.apply(sc)
 import json  # noqa: E402
 os.makedirs(os.path.join(HERE, "out"), exist_ok=True)
 json.dump({"cuts": [s_[0] for s_ in SHOTS], "T_BANG": T_BANG, "T_LOUD": T_LOUD, "T_GO": T_GO, "T_DOOR": T_DOOR,
