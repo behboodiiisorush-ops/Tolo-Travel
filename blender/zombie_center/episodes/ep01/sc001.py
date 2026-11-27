@@ -19,7 +19,7 @@ sys.path[:0] = [ZC, os.path.join(ZC, "sets")]
 import env_city, phone, zc_cast, mocap, motion_qc as Q, footlock
 from mathutils import Vector, Euler
 
-MODE = sys.argv[-1] if sys.argv[-1] in ("layout", "preview", "final") else "layout"
+MODE = sys.argv[-1] if sys.argv[-1] in ("layout", "preview", "final", "side") else "layout"
 MOCAP = os.path.join(ZC, "..", "mocap")
 FPS = 24
 SHOTS = [(1, 144), (145, 288), (289, 408), (409, 504), (505, 888), (889, 1008), (1009, 1080)]
@@ -33,6 +33,21 @@ S = env_city.build()
 bus = S["bus"]
 bpy.context.view_layer.update()
 
+def _mesh_min_z(objs):
+    dg = bpy.context.evaluated_depsgraph_get(); z = 1e9
+    for o in objs:
+        if o.type != "MESH":
+            continue
+        ev = o.evaluated_get(dg); me = ev.to_mesh()
+        for v in me.vertices:
+            z = min(z, (o.matrix_world @ v.co).z)
+        ev.to_mesh_clear()
+    return z
+
+# rest the bus on the road (its lowest point on z = 0)
+bus.location.z -= _mesh_min_z(bus.children_recursive)
+bpy.context.view_layer.update()
+
 # ---- where is the raised edge of the bus? (lowest -Y face of the bus, measured)
 pts = []
 for o in bus.children_recursive:
@@ -44,24 +59,40 @@ print("BUS edge_y", round(edge_y, 2), "x range", round(min(p.x for p in pts), 2)
 
 # ---- Arin: on his back in the gap under the raised edge, head towards the avenue (-Y)
 arin = zc_cast.spawn("zc_arin")
-ARIN_POS = (1.0, edge_y + 1.05, 0.0)
+ARIN_POS = (1.0, edge_y + 0.5, 0.0)
 lay = mocap.load(os.path.join(MOCAP, "laying_breathless.fbx"))
-mocap.apply(arin, lay, start=1, length=1080, offset=ARIN_POS, facing=180, loop=True, in_place=True)
+mocap.apply(arin, lay, start=1, length=1080, offset=ARIN_POS, facing=90, loop=True, in_place=True)
+# lying on the ground: lower the whole body until its lowest point (clothes or skin) touches the road
+sc.frame_set(1)
+low = _mesh_min_z([arin.body] + arin.parts.get("Clothes", []))
+arin.rig.location.z -= low
+for f in range(1, 1081, 24):
+    arin.rig.keyframe_insert("location", index=2, frame=f)
+print("ARIN lowered by", round(low, 3))
 
 # ---- the phone, face down in a puddle within arm's reach of his head
 tex = os.path.join(HERE, "tex")
 ph = phone.build(os.path.join(tex, "lock_nika.png"))
-PHONE_POS = (ARIN_POS[0] + 0.55, edge_y - 0.35, 0.0)
+sc.frame_set(1)
+_hd = arin.rig.matrix_world @ arin.rig.pose.bones["head"].head
+PHONE_POS = (_hd.x + 0.1, edge_y - 0.15, 0.0)
+print("HEAD", tuple(round(v, 2) for v in _hd), "PHONE", tuple(round(v, 2) for v in PHONE_POS))
 ph.location = PHONE_POS
 ph.rotation_euler = (math.pi, 0, math.radians(20))        # face down
 ph.location.z = 0.009
 
-# ---- the shambler (Z1): comes down the road, stops 3 m from Arin, sniffs, moves on
+# ---- the shambler (Z1): drags down the road, stops ~3 m from Arin (f700–820), sniffs, then moves on round the bus end
 z1 = zc_cast.spawn("zc_z1_office")
 walk = mocap.load(os.path.join(MOCAP, "zombie_walk.fbx"))
-mocap.apply(z1, walk, start=1, length=1080, offset=(3.6, -26.0, 0), facing=0, loop=True, in_place=True,
-            place=lambda j: ((3.6, -26.0 + min(j, 760) * 0.035, 0), 0.0))
-
+idle = mocap.load(os.path.join(MOCAP, "zombie_idle.fbx"))
+ZX, ZSTOP = 3.6, 4.0
+V = 0.035                                    # m/frame ≈ 0.84 m/s: a dragging shambler
+Y0 = ZSTOP - V * 699
+mocap.apply(z1, walk, start=1, length=699, in_place=True, loop=True, place=lambda j: ((ZX, Y0 + V * j, 0), 0.0))
+mocap.apply(z1, idle, start=700, length=120, offset=(ZX, ZSTOP, 0), facing=-25, in_place=True, loop=True, blend=8)
+mocap.apply(z1, walk, start=820, length=261, in_place=True, loop=True, blend=8,
+            place=lambda j: ((ZX + V * j * 0.9, ZSTOP + V * j * 0.45, 0), -63.0))
+Q.ground(z1, 1, 1080)
 # ---- cameras (one per shot), bound to markers
 def cam(name, loc, tgt, lens, f0, dof=None):
     cd = bpy.data.cameras.new(name); cd.lens = lens; cd.sensor_width = 36
@@ -74,15 +105,16 @@ def cam(name, loc, tgt, lens, f0, dof=None):
     return c
 
 pv = Vector(PHONE_POS)
-c1 = cam("CAM_S01_ECU_phone", pv + Vector((0.05, -0.32, 0.05)), pv + Vector((0, 0, 0.0)), 100, 1, (0.33, 2.0))
-c2 = cam("CAM_S02_wide", (1.2, -16.0, 0.32), (0.8, edge_y + 2, 0.9), 24, 145)
-c3 = cam("CAM_S03_insert", pv + Vector((0.6, -0.55, 0.25)), pv + Vector((-0.2, 0.25, 0.02)), 50, 289)
+sc.frame_set(456)
 head = arin.rig.matrix_world @ arin.rig.pose.bones["head"].head
-c4 = cam("CAM_S04_CU", Vector((head.x + 0.45, edge_y - 0.6, 0.18)), head, 35, 409)
-c5 = cam("CAM_S05_track", Vector((ARIN_POS[0] + 0.3, edge_y - 0.2, 0.12)), Vector((3.6, edge_y - 1.0, 0.3)), 35, 505)
-c6 = cam("CAM_S06_POV", head + Vector((0, -0.05, 0.08)), pv, 28, 889)
-c7 = cam("CAM_S07_CU", head + Vector((0.35, -0.5, 0.12)), head, 50, 1009)
-
+zfeet = Vector((ZX, ZSTOP, 0.15))
+c1 = cam("CAM_S01_ECU_phone", pv + Vector((0.04, 0.3, 0.07)), pv + Vector((0, -0.6, 0.02)), 60, 1, (0.3, 1.4))
+c2 = cam("CAM_S02_wide", (1.2, -16.0, 0.32), (0.9, edge_y + 1.0, 1.2), 24, 145)
+c3 = cam("CAM_S03_insert", pv + Vector((0.5, -0.5, 0.22)), pv + Vector((-0.15, 0.3, 0.03)), 50, 289)
+c4 = cam("CAM_S04_CU", head + Vector((0.25, -0.75, -0.25)), head, 35, 409)
+c5 = cam("CAM_S05_track", head + Vector((0.05, -0.35, -0.3)), zfeet, 35, 505)
+c6 = cam("CAM_S06_POV", head + Vector((0, -0.05, 0.1)), head + Vector((0, -0.2, 0.45)), 28, 889)
+c7 = cam("CAM_S07_CU", head + Vector((0.35, -0.5, 0.0)), head, 50, 1009)
 # ---- render settings
 sc.render.engine = "BLENDER_EEVEE"
 sc.view_settings.view_transform = "AgX"; sc.view_settings.look = "AgX - Base Contrast"; sc.view_settings.exposure = 2.0
@@ -100,3 +132,16 @@ if MODE == "layout":
         sc.render.filepath = os.path.join(OUT, f"layout_s{i + 1:02d}_f{f:04d}.png")
         bpy.ops.render.render(write_still=True)
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, "CH01_SC001_layout.blend"))
+
+if MODE == "side":       # orthographic cross-section: is Arin really in the gap under the bus, on the ground?
+    sc.timeline_markers.clear(); sc.frame_set(456)
+    cd = bpy.data.cameras.new("dbg"); cd.type = "ORTHO"; cd.ortho_scale = 5
+    c = bpy.data.objects.new("dbg", cd); sc.collection.objects.link(c); sc.camera = c
+    c.location = (ARIN_POS[0] + 9, ARIN_POS[1], 1.0); c.rotation_euler = (math.radians(90), 0, math.radians(90))
+    s = bpy.data.lights.new("s", "SUN"); s.energy = 5; so = bpy.data.objects.new("s", s)
+    so.rotation_euler = (math.radians(60), 0, math.radians(60)); sc.collection.objects.link(so)
+    for o in bpy.data.objects:
+        if o.name.startswith("ENV_Building") or o.name.startswith("FX_"):
+            o.hide_render = True
+    sc.render.resolution_x = sc.render.resolution_y = 480; sc.eevee.taa_render_samples = 4
+    sc.render.filepath = os.path.join(OUT, "side_check.png"); bpy.ops.render.render(write_still=True)

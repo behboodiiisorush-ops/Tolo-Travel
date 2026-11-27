@@ -201,7 +201,7 @@ def bus(loc, name="PROP_BUS_NIGHT_4"):
     for o in parts:
         _own(o); P.parent_keep(o, root)
     # tip onto its left side (roof towards -Y), raised edge ~0.45 m on the +Y... side resting on debris
-    root.rotation_euler = (math.radians(-90 + 9), 0, math.radians(8))
+    root.rotation_euler = (math.radians(-90 + 22), 0, math.radians(8))   # side down, tipped past 90° so the chassis overhangs a low wedge gap
     root.location = (loc[0], loc[1], 1.25 + 0.2)
     return root
 
