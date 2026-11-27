@@ -112,7 +112,7 @@ def facade(name, base, lit_frac=0.06, seed=0):
     rr = nt.nodes.new("ShaderNodeMapRange"); rr.inputs["To Min"].default_value = 0.85; rr.inputs["To Max"].default_value = 0.08
     nt.links.new(win2.outputs[0], rr.inputs["Value"]); nt.links.new(rr.outputs["Result"], p.inputs["Roughness"])
     p.inputs["Emission Color"].default_value = (1.0, 0.62, 0.3, 1)
-    es = nt.nodes.new("ShaderNodeMath"); es.operation = "MULTIPLY"; es.inputs[1].default_value = 0.12
+    es = nt.nodes.new("ShaderNodeMath"); es.operation = "MULTIPLY"; es.inputs[1].default_value = 0.05
     nt.links.new(litw.outputs[0], es.inputs[0]); nt.links.new(es.outputs[0], p.inputs["Emission Strength"])
     P.grime(m, scale=0.4, dark=0.55, rough_var=0.05, bump=0.0)
     return m
@@ -156,7 +156,19 @@ def bus(loc, name="PROP_BUS_NIGHT_4"):
     tyre = P.mat("MAT_Bus_Tyre", (0.03, 0.03, 0.03), rough=0.85)
     root = P.empty(name, (0, 0, 0)); _own(root)
     # built upright (length along X, width along Y, height Z), then tipped onto its left side
-    parts = [P.box((0, 0, 1.75), (11.5, 2.5, 2.9), paint, name + "_body", bevel=0.15)]
+    parts = [P.box((0, 0, 1.95), (11.5, 2.5, 2.5), paint, name + "_body", bevel=0.15)]
+    # underside (faces the avenue once the bus is on its side): chassis rails, axles, tank, exhaust, dirt
+    under = P.grime(P.mat("MAT_Bus_Under", (0.08, 0.075, 0.07), rough=0.85, metal=0.3), 3.0, 0.5, 0.1, 0.08)
+    for y in (-0.55, 0.55):
+        parts.append(P.box((0, y, 0.6), (10.4, 0.2, 0.25), under, name + "_rail"))
+    for x in (-3.8, 3.6):
+        parts.append(P.cyl((x, -1.1, 0.52), (x, 1.1, 0.52), 0.07, under, name + "_axle"))
+    parts.append(P.box((0.4, 0.75, 0.62), (1.6, 0.6, 0.45), under, name + "_tank", bevel=0.05))
+    parts.append(P.cyl((-1.0, -0.8, 0.55), (-5.5, -0.8, 0.55), 0.06, under, name + "_exhaust"))
+    parts.append(P.box((0, 0, 0.72), (11.0, 2.3, 0.05), under, name + "_floor"))
+    for x in (-3.8, 3.6):          # wheel arches (dark recess around each wheel)
+        for y in (-1.2, 1.2):
+            parts.append(P.box((x, y, 0.85), (1.3, 0.12, 0.6), under, name + "_arch"))
     for side in (-1, 1):
         parts.append(P.box((0.3, side * 1.26, 2.15), (9.6, 0.04, 1.0), glass, name + "_windows"))
     parts.append(P.box((5.76, 0, 2.0), (0.05, 2.2, 1.4), glass, name + "_windscreen"))
@@ -175,7 +187,9 @@ def bus(loc, name="PROP_BUS_NIGHT_4"):
             parts.append(P.box((x, y, 1.3), (1.1, 0.03, 1.9), glass, name + "_door"))
     for x in (-3.8, 3.6):
         for y in (-1.15, 1.15):
-            parts.append(P.cyl((x, y - 0.15, 0.5), (x, y + 0.15, 0.5), 0.5, tyre, name + "_wheel", 24))
+            parts.append(P.cyl((x, y - 0.16, 0.52), (x, y + 0.16, 0.52), 0.52, tyre, name + "_wheel", 28))
+            rim = bpy.data.materials.get("MAT_Bus_Rim") or P.mat("MAT_Bus_Rim", (0.4, 0.4, 0.4), rough=0.4, metal=0.8)
+            parts.append(P.cyl((x, y - 0.17 * (1 if y < 0 else -1), 0.52), (x, y - 0.19 * (1 if y < 0 else -1), 0.52), 0.3, rim, name + "_rim", 20))
     # destination display: route number only
     disp = P.mat("MAT_Bus_Display", (0.02, 0.02, 0.02), rough=0.3, emit=(1.0, 0.55, 0.1), strength=2.5)
     parts.append(P.box((5.79, 0, 3.0), (0.03, 1.4, 0.3), P.mat("MAT_Bus_DispBg", (0.01, 0.01, 0.01), rough=0.3), name + "_dispbg"))
@@ -212,9 +226,10 @@ def traffic_light(loc, name="PROP_TRAFFIC_LIGHT"):
     return root
 
 
-def street_lamp(loc, on=True, name="PROP_STREET_LAMP"):
+def street_lamp(loc, on=True, name="PROP_STREET_LAMP", sodium=False):
     pole_m = bpy.data.materials.get("MAT_Pole") or P.mat("MAT_Pole", (0.15, 0.16, 0.15), rough=0.5, metal=0.6)
-    head = P.mat(name + "_head", (0.4, 0.3, 0.2), rough=0.3, emit=(1.0, 0.55, 0.22) if on else None, strength=8.0 if on else 0)
+    col = (1.0, 0.62, 0.3) if sodium else (0.78, 0.88, 1.0)
+    head = P.mat(name + "_head", (0.4, 0.4, 0.4), rough=0.3, emit=col if on else None, strength=8.0 if on else 0)
     root = P.empty(name, (0, 0, 0)); _own(root)
     side = -1 if loc[0] > 0 else 1
     ps = [P.cyl((0, 0, 0), (0, 0, 7.5), 0.09, pole_m, name + "_pole"),
@@ -223,7 +238,7 @@ def street_lamp(loc, on=True, name="PROP_STREET_LAMP"):
     for o in ps:
         _own(o); P.parent_keep(o, root)
     if on:
-        L = bpy.data.lights.new(name + "_light", "SPOT"); L.energy = 1400; L.color = (1.0, 0.68, 0.42)
+        L = bpy.data.lights.new(name + "_light", "SPOT"); L.energy = 1400; L.color = col
         L.spot_size = math.radians(110); L.spot_blend = 0.6; L.shadow_soft_size = 0.3
         lo = bpy.data.objects.new(name + "_light", L); lo.location = (side * 1.5, 0, 7.35)
         _coll().objects.link(lo); P.parent_keep(lo, root)
@@ -232,7 +247,7 @@ def street_lamp(loc, on=True, name="PROP_STREET_LAMP"):
 
 
 def building_block(x0, x1, y0, y1, h, colour, seed):
-    m = facade(f"MAT_Facade_{seed}", colour, lit_frac=0.05, seed=seed)
+    m = facade(f"MAT_Facade_{seed}", colour, lit_frac=0.03, seed=seed)
     o = P.box(((x0 + x1) / 2, (y0 + y1) / 2, h / 2), (abs(x1 - x0), abs(y1 - y0), h), m, f"ENV_Building_{seed}")
     _own(o)
     # ground-floor shutters (closed, dirty) on the street face
@@ -244,6 +259,13 @@ def building_block(x0, x1, y0, y1, h, colour, seed):
         w = R.uniform(2.4, 3.6)
         _own(P.box((face_x - s * 0.05, y + w / 2, 1.5), (0.08, w - 0.3, 2.9), sh, "ENV_Shutter"))
         y += w + 0.6
+    # floor ledges + a cornice on the street face: breaks the flat wall, catches light, reads as real buildings
+    led = bpy.data.materials.get("MAT_Ledge") or P.grime(P.mat("MAT_Ledge", (0.5, 0.48, 0.45), rough=0.8), 1.5, 0.5, 0.1, 0.03)
+    z = 3.4
+    while z < h - 1.0:
+        _own(P.box((face_x - s * 0.12, (y0 + y1) / 2, z), (0.25, abs(y1 - y0), 0.14), led, "ENV_Ledge"))
+        z += 3.2
+    _own(P.box((face_x - s * 0.2, (y0 + y1) / 2, h - 0.2), (0.4, abs(y1 - y0), 0.4), led, "ENV_Cornice"))
     return o
 
 
@@ -300,7 +322,7 @@ def build():
     S["traffic_light"] = traffic_light((5.7, -6.0, 0.15))
     for i, (x, y, on) in enumerate(((7.2, -20, True), (-7.2, -4, False), (7.2, 3.0, True), (7.2, 14, True), (-7.2, 30, True),
                                     (7.2, 40, False), (-7.2, -34, True))):
-        street_lamp((x, y, 0.15), on, f"PROP_STREET_LAMP_{i}")
+        street_lamp((x, y, 0.15), on, f"PROP_STREET_LAMP_{i}", sodium=(i in (5,)))
     carcols = [(0.25, 0.26, 0.28), (0.55, 0.53, 0.5), (0.18, 0.2, 0.25), (0.35, 0.12, 0.1), (0.5, 0.5, 0.48), (0.12, 0.13, 0.12)]
     spots = [(-3.0, -12, 4), (3.2, -18, -8), (-3.4, 16, 172), (3.0, 26, 186), (-2.8, -28, 10), (4.4, 33, -20)]
     S["cars"] = [car((x, y, 0), yaw, carcols[i], f"PROP_CAR_ABANDONED_{i}", damaged=True) for i, (x, y, yaw) in enumerate(spots)]
@@ -319,11 +341,11 @@ def build():
     S["side_street_origin"] = (10.0, 22.0, 0.0)
     # world: night sky + atmospheric fog
     w = bpy.data.worlds.new("WORLD_City_Night"); sc.world = w; w.use_nodes = True
-    bg = w.node_tree.nodes["Background"]; bg.inputs[0].default_value = (0.02, 0.03, 0.055, 1); bg.inputs[1].default_value = 3.0
+    bg = w.node_tree.nodes["Background"]; bg.inputs[0].default_value = (0.03, 0.045, 0.085, 1); bg.inputs[1].default_value = 3.0
     vol = w.node_tree.nodes.new("ShaderNodeVolumePrincipled")
     vol.inputs["Density"].default_value = 0.004; vol.inputs["Color"].default_value = (0.55, 0.6, 0.7, 1)
     w.node_tree.links.new(vol.outputs[0], w.node_tree.nodes["World Output"].inputs["Volume"])
-    moon = bpy.data.lights.new("LGT_Moon", "SUN"); moon.energy = 4.0; moon.color = (0.6, 0.7, 1.0); moon.angle = math.radians(1)
+    moon = bpy.data.lights.new("LGT_Moon", "SUN"); moon.energy = 6.0; moon.color = (0.6, 0.7, 1.0); moon.angle = math.radians(1)
     mo = bpy.data.objects.new("LGT_Moon", moon); mo.rotation_euler = (math.radians(55), 0, math.radians(-35)); _coll().objects.link(mo)
     # low ground fog layer
     fog = P.box((0, 5, 0.45), (14, 90, 0.9), bpy.data.materials.new("MAT_GroundFog"), "FX_GroundFog"); _own(fog)
