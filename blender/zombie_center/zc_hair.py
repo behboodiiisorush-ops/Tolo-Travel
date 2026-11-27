@@ -32,7 +32,7 @@ def _darken_scalp(body, on_scalp, rgb=(0.012, 0.01, 0.01)):
     """Paint the scalp under the strands dark so skin never shows through the part or the hairline."""
     import mpfb_tools as M
     mw = body.matrix_world
-    M.paint(body, "zc_scalp", lambda p, n: (1.0, 0, 0) if on_scalp(mw @ p) else (0.0, 0, 0))
+    M.paint(body, "zc_scalp", lambda p, n: (min(1.0, on_scalp(mw @ p)), 0, 0))
     M.recolor(body, lambda nt, c: M.mix(nt, c, rgb, M.attr(nt, "zc_scalp")[0]))
 
 
@@ -73,12 +73,21 @@ def centre_part_hair(ch, n=20000, seed=1, colour=(0.012, 0.010, 0.010), name=Non
         fy = (p.y - front_y) / max(1e-6, (back_y - front_y))
         return on_scalp(p) and (abs(p.x - cx) < 0.055 or p.z > ear_z + 0.05 or (fy > 0.68 and p.z > ear_z - 0.01))
     faces = [f for f in bm.faces if root_ok(f.calc_center_median())]
-    _darken_scalp(body, on_scalp)
+    def paint_ok(p):
+        fy = (p.y - front_y) / max(1e-6, (back_y - front_y))
+        if root_ok(p) and (fy > 0.3 or p.z > hairline_front + 0.02):
+            return 1.0
+        # forehead under the fringe: a soft shadow so skin doesn't flash between strands (not the part line)
+        if fy < 0.3 and brow_z + 0.04 < p.z <= hairline_front + 0.02 and 0.007 < abs(p.x - cx) < 0.06:
+            return 0.55 * min(1.0, (p.z - brow_z - 0.04) / 0.02)
+        return 0.0
+    _darken_scalp(body, paint_ok)
     areas = [f.calc_area() for f in faces]
     tot = sum(areas)
     roots = []
     for f, a in zip(faces, areas):
-        k = a / tot * n
+        fyc = (f.calc_center_median().y - front_y) / max(1e-6, (back_y - front_y))
+        k = a / tot * n * (2.6 if fyc < 0.38 else 1.0)      # dense front: the fringe must hide the forehead
         cnt = int(k) + (1 if rnd.random() < k - int(k) else 0)
         vs = [v.co for v in f.verts]
         for _ in range(cnt):
@@ -152,8 +161,10 @@ def centre_part_hair(ch, n=20000, seed=1, colour=(0.012, 0.010, 0.010), name=Non
             pts.append(p.copy())
         for i in range(1, len(pts)):           # hard guard: nothing beside the face, nothing over the eyes
             q = pts[i]
-            if (abs(q.x - cx) > 0.058 and q.z < ear_z + 0.045) or (fy < 0.45 and abs(q.x - cx) < 0.058 and q.z < brow_z + 0.025):
+            if q.z < ear_z - 0.03 or (abs(q.x - cx) > 0.058 and q.z < ear_z + 0.045) or (fy < 0.45 and abs(q.x - cx) < 0.058 and q.z < brow_z + 0.025):
                 pts[i] = pts[i - 1].copy()
+        if sum((pts[i] - pts[i - 1]).length for i in range(1, len(pts))) < 0.4 * L:
+            continue                           # clipped to a stub: would show as a dot, drop it
         strands.append(pts)
     bm.free()
 
@@ -166,8 +177,9 @@ def centre_part_hair(ch, n=20000, seed=1, colour=(0.012, 0.010, 0.010), name=Non
     rad = cv.attributes.get("radius") or cv.attributes.new("radius", "FLOAT", "POINT")
     rv = []
     for s in strands:
+        thick = 1.6 if (s[0].y - front_y) / (back_y - front_y) < 0.38 else 1.0   # fuller fringe
         for i in range(SEG):
-            rv.append(0.00016 * (1 - 0.7 * i / (SEG - 1)))
+            rv.append(0.00016 * thick * (1 - 0.7 * i / (SEG - 1)))
     rad.data.foreach_set("value", rv)
     ob = bpy.data.objects.new(cname, cv)
     for c in body.users_collection:

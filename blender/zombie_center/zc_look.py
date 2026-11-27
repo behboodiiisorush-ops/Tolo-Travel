@@ -66,11 +66,11 @@ def brow_scar(ch, side=+1):
         f = min(1.0, max(0.0, f))
         q = a + (b - a) * f
         return Vector((p.x - q.x, 0, p.z - q.z)).length if p.y < front + 0.03 else 1.0
-    M.paint(body, "zc_scar", lambda p, n: (M.smooth(0.0014, 0.0005, dist(p)), 0, 0))
+    M.paint(body, "zc_scar", lambda p, n: (M.smooth(0.0042, 0.0016, dist(p)), 0, 0))
     M.recolor(body, lambda nt, c: M.mix(nt, c, (0.78, 0.6, 0.55), M.attr(nt, "zc_scar")[0]))
     import bmesh
     for o in ch.parts.get("Eyebrows", []):
         bm = bmesh.new(); bm.from_mesh(o.data)
-        kill = [v for v in bm.verts if dist(o.matrix_world @ v.co) < 0.0012]
+        kill = [v for v in bm.verts if dist(o.matrix_world @ v.co) < 0.0022]
         bmesh.ops.delete(bm, geom=kill, context="VERTS")
         bm.to_mesh(o.data); bm.free()

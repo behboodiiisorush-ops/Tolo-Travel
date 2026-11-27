@@ -17,7 +17,7 @@ ZC = {
         fa="آرین", role="Subject 001. 19, lean, black centre-parted hair, dark eyes, small scar at the LEFT eyebrow.",
         gender=1.0, age=0.43, height=0.55, weight=0.42, muscle=0.5, skin="young_caucasian_male", skin_tint=OLIVE,
         hair="short04", hair_col=(0.02, 0.018, 0.018), strand_hair="centre_part",   # short04 = dark scalp layer under the strands
-        brow="eyebrow006", brow_col=(0.03, 0.025, 0.022), dark_eyes=True,
+        brow="eyebrow004", brow_col=(0.03, 0.025, 0.022), dark_eyes=True,
         scar="left_brow",
         clothes={"male_casualsuit05": (0.16, 0.17, 0.18), "toigo_ankle_boots_male": (0.12, 0.1, 0.09)}),
     "zc_nika": dict(
