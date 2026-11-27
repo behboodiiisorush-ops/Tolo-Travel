@@ -61,7 +61,7 @@ def screen_off(path):
     return path
 
 
-def build(screen_path, name="PROP_PHONE_ARIN", strength=2.5):
+def build(screen_path, name="PROP_PHONE_ARIN", strength=0.7):
     import bpy, props as P
     body = P.mat(name + "_body", (0.03, 0.03, 0.035), rough=0.35, metal=0.3)
     o = P.box((0, 0, 0.0045), (0.072, 0.152, 0.009), body, name, bevel=0.004)

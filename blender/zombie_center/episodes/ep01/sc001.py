@@ -16,7 +16,7 @@ import bpy, sys, os, math
 HERE = os.path.dirname(os.path.abspath(__file__))
 ZC = os.path.abspath(os.path.join(HERE, "..", ".."))
 sys.path[:0] = [ZC, os.path.join(ZC, "sets")]
-import env_city, phone, zc_cast, mocap, motion_qc as Q, footlock
+import env_city, phone, zc_cast, mocap, motion_qc as Q, footlock, perform as A
 from mathutils import Vector, Euler
 
 MODE = sys.argv[-1] if sys.argv[-1] in ("layout", "preview", "final", "side", "quality") else "layout"
@@ -123,11 +123,43 @@ c4 = cam("CAM_S04_CU", eyec + fwd * 0.45 + Vector((0, -0.35, 0)), eyec, 35, 409)
 c5 = cam("CAM_S05_track", head + Vector((0.05, -0.35, -0.3)), zfeet, 35, 505)
 c6 = cam("CAM_S06_POV", eyec + fwd * 0.03, eyec + fwd * 0.4, 28, 889)
 c7 = cam("CAM_S07_CU", eyec + fwd * 0.35 + Vector((0, -0.25, 0)), eyec, 50, 1009)
-# shots 6–7: the phone is held above his face (hand IK comes in the animation pass)
-ph.keyframe_insert("location", frame=888); ph.keyframe_insert("rotation_euler", frame=888)
-ph.location = eyec + fwd * 0.32
-ph.rotation_euler = ((-fwd).to_track_quat("Z", "Y").to_euler())
-ph.keyframe_insert("location", frame=889); ph.keyframe_insert("rotation_euler", frame=889)
+
+# ================================================================ acting
+from mathutils import Quaternion
+mesh_c = lambda o: (lambda me: sum((o.matrix_world @ v.co for v in me.vertices), Vector()) / len(me.vertices))(o.evaluated_get(bpy.context.evaluated_depsgraph_get()).to_mesh())
+mouth = mesh_c(arin.parts["Teeth"][0]) + fwd * 0.02
+chest = (arin.rig.matrix_world @ arin.rig.pose.bones["spine_03"].head) + fwd * 0.14
+sc.frame_set(300)
+hl = arin.rig.matrix_world @ arin.rig.pose.bones["hand_l"].head
+hr = arin.rig.matrix_world @ arin.rig.pose.bones["hand_r"].head
+SIDE = "l" if (hl - pv).length < (hr - pv).length else "r"
+hrest = hl if SIDE == "l" else hr
+print("REACH with", SIDE, "hand; reach dist", round((min(hl, hr, key=lambda h: (h - pv).length) - pv).length, 2))
+grab = pv + Vector((0, 0, 0.03))
+A.hand(arin, SIDE, [
+    (300, hrest), (318, (hrest + grab) / 2 + Vector((0, 0, 0.06))), (345, grab), (352, grab),     # reach out, grab
+    (395, chest), (404, chest),                                                                   # pull it in to the chest
+    (418, mouth + fwd * 0.05), (880, mouth + fwd * 0.05),                                         # hand clamped over his mouth
+    (900, chest + Vector((0, 0, 0.02))), (906, chest + Vector((0, 0, 0.02))),                     # takes the phone off his chest
+    (935, eyec + fwd * 0.26 + Vector((0, 0, -0.06))), (1080, eyec + fwd * 0.26 + Vector((0, 0, -0.06))),
+])
+# the phone: lies in the puddle -> carried 352–404 -> rests face-down on his chest -> lifted and turned to his face
+q_down = ph.rotation_euler.to_quaternion()
+A.place(ph, 1, Vector(PHONE_POS) + Vector((0, 0, 0.009)), q_down)
+A.place(ph, 351, Vector(PHONE_POS) + Vector((0, 0, 0.009)), q_down)
+A.carry(ph, arin, SIDE, 352, 404)
+sc.frame_set(404)
+A.place(ph, 405, chest + fwd * 0.01, ph.matrix_world.to_quaternion())
+A.place(ph, 905, chest + fwd * 0.01, ph.matrix_world.to_quaternion())
+q_face = (-fwd).to_track_quat("Z", "Y")
+A.place(ph, 935, eyec + fwd * 0.3, q_face)
+A.place(ph, 1080, eyec + fwd * 0.3, q_face)
+# head turns toward the dragging feet while she passes; face: fear, then shock at the name
+A.look(arin, 560, 860, lambda f: zfeet, weight=0.45)
+A.face(arin, 1, 1080, lambda f, t: dict(worry=(1.5 if f < 940 else 1.0), talking=(1040 <= f <= 1068)))
+# the shambler lifts her face and sniffs toward the bus while she stands (f720–800)
+A.look(z1, 712, 805, lambda f: Vector((ARIN_POS[0], edge_y + 0.2, 1.9 + 0.08 * math.sin(f * 0.6))), weight=0.6)
+A.face(z1, 1, 1080, lambda f, t: dict())
 # ---- render settings
 sc.render.engine = "BLENDER_EEVEE"
 sc.view_settings.view_transform = "AgX"; sc.view_settings.look = "AgX - Base Contrast"; sc.view_settings.exposure = 2.0
