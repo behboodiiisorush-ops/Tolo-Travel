@@ -51,23 +51,57 @@ def apply(sc, f, base):
     for o in bpy.data.objects:
         if o.get("front"):
             o.hide_render = not st["front"]
-    for o in bpy.data.collections["SHADOW"].all_objects:
-        if o.type == "MESH":
+    for o in bpy.data.objects:
+        if o.type != "MESH":
+            continue
+        if o.name.startswith("SHADOW_"):
             o.hide_render = not st["shadow"]
             o.visible_shadow = False
-    for o in bpy.data.collections["DANIEL"].all_objects:
-        if o.type == "MESH":
+        elif o.name.startswith("DANIEL_"):
             o.visible_shadow = st["daniel_shadow"]
+        elif o.name.startswith("Coffee table"):
+            o.hide_render = st["cam"] == "REV"          # it stands between the reverse camera and the family
     L = st["light"]
     for name, e in base.items():
         lt = bpy.data.objects[name]
         if name == "EP2 key":                       # the moon through the window stays a little
-            lt.data.energy = e * max(L, 0.18) if L <= 1 else e * 2
+            lt.data.energy = e * max(L, 0.5) if L <= 1 else e * 2
         else:
             lt.data.energy = e * L
     w = sc.world.node_tree.nodes["Background"].inputs["Strength"]
     w.default_value = 0.6 * (L if L <= 1 else 3)
     return st
+
+
+def fix_scene(sc):
+    """Framing fixes found on the test stills (kept here so the 19-minute scene build need not run again)."""
+    import render_shorts as RS
+    ceil = bpy.data.objects["Living_Room ceiling"]
+    if "ceiling front" not in bpy.data.objects:
+        c = ceil.copy()
+        c.data = ceil.data.copy()
+        c.name = "ceiling front"
+        sc.collection.objects.link(c)
+        c.location = (ceil.location.x, -2.2 - 2.0 - 0.01, ceil.location.z + 0.04)   # no z-fighting with the room's ceiling
+        c.scale = (3.0, 1.0, 1.0)
+    fl = bpy.data.objects["floor front"]
+    fl.data.materials.clear()
+    fl.data.materials.append(bpy.data.materials["PP set floor_liv"])
+    for name, loc, tgt, lens in (("WIDE", (0.35, -4.4, 1.2), (0.35, 0, 1.05), 20),
+                                 ("MED", (0.1, -3.7, 1.25), (0.2, -1.0, 1.0), 22),
+                                 ("FLOOR", (0.35, -3.7, 0.3), (0.35, -0.6, 0.4), 16)):
+        cam = bpy.data.objects["CAM_" + name]
+        RS.aim(cam, loc, tgt)
+        cam.data.lens = lens
+    key = bpy.data.objects["EP2 key"]
+    key.rotation_euler = (math.radians(42), 0, math.radians(180))      # shadows fall towards the camera, close to the feet
+    key.data.energy = 4.0                                               # strong enough to draw shadows on the floor
+    for n in ("Living_Room ceiling", "ceiling front"):
+        bpy.data.objects[n].visible_shadow = False                      # the ceiling blocked the moon: no floor shadows
+    bpy.data.objects["EP2 fill"].location = (0.3, -5.2, 2.4)           # was in front of the wide camera (a bright band)
+    for o in bpy.data.objects:
+        if o.type == "LIGHT" and o.data.type == "AREA":
+            o.visible_camera = False                                    # seen edge-on it was a bright line
 
 
 def main():
@@ -77,6 +111,7 @@ def main():
     import generate_rig as G
     G.enable_addons()
     sc = bpy.context.scene
+    fix_scene(sc)
     base = {o.name: o.data.energy for o in bpy.data.objects if o.type == "LIGHT"}
     out = os.path.join(HERE, "frames")
     if "--still" in argv:
