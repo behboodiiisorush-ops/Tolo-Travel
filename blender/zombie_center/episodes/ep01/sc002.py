@@ -1,4 +1,4 @@
-"""EP01 · CH01_SC002 — EXT. AVENUE, BEHIND THE FALLEN BUS — NIGHT · 22:42 · 71.5 s (scene frames 1081–2796)
+"""EP01 · CH01_SC002 — EXT. AVENUE, BEHIND THE FALLEN BUS — NIGHT · 22:42 · 66.8 s (scene frames 1081–2684)
 
     blender/cast/bpy.sh blender/zombie_center/episodes/ep01/sc002.py layout     # one still per shot
     blender/cast/bpy.sh blender/zombie_center/episodes/ep01/sc002.py preview    # every 2nd frame, 480x270
@@ -7,14 +7,14 @@
 The phone screen plays a per-frame image sequence made by sc002_screen.py (Nika's video frames + player UI).
 Shots (screenplay v1.0, timed to the real video length 34.5 s):
  1  1081–1248  medium 35 mm: Arin crawls round the bus end, kneels with his back to the bus roof, dims the phone
- 2  1249–1593  POV 28 mm over the phone: the video plays — Nika's first line, first glance at the door (video 1–345)
- 3  1594–1690  POV 50 mm, screen fills the frame: her wrist — veins, bracelet, cannula (video 346–442)
- 4  1691–1768  POV 50 mm: «اونا می‌گن دارم خوب می‌شم... دروغ می‌گن.» (video 443–520)
- 5  1769–1953  POV 50 mm: the Centre directions (video 521–705)
- 6  1954–2124  POV 35 mm: the lock, she leans in, cut-off line, the screen goes black (video 706–828 + 48 black)
- 7  2125–2340  CU 50 mm: Arin frozen; drags the scrubber back, replays the last second, black again
- 8  2341–2532  wide 24 mm from behind Arin: far down the avenue the Driver has stopped; slowly turns his head to the glow
- 9  2533–2796  CU 50 mm: «همه‌ی این سال‌ها... تو مُرده بودی.» — he swallows, eyes wet
+ 2  1249–1497  POV 28 mm over the phone: the video plays — Nika's first line, first glance at the door (video 1–249)
+ 3  1498–1594  POV 50 mm, screen fills the frame: her wrist — veins, bracelet, cannula (video 250–346)
+ 4  1595–1678  POV 50 mm: «اونا می‌گن دارم خوب می‌شم... دروغ می‌گن.» (video 347–430)
+ 5  1679–1848  POV 50 mm: the Centre directions (video 431–600)
+ 6  1849–2012  POV 35 mm: the lock, she leans in, cut-off line, the screen goes black (video 601–716 + 48 black)
+ 7  2013–2228  CU 50 mm: Arin frozen; drags the scrubber back, replays the last second, pauses on her face
+ 8  2229–2420  wide 24 mm from behind Arin: far down the avenue the Driver has stopped; slowly turns his head to the glow
+ 9  2421–2684  CU 50 mm: «همه‌ی این سال‌ها... تو مُرده بودی.» — he swallows, eyes wet
 """
 import bpy, sys, os, math
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -27,11 +27,11 @@ MODE = sys.argv[-1] if sys.argv[-1] in ("layout", "preview", "final", "debug") e
 MOCAP = os.path.join(ZC, "..", "mocap")
 VOICE = os.path.join(HERE, "audio", "voice")
 FPS = 24
-F0, F1 = 1081, 2796
-SHOTS = [(1081, 1248), (1249, 1593), (1594, 1690), (1691, 1768), (1769, 1953), (1954, 2124),
-         (2125, 2340), (2341, 2532), (2533, 2796)]
+F0, F1 = 1081, 2684
+SHOTS = [(1081, 1248), (1249, 1497), (1498, 1594), (1595, 1678), (1679, 1848), (1849, 2012),
+         (2013, 2228), (2229, 2420), (2421, 2684)]
 VIDEO_START = 1249                      # scene frame of video frame 1
-ARIN_LINE = 2533 + 30                   # «همه‌ی این سال‌ها...»
+ARIN_LINE = 2421 + 30                   # «همه‌ی این سال‌ها...»
 
 sc = bpy.context.scene
 for o in list(bpy.data.objects):
@@ -139,7 +139,7 @@ idle = mocap.load(os.path.join(MOCAP, "breathing_idle.fbx"))
 DP = Vector((K.x + 1.8, K.y + 30.0, 0.0))
 mocap.apply(drv, idle, start=F0, length=F1 - F0 + 1, offset=tuple(DP), facing=200.0, in_place=True, loop=True)
 Q.ground(drv, F0, F1)
-A.look(drv, 2380, F1 - 10, lambda f: HOLD.lerp(DP + Vector((-6, 0, 1.6)), max(0.0, min(1.0, (2470 - f) / 90.0))), weight=0.8)
+A.look(drv, 2268, F1 - 10, lambda f: HOLD.lerp(DP + Vector((-6, 0, 1.6)), max(0.0, min(1.0, (2358 - f) / 90.0))), weight=0.8)
 A.face(drv, F0, F1, lambda f, t: dict())
 
 # ---------------------------------------------------------------- Arin's face + head
@@ -149,7 +149,7 @@ LS.add("arin", os.path.join(VOICE, "sc002_arin_02.wav"), start=(ARIN_LINE - 1) /
 
 def arin_face(f, t):
     w = 1.3
-    if f >= 2050:
+    if f >= 1940:
         w = 1.7                          # the cut-off, the black screen: shock
     if f >= ARIN_LINE + 80:
         w = 1.5

@@ -6,14 +6,14 @@
     blender/cast/bpy.sh blender/zombie_center/episodes/ep01/sc002_video.py final     # 540x960 (use PREV_START/PREV_END)
 
 Video timeline (24 fps, video frame 1 = 0.0 s) — voices are the ElevenLabs takes in ../audio/voice:
-   14– 302  N1 «آرین... اگه اینو می‌بینی ... همه‌ی این سال‌ها زنده بودم.»  (brave smile on «زنده‌م»)
-  312– 345  first glance at the door
-  346– 442  pushes her sleeve back and turns the LEFT wrist to the lens: dark veins, red-thread bracelet, cannula
-  451– 509  N2 «اونا می‌گن دارم خوب می‌شم... دروغ می‌گن.»   (chin trembles)
-  535– 705  N3 «مرکز... زیر تپه، آخر جاده‌ی معدن. بیا دنبالم. خواهش می‌کنم.»
-  720       a lock clacks outside — she snaps round to the door (720–758), wide eyes
-  750– 763  leans in very close to the lens
-  763– 828  N4 «به هیچ‌کس اعتماد نکن... حتی به —»   -> the video cuts to black at 828 (length 00:34)
+   14– 205  N1 «آرین... اگه اینو می‌بینی ... همه‌ی این سال‌ها زنده بودم.»  (brave smile on «زنده‌م»)
+  214– 245  first glance at the door
+  250– 346  turns the LEFT forearm to the lens: dark veins, red-thread bracelet, cannula
+  356– 415  N2 «اونا می‌گن دارم خوب می‌شم... دروغ می‌گن.»   (chin trembles)
+  440– 589  N3 «مرکز... زیر تپه، آخر جاده‌ی معدن. بیا دنبالم. خواهش می‌کنم.»
+  605       a lock clacks outside — she snaps round to the door (605–643), wide eyes
+  636– 649  leans in very close to the lens
+  650– 716  N4 «به هیچ‌کس اعتماد نکن... حتی به —»   -> the video cuts to black at 716 (length 00:30)
 """
 import bpy, sys, os, math, random
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -27,8 +27,8 @@ MODE = sys.argv[-1] if sys.argv[-1] in ("layout", "preview", "final") else "layo
 MOCAP = os.path.join(ZC, "..", "mocap")
 VOICE = os.path.join(HERE, "audio", "voice")
 FPS = 24
-N_FR = 828
-LINES = [("sc002_nika_01", 14), ("sc002_nika_02", 451), ("sc002_nika_03", 535), ("sc002_nika_04", 763)]
+N_FR = 716
+LINES = [("sc002_nika_01", 14), ("sc002_nika_02", 356), ("sc002_nika_03", 440), ("sc002_nika_04", 650)]
 
 sc = bpy.context.scene
 for o in list(bpy.data.objects):
@@ -127,10 +127,10 @@ ph_shake = [random.Random(9).random() * 6 for _ in range(6)]
 
 def cam_pos(f):
     d = 0.46
-    if f >= 750:                                   # leans in to the lens
-        d = 0.46 - 0.17 * min(1.0, (f - 750) / 13.0)
-    if 346 <= f <= 442:                            # holds the phone a bit further to fit the wrist in
-        d += 0.06 * math.sin(math.pi * (f - 346) / 96)
+    if f >= 636:                                   # leans in to the lens
+        d = 0.46 - 0.17 * min(1.0, (f - 636) / 13.0)
+    if 250 <= f <= 346:                            # holds the phone a bit further to fit the wrist in
+        d += 0.06 * math.sin(math.pi * (f - 250) / 96)
     return eyec + fwd * d + up * 0.07 + right * 0.06
 
 
@@ -152,8 +152,8 @@ A.hand(nika, "r", [(1, cam_pos(1) - up * 0.05 + fwd * 0.03)] +
        [(f, cam_pos(f) - up * 0.09 + fwd * 0.03 + right * 0.04) for f in range(12, N_FR + 1, 12)], ease=1, pole_offset=(0.0, -0.3, -0.4))
 # left wrist turned to the lens (346–442): hand rises in front of the chest, fingers up, inner wrist to camera
 WR = lambda f: cam_pos(f) - fwd * 0.2 - up * 0.11 + right * 0.03     # forearm across the frame below her chin
-A.hand(nika, "l", [(330, None), (356, WR(356)), (432, WR(432)), (450, None)], ease=10)
-A.aim_hand(nika, "l", 358, 430, WR(390) + right * 0.5 + up * 0.05, ease=8, palm_to=cam_pos(390))   # fingers to her right: inner wrist up
+A.hand(nika, "l", [(234, None), (260, WR(260)), (336, WR(336)), (354, None)], ease=10)
+A.aim_hand(nika, "l", 262, 334, WR(294) + right * 0.5 + up * 0.05, ease=8, palm_to=cam_pos(294))   # fingers to her right: inner wrist up
 # head: on the lens, two glances at the door
 door = Vector(R["door"])
 
@@ -167,8 +167,8 @@ def look_target(f):
         if f > b:
             return 1 - (f - b) / e
         return 1.0
-    w = max(win(312, 340), win(722, 756, 4))
-    if 356 <= f <= 432:
+    w = max(win(214, 242), win(607, 641, 4))
+    if 260 <= f <= 336:
         return cam_pos(f).lerp(WR(f), 0.5)            # glances down at her own wrist while showing it
     return cam_pos(f).lerp(door, w)
 
@@ -183,11 +183,11 @@ for name, f0 in LINES:
 def face_state(f, t):
     w = 1.25
     smile = 0.0
-    if 160 <= f <= 225:
+    if 130 <= f <= 168:
         smile = 0.35                                   # brave smile on «من زنده‌م»
-    if 451 <= f <= 520:
+    if 356 <= f <= 425:
         w = 1.6                                        # chin trembles on «دروغ می‌گن»
-    if f >= 720:
+    if f >= 605:
         w = 1.9                                        # the lock: wide-eyed
     return dict(worry=w, smile=smile, talking=LS.level("nika", t))
 
@@ -202,7 +202,7 @@ OUT = os.path.join(HERE, "out", "sc002_video"); os.makedirs(OUT, exist_ok=True)
 sc.render.image_settings.file_format = "PNG"
 if MODE == "layout":
     sc.eevee.taa_render_samples = 12
-    for f in [int(x) for x in os.environ.get("LAYOUT_FRAMES", "150,400,600,760").split(",")]:
+    for f in [int(x) for x in os.environ.get("LAYOUT_FRAMES", "150,300,500,645").split(",")]:
         sc.frame_set(f); sc.render.filepath = os.path.join(OUT, f"layout_f{f:04d}.png")
         bpy.ops.render.render(write_still=True)
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, "sc002_video.blend"))

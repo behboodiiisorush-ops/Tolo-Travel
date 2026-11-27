@@ -2,11 +2,11 @@
 Plain python3 + Pillow (no Blender). Uses Nika's video frames (out/sc002_video/f_####.png, else prev_####.png).
 
  1081–1248  paused on the first video frame, play icon; he dims the screen (~1190)
- 1249–2076  the video plays (video frames 1–828), progress bar + time
- 2077–2180  the video has cut to black (abrupt end), time 00:34
- 2181–2200  he drags the scrubber back one second (frames run backwards fast)
- 2201–2225  the last second again (video 804–828)
- 2226–2796  paused on the last frame (her face, very close), pause icon — the glow the Driver turns towards
+ 1249–1964  the video plays (video frames 1–716), progress bar + time
+ 1965–2068  the video has cut to black (abrupt end), time 00:30
+ 2069–2088  he drags the scrubber back one second (frames run backwards fast)
+ 2089–2113  the last second again (video 692–716)
+ 2114–2684  paused on the last frame (her face, very close), pause icon — the glow the Driver turns towards
 """
 import os, sys
 from PIL import Image, ImageDraw, ImageFont, ImageEnhance
@@ -16,7 +16,8 @@ OUT = os.path.join(HERE, "out", "sc002_screen")
 VID = os.path.join(HERE, "out", "sc002_video")
 FONT = os.path.join(HERE, "..", "..", "..", "fonts", "Vazirmatn-FD-ExtraBold.ttf")
 W, H = 540, 1170
-F0, F1, VS, VN = 1081, 2796, 1249, 828
+F0, F1, VS, VN = 1081, 2684, 1249, 716
+B0, S0, R0, P0 = 1965, 2069, 2089, 2114        # black, scrub, replay, paused
 _cache = {}
 
 
@@ -42,12 +43,12 @@ def frame(sf):
         bright = 1.0 if sf < 1190 else max(0.55, 1.0 - (sf - 1190) / 20 * 0.45)
     elif sf < VS + VN:
         vf = sf - VS + 1
-    elif sf <= 2180:
+    elif sf < S0:
         state, vf = "black", VN
-    elif sf <= 2200:
-        state, vf = "scrub", int(VN - (sf - 2180) / 20 * 24)
-    elif sf <= 2225:
-        vf = 804 + (sf - 2201)
+    elif sf < R0:
+        state, vf = "scrub", int(VN - (sf - S0 + 1) / (R0 - S0) * 24)
+    elif sf < P0:
+        vf = VN - 24 + (sf - R0)
     else:
         state, vf = "paused", VN
     if sf >= VS:
@@ -67,7 +68,7 @@ def frame(sf):
     secs = int(round((VN if state == "black" else vf) / 24))
     f = ImageFont.truetype(FONT, 26)
     d.text((30, y + 16), f"00:{secs:02d}", font=f, fill=(200, 200, 205))
-    d.text((W - 30, y + 16), "00:34", font=f, fill=(200, 200, 205), anchor="ra")
+    d.text((W - 30, y + 16), f"00:{round(VN / 24):02d}", font=f, fill=(200, 200, 205), anchor="ra")
     if state == "paused":
         cx, cy = W // 2, H // 2
         d.ellipse([cx - 46, cy - 46, cx + 46, cy + 46], fill=(0, 0, 0, 120), outline=(230, 230, 235), width=3)
