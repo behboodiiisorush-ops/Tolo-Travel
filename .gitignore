@@ -46,3 +46,11 @@ blender/storeroom/*.log
 blender/storeroom/voices/fitted/
 blender/storeroom/out/storeroom_voices.wav
 blender/storeroom/out/storeroom_sfx.mp4
+blender/armored/frames/
+blender/armored/test/
+blender/armored/post_tmp/
+blender/armored/*.blend
+blender/armored/*.log
+blender/armored/voices/fitted/
+blender/armored/out/*.wav
+blender/armored/out/armored_sfx.mp4
