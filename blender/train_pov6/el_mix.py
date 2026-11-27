@@ -17,8 +17,8 @@ TOTAL = END + 4.0
 # clarity first (the user found ep6 voices unclear): eleven_multilingual_v2 takes, every line loudness-matched,
 # gentle pitch with formants kept, a light radio colour for Mom only
 NORM = "highpass=f=80,acompressor=threshold=-24dB:ratio=3:attack=5:release=120,loudnorm=I=-16:TP=-1.5:LRA=7"
-FX = {"Me": NORM, "Lena": NORM, "Rahim": NORM,      # the user's own ElevenLabs recording (user/rec.mp3), cut per line
-      "Mom": "highpass=f=380,lowpass=f=3300,acrusher=bits=11:mix=0.18,acompressor=threshold=-22dB:ratio=5," + NORM}   # walkie-talkie
+FX = {"Me": "rubberband=pitch=1.122:formant=preserved," + NORM, "Lena": NORM, "Rahim": NORM,   # the user's «واگن آخر ۲» cast: Mard +2 st / Rashnow / Wagon-Rahim / Wagon-Mom (user takes in el_user/)
+      "Mom": "highpass=f=280,lowpass=f=4200,acompressor=threshold=-22dB:ratio=4," + NORM}   # walkie-talkie
 GAIN = {"Me": 1.0, "Lena": 1.0, "Rahim": 1.0, "Mom": 1.0}
 
 
@@ -80,7 +80,7 @@ def effects(buf, duck=()):
     g = env(n, [(0, 0.8), (P.BRAKE0, 0.8), (P.BRAKE1, 0.0), (TOTAL, 0.0)])
     d = np.ones(n, np.float32)
     for a, b in duck:
-        d[max(0, int((a - 0.25) * SR)):int((b + 0.25) * SR)] = 0.22
+        d[max(0, int((a - 0.25) * SR)):int((b + 0.25) * SR)] = 0.12
     d = np.convolve(d, np.ones(4800) / 4800, mode="same").astype(np.float32)
     put(buf, tr * g * d, 0.0, 1.0, fade=1.0)
     # helicopter: far, then loud overhead while it hovers, then away
@@ -102,7 +102,7 @@ def effects(buf, duck=()):
     put(buf, st, P.RADIO_T + 0.2, 0.35, 0.1, length=min(len(st) / SR, 6.0), fade=0.3)
     for k in ("mom1", "mom2", "mom3"):
         a, b = KEY_OF[k]
-        put(buf, st, a - 0.4, 0.05, 0.1, length=(b - a) + 0.8, fade=0.2)
+        put(buf, st, a - 0.4, 0.02, 0.1, length=(b - a) + 0.8, fade=0.2)
     put(buf, st, P.DEAD_T - 0.2, 0.45, 0.1, length=1.2, fade=0.1)         # the radio dies
     put(buf, load("sfx_brake"), P.BRAKE0 - 0.2, 1.0, 0.0)
     rv = loop(load("sfx_river", trim=False), n / SR)
