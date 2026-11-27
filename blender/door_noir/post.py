@@ -116,7 +116,8 @@ def encode(pattern, out, audio=None):
     cmd = ["ffmpeg", "-v", "error", "-y", "-framerate", str(FPS), "-i", pattern]
     if audio:
         cmd += ["-i", audio, "-c:a", "aac", "-b:a", "192k", "-shortest"]
-    cmd += ["-c:v", "libx264", "-crf", "18", "-pix_fmt", "yuv420p", "-movflags", "+faststart", out]
+    cmd += ["-vf", "scale=720:1280:flags=lanczos", "-c:v", "libx264", "-crf", "27", "-preset", "slow", "-tune", "grain",
+            "-pix_fmt", "yuv420p", "-movflags", "+faststart", out]          # the grain is heavy: 720p keeps it ~20 MB
     subprocess.run(cmd, check=True)
     print(out)
 
