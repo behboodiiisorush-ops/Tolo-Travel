@@ -1,7 +1,9 @@
 """Post for «هشدار»: upscale, Persian captions, fade to black, question card.
     out/bird_captions.mp4   captions, no sound (for the user's ElevenLabs voices)
     out/bird_clean.mp4      no captions, no sound
-    out/bird_sfx.mp4        captions + synthesised sound effects (if out/bird_sfx.wav exists)
+    out/bird_sfx.mp4        captions + ElevenLabs sound effects (out/bird_sfx.wav, from el_mix.py)
+    out/bird_voice.mp4      captions + ElevenLabs voices and sound effects (out/bird_voice.wav, from el_mix.py)
+Every version carries the credit «ساخته شده توسط بلندر» + «agetobudi» (corner + question card).
 """
 import os, shutil, subprocess, sys
 from PIL import Image, ImageDraw, ImageFont
@@ -51,6 +53,18 @@ def caption(img, who, text, alpha=1.0):
                stroke_width=9, stroke_fill=(0, 0, 0))
 
 
+CREDIT, CHANNEL = "ساخته شده توسط بلندر", "agetobudi"
+
+
+def corner(img):
+    """Small credit in the top corner, on every frame of every version."""
+    d = ImageDraw.Draw(img)
+    d.text((W - 40, 52), CHANNEL, font=font(40), fill=(255, 255, 255), anchor="rm", stroke_width=4,
+           stroke_fill=(0, 0, 0))
+    d.text((W - 40, 104), CREDIT, font=font(30), fill=(235, 235, 235), anchor="rm", direction="rtl", language="fa",
+           stroke_width=3, stroke_fill=(0, 0, 0))
+
+
 def card(t):
     img = Image.new("RGB", (W, H), (0, 0, 0))
     d = ImageDraw.Draw(img)
@@ -62,6 +76,9 @@ def card(t):
     for k, ln in enumerate(lines):
         d.text((W // 2, y0 + k * 120), ln, font=f, fill=(c, c, c), anchor="mm", direction="rtl", language="fa")
     d.text((W // 2, y0 - 190), "؟", font=font(140), fill=(int(230 * a), int(40 * a), int(50 * a)), anchor="mm")
+    g = int(200 * a)
+    d.text((W // 2, H - 300), CREDIT, font=font(52), fill=(g, g, g), anchor="mm", direction="rtl", language="fa")
+    d.text((W // 2, H - 220), CHANNEL, font=font(64), fill=(int(255 * a), int(200 * a), int(60 * a)), anchor="mm")
     return img
 
 
@@ -96,6 +113,8 @@ def main():
                 img = Image.blend(Image.new("RGB", img.size), img, fade)
         else:
             img = card(t - len(names) / FPS)
+        if i < len(names):
+            corner(img)
         img.save(os.path.join(TMP, f"n_{i:04d}.jpg"), quality=95)
         for a, b, who, text in LINES:
             if a <= t <= b and i < len(names):
@@ -103,9 +122,10 @@ def main():
         img.save(os.path.join(TMP, f"c_{i:04d}.jpg"), quality=95)
     encode(os.path.join(TMP, "c_%04d.jpg"), os.path.join(OUT, "bird_captions.mp4"))
     encode(os.path.join(TMP, "n_%04d.jpg"), os.path.join(OUT, "bird_clean.mp4"))
-    sfx = os.path.join(OUT, "bird_sfx.wav")
-    if os.path.exists(sfx):
-        encode(os.path.join(TMP, "c_%04d.jpg"), os.path.join(OUT, "bird_sfx.mp4"), sfx)
+    for name in ("bird_sfx", "bird_voice"):
+        wav = os.path.join(OUT, name + ".wav")
+        if os.path.exists(wav):
+            encode(os.path.join(TMP, "c_%04d.jpg"), os.path.join(OUT, name + ".mp4"), wav)
     shutil.rmtree(TMP, ignore_errors=True)
 
 
