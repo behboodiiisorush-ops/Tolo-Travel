@@ -9,7 +9,7 @@ TM = {}
 for line in open(os.path.join(HERE, "timing.txt")):
     k, v = line.split()
     TM[k] = float(v)
-DOOR, BREAD = TM["door_touch"], TM["bread_grab"]
+DOOR, BREAD, SLAM = TM["door_touch"], TM["bread_grab"], TM.get("door_slam", 81.15)
 # clip, start (s), volume, extra filter on the clip's own time
 CUES = [
     ("wind", 0.0, 1.0, "aloop=loop=3:size=1440000,atrim=0:90,volume='if(between(t,35.5,60),0.08,0.32)':eval=frame,"),
@@ -25,11 +25,11 @@ CUES = [
     ("speakeron", 49.9, 0.9, ""),
     ("heart", 52.0, 0.55, "afade=t=out:st=5:d=1,"),
     ("run", 59.3, 0.75, ""),
-    ("steps", 65.0, 0.18, "atrim=0:6.6,afade=t=out:st=6:d=0.6,"),        # the man, far away
+    ("steps", 67.0, 0.18, "atrim=0:6.6,afade=t=out:st=6:d=0.6,"),        # the man, far away
     ("doorhandle", DOOR - 0.05, 0.8, ""),
     ("dooropen", DOOR + 0.2, 0.8, ""),
-    ("doorslam", 79.1, 1.0, ""),
-    ("drone", 76.0, 0.55, "afade=t=in:d=3,afade=t=out:st=12:d=2,"),
+    ("doorslam", SLAM - 0.05, 1.0, ""),
+    ("drone", 77.0, 0.55, "afade=t=in:d=3,afade=t=out:st=12:d=2,"),
 ]
 
 

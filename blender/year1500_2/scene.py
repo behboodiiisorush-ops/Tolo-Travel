@@ -148,7 +148,7 @@ for _ch in CH.values():
 mocap.LAST.clear()
 print("WALK SPEEDS", V)
 
-CUTS = {0.0, 7.0, 73.0, 79.6}
+CUTS = {0.0, 7.0, 73.0, 81.4}
 LASTSEG = {}
 
 
@@ -212,14 +212,14 @@ ME_D0, ME_D = Vector((HX + 0.8, 5.9, 0)), Vector((HX + 0.75, 9.72, 0))
 KI_D0, KI_D = Vector((HX - 0.6, 5.7, 0)), Vector((HX - 0.9, 9.25, 0))
 walk("me", 30.0, 35.0, ME_C, ME_D0)
 walk("me", 35.0, 37.8, ME_D0, ME_D)
-act("me", "breathing_idle", 37.8, 52.0, tuple(ME_D), 0, src_from=2.0)
+act("me", "breathing_idle", 37.8, 50.2, tuple(ME_D), 0, src_from=2.0)
 walk("kian", 30.0, 34.4, KI_C, KI_D0)
 walk("kian", 34.4, 36.6, KI_D0, KI_D)
 act("kian", "breathing_idle", 36.6, 38.0, tuple(KI_D), 0, src_from=1.0)
 act("kian", "picking_up", 38.0, 47.6, tuple(KI_D), 0)
 act("kian", "breathing_idle", 47.6, 52.0, tuple(KI_D), 20, src_from=3.0)
 # ---- E: the loudspeaker: fear
-act("me", "nervously_look_around", 52.0, 59.0, tuple(ME_D), 20)   # (terrified puts my own hands over the camera)
+act("me", "breathing_idle", 50.2, 59.0, tuple(ME_D), facing_to(ME_D, S["SPEAKER_AT"]), src_from=5.0)   # (terrified puts my own hands over the camera)
 act("kian", "terrified", 52.0, 59.0, tuple(KI_D), -40, src_from=0.6)
 # ---- F: run out
 ME_F1, ME_F2 = Vector((HX + 0.4, 5.6, 0)), Vector((1.0, 0.8, 0))
@@ -237,15 +237,15 @@ act("kian", "breathing_idle", 80.0, 86.1, tuple(KI_F2), facing_to(KI_F2, ME_F2) 
 # ---- the man: walks to the house door, opens it, goes in
 HOUSE = S["HOUSE_AT"]
 MAN0, MAN1 = Vector((-11.5, -2.6, 0)), Vector((HOUSE.x, -5.55, 0))
-walk("man", 65.0, 71.6, MAN0, MAN1 + Vector((0.4, 0.9, 0)))
-act("man", "opening_door_inwards", 71.6, 78.0, tuple(MAN1), 180)
-PRESENT = {"me": [(0, END + 1)], "kian": [(0, END + 1)], "man": [(65.0, 77.9)]}
+walk("man", 67.0, 73.6, MAN0, MAN1 + Vector((0.4, 0.9, 0)))
+act("man", "opening_door_inwards", 73.6, 80.0, tuple(MAN1), 180)
+PRESENT = {"me": [(0, END + 1)], "kian": [(0, END + 1)], "man": [(67.0, 79.9)]}
 
 # ---- the door follows the man's hand: find when a hand reaches the handle, then the door swings with it
 rig_m = CH["man"].rig
 hpos = S["HANDLE"].matrix_world.translation.copy()
 best = None
-for f in range(fr(71.6), fr(74.6)):
+for f in range(fr(73.6), fr(76.6)):
     sc.frame_set(f)
     for side in ("l", "r"):
         p = rig_m.matrix_world @ rig_m.pose.bones[f"hand_{side}"].tail
@@ -257,11 +257,11 @@ print("MAN HAND TO HANDLE", round(best[0], 3), best[1], best[2])
 sc.frame_set(best[1])
 miss = hpos - (rig_m.matrix_world @ rig_m.pose.bones[f"hand_{best[2]}"].tail)
 MAN1 = MAN1 + Vector((miss.x, miss.y, 0))
-LASTSEG["man"] = 71.6
-walk("man", 65.0, 71.6, MAN0, MAN1 + Vector((0.4, 0.9, 0)))
-act("man", "opening_door_inwards", 71.6, 78.0, tuple(MAN1), 180, follow=False)
+LASTSEG["man"] = 73.6
+walk("man", 67.0, 73.6, MAN0, MAN1 + Vector((0.4, 0.9, 0)))
+act("man", "opening_door_inwards", 73.6, 80.0, tuple(MAN1), 180, follow=False)
 best = None
-for f in range(fr(71.6), fr(74.6)):
+for f in range(fr(73.6), fr(76.6)):
     sc.frame_set(f)
     for side in ("l", "r"):
         p = rig_m.matrix_world @ rig_m.pose.bones[f"hand_{side}"].tail
@@ -270,11 +270,11 @@ for f in range(fr(71.6), fr(74.6)):
             best = (d, f, side)
 print("MAN HAND TO HANDLE (moved)", round(best[0], 3), best[1], best[2])
 with open(os.path.join(HERE, "timing.txt"), "w") as fh:
-    fh.write(f"door_touch {(best[1] - 1) / FPS:.3f}\n")
+    fh.write(f"door_touch {(best[1] - 1) / FPS:.3f}\ndoor_slam 81.15\n")
 T_TOUCH = (best[1] - 1) / FPS
 SIDE = best[2]
 hinge = S["HINGE"]
-for t, ang in ((0, 0), (T_TOUCH + 0.15, 0), (T_TOUCH + 1.6, 78), (78.2, 78), (79.15, 0)):
+for t, ang in ((0, 0), (T_TOUCH + 0.15, 0), (T_TOUCH + 1.6, 78), (80.2, 78), (81.15, 0)):
     hinge.rotation_euler = (0, 0, math.radians(ang))
     hinge.keyframe_insert("rotation_euler", index=2, frame=fr(t))
 for fc in fcurves_of(hinge):
@@ -437,8 +437,8 @@ pov.data.clip_end = 800
 LOOK = [  # (t, pitch up deg, yaw left deg) on top of where my head points
     (7.0, 2, 0), (9.6, 2, -22), (12.0, 4, 24), (14.2, 2, 0), (19.0, 2, 0), (22.3, -10, 0), (25.0, -12, 30),
     (26.5, 0, 34), (30.0, 0, 0), (36.6, -4, 20), (39.0, -26, 40), (41.6, -8, -6), (44.6, -10, 0), (46.5, -22, 34),
-    (50.2, 22, 112), (57.4, 22, 112), (58.2, 0, 40), (59.4, 0, 0), (64.6, 0, 0), (68.6, 1, 8), (79.6, 1, 10),
-    (80.2, -6, 42), (82.6, 1, 10)]
+    (50.2, 24, 0), (57.4, 22, 0), (58.2, 0, -50), (59.4, 0, 0), (64.6, 0, 0), (68.6, 1, 8), (81.4, 1, 10),
+    (82.0, -6, 42), (84.4, 1, 10)]
 
 
 def look(t):
@@ -474,8 +474,8 @@ cam.data.sensor_fit, cam.data.sensor_height = "VERTICAL", 36
 mid0 = (ME0 + KI0) / 2
 KEYS = [(fr(0.0), Vector((22, -3.2, 9.5)), mid0 + Vector((0, 0, 0.8)), 32),        # inside the vault, high,
         (fr(7.0) - 1, Vector((16, -2.6, 5.5)), mid0 + Vector((-8.4, 0, 0.9)), 30),    # they walk towards us
-        (fr(73.0), Vector((-15.2, -2.2, 1.75)), HOUSE + Vector((0.3, 0.2, 1.25)), 28),
-        (fr(79.6) - 1, Vector((-16.0, -3.0, 1.6)), HOUSE + Vector((0.3, 0.2, 1.15)), 28)]
+        (fr(73.0), Vector((-18.6, -1.4, 1.6)), HOUSE + Vector((0.1, 0, 1.2)), 36),
+        (fr(81.4) - 1, Vector((-18.9, -2.4, 1.5)), HOUSE + Vector((0.1, 0, 1.15)), 40)]
 for f, c, a, lens in KEYS:
     cam.location = c
     cam.rotation_euler = (a - c).to_track_quat("-Z", "Y").to_euler()
@@ -487,7 +487,7 @@ for owner in (cam, cam.data):
     for fc in fcurves_of(owner):
         for k in fc.keyframe_points:
             k.interpolation = "LINEAR"
-for t, c in ((0.0, cam), (7.0, pov), (73.0, cam), (79.6, pov)):
+for t, c in ((0.0, cam), (7.0, pov), (73.0, cam), (81.4, pov)):
     m = sc.timeline_markers.new(f"cam {t}", frame=fr(t))
     m.camera = c
 sc.camera = cam
