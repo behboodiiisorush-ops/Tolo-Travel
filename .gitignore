@@ -83,3 +83,8 @@ blender/shelter3/test/
 blender/shelter3/voices/fitted/
 blender/shelter3/*.blend
 blender/shelter3/*.blend1
+blender/train_pov6/frames/
+blender/train_pov6/post_tmp/
+blender/train_pov6/test/
+blender/train_pov6/*.blend
+blender/train_pov6/*.blend1
