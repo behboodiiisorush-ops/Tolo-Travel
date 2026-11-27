@@ -1,7 +1,7 @@
 #!/bin/bash
 # build the scene once, then render all frames; restarts the renderer whenever EEVEE crashes
 cd "$(dirname "$0")"
-[ -f year1500_2.blend ] || ../cast/bpy.sh scene.py --save > /tmp/claude-0/y1500_build.log 2>&1
+[ -f year1500_2.blend ] || ../cast/bpy.sh scene.py --save > /tmp/claude-0/y2_build.log 2>&1
 N=${N:-2064}; A=${A:-1}
 BLACK=$(python3 -c "from captions import FLASHBACK as F, WAKE as W; print(sum(1 for f in range(1, 2000) if F[1]*24 < f <= W*24))")
 for i in $(seq 1 300); do
