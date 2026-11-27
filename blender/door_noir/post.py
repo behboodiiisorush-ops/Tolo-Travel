@@ -98,9 +98,18 @@ def card(t):
         d.text((W // 2, y0 + k * 120), ln, font=f, fill=(c, c, c), anchor="mm", direction="rtl", language="fa")
     d.text((W // 2, y0 - 190), "؟", font=font(140), fill=(int(230 * a), int(30 * a), int(40 * a)), anchor="mm")
     gg = int(170 * a)
-    d.text((W // 2, H - 260), f"{CREDIT} — {CHANNEL}", font=font(40), fill=(gg, gg, gg), anchor="mm",
-           direction="rtl", language="fa")
+    d.text((W // 2, H - 260), CHANNEL, font=font(40), fill=(gg, gg, gg), anchor="mm")
     return img
+
+
+def delivered(img, t):
+    """45.2-47: the payoff the phone shows, big enough to read: «تحویل: دیروز ۲۳:۵۸»."""
+    if not 45.3 <= t < END:
+        return
+    a = min(1.0, (t - 45.3) / 0.4)
+    d = ImageDraw.Draw(img)
+    d.text((W // 2, 1450), "تحویل: دیروز ۲۳:۵۸", font=font(78), fill=(int(235 * a), int(30 * a), int(40 * a)),
+           anchor="mm", direction="rtl", language="fa", stroke_width=8, stroke_fill=(0, 0, 0))
 
 
 def encode(pattern, out, audio=None):
@@ -161,6 +170,7 @@ def main():
         overlay(img, TITLE)
         img.save(os.path.join(TMP, f"n_{i:04d}.jpg"), quality=94)
         if i < n_film:
+            delivered(img, t)
             for a, b, who, text, *_ in LINES:
                 if a <= t <= b:
                     caption(img, who, text, t)

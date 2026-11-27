@@ -68,21 +68,21 @@ def tracks():
     add(fx, room, 0.0, 0.07, fade_out=0.1, max_len=BLACK[0])
     add(fx, room, BLACK[1], 0.05, src_from=12.0, fade_in=0.4, fade_out=1.0, max_len=END - BLACK[1])
     drone = S("drone")
-    add(fx, drone, 2.6, 0.32, fade_in=3.0, max_len=17.0, src_from=0.6)
-    add(fx, drone, 19.6, 0.38, max_len=BLACK[0] - 19.6, src_from=2.0, fade_out=0.08)
+    add(fx, drone, 2.6, 0.22, fade_in=3.0, max_len=17.0, src_from=0.6)
+    add(fx, drone, 19.6, 0.26, max_len=BLACK[0] - 19.6, src_from=2.0, fade_out=0.08)
     add(fx, drone, BLACK[1], 0.25, src_from=6.0, fade_in=0.8, fade_out=1.2, max_len=END - BLACK[1])
     add(fx, S("knock"), 4.4 - 1.10, 0.95)                               # three knocks on the front door
     add(fx, S("steps"), 10.65 - 0.70, 0.45, max_len=4.4, fade_out=0.4)    # my socks on the hall floor
     add(fx, S("lean"), 14.05 - 2.25, 0.55)                               # my cheek against the door
     add(fx, S("vibrate"), 17.7, 0.5, max_len=1.3, fade_out=0.15)         # mom calling
     heart = S("heart")
-    add(fx, heart, 26.6, 0.45, fade_in=1.2, max_len=6.4, fade_out=0.6)
+    add(fx, heart, 26.6, 0.35, fade_in=1.2, max_len=6.4, fade_out=0.6)
     add(fx, S("flicker"), 33.0 - 1.6, 0.5, src_from=0.0, max_len=3.6, fade_out=0.3)   # the corridor light dies
     add(fx, heart, 35.0, 0.6, src_from=1.5, max_len=3.8, fade_in=0.3, fade_out=0.3)
     add(fx, S("stinger"), 38.85, 1.0, max_len=1.4, fade_out=0.25)        # she is inside
-    add(fx, S("send"), 45.0 - 0.1, 0.55)                                 # the message is sent
+    add(fx, S("send"), 45.0 - 0.1, 0.35)                                 # the message is sent
     env = np.convolve(np.abs(voice), np.ones(int(0.25 * SR)) / int(0.25 * SR), "same")
-    duck = 1.0 - 0.5 * np.clip(env / (env.max() * 0.25 + 1e-6), 0, 1)
+    duck = 1.0 - 0.72 * np.clip(env / (env.max() * 0.25 + 1e-6), 0, 1)
     return voice, fx * duck
 
 
