@@ -32,6 +32,7 @@ Check poses fast: `../cast/bpy.sh test_clips.py --clips a,b,c` -> `test/clips_<n
 | cross_punch | 2.0 | boxer guard, one big straight punch forward with a step, back to guard | one hard punch on the steel door |
 | punching_bag | 3.2 | upright guard, a run of quick short punches | hammering the door with fists |
 | start_walking | 2.9 | standing -> walking | starting to walk |
+| start_walking_2 | 2.9 | the same motion as start_walking, exported from a shorter (custom) Mixamo skeleton (`mixamorig1:`); retargets the same | starting to walk |
 | walking | 1.0 | normal walk (in place) | walking |
 | walking_2 | 1.5 | slouched shuffle, arms dangling (not a normal walk) | exhausted / zombie-like walk |
 | pistol_walk | 0.8 | both hands together at chest height, walking (in place) | walking holding something in front |
@@ -39,6 +40,12 @@ Check poses fast: `../cast/bpy.sh test_clips.py --clips a,b,c` -> `test/clips_<n
 | jog_in_circle | 5.9 | jogging along a circle | running |
 | climbing_to_top | 4.0 | reaches up, pulls up, steps over, stands with arms out | climbing onto a ledge / into a vent |
 | reloading | 3.7 | hands working in front of the body (rifle reload) | fiddling with an object in the hands |
+| walking_3 | 1.0 | normal relaxed walk, slightly longer stride than `walking` (in place) | ordinary walking, variety in crowds |
+| sitting_talking | 45.0 | seated with the legs crossed, talking with both hands, small leans and weight shifts (cut a piece) | conversations on a bus / train seat, sofa |
+| sit_to_stand | 2.3 | from sitting: leans forward, pushes on the knees, stands up straight | getting up from a seat |
+| pointing | 2.8 | standing, right arm rises across the body and points to the character's left, holds, lowers | "look there!" — rotate `facing` so the arm aims at the target |
+| crying | 6.3 | standing, hands to the face, wipes the eyes, shoulders shake, one arm drops open in despair | grief, crying |
+| driving | 5.0 | seated, both hands forward at wheel height, small steering turns (loop) | bus / car driver |
 | zombie_idle | 4.3 | hunched, swaying | zombies |
 | zombie_walk | 4.0 | hunched lurching walk, arms forward | zombies |
 | zombie_run | 0.8 | hunched run, arms back | zombies |
