@@ -244,7 +244,7 @@ act("me", "sitting_idle", 0.0, END, (SX - 0.25, SY - 0.05, 0.02), 180, blend=0, 
 AP = (1.75, 2.3)          # beside the table, out of the line between me and the doorway
 act("arian", "breathing_idle", 0.0, 12.0, (3.1, -1.3, 0.0), 0, blend=0, loop=True)   # hidden behind the wall
 F_ME = face(AP, (SX - 0.25, SY))
-F_PT = face(AP, ((DX0 + DX1) / 2, 0.0)) - 90           # the clip points to his left -> the arm aims at the kitchen
+F_PT = face(AP, ((DX0 + DX1) / 2, 0.0)) + 90           # the clip points to his right -> the arm aims at the kitchen
 F_PT = F_ME + ((F_PT - F_ME + 180) % 360 - 180)
 walk("arian", 12.0, 15.2, [(3.1, -1.3), (4.0, -0.7), (4.2, 0.2), (3.6, 1.4), AP], F_PT)
 
