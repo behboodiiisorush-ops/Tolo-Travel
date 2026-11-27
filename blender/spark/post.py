@@ -61,7 +61,7 @@ def badge(img):
     d.text((W - 130, 110), "جرقه", font=f, fill=(255, 255, 255), anchor="mm", direction="rtl", language="fa")
 
 
-CREDIT = "ساخته شده توسط بلندر"
+CREDIT = ""   # the user: never show the Blender credit on screen
 CHANNEL = "agetobudi"
 
 
