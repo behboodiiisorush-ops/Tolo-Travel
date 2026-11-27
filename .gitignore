@@ -87,3 +87,5 @@ blender/nila/frames/
 blender/nila/nila.blend
 blender/nila/*.log
 blender/nila/out/
+blender/nila/preview/
+blender/nila/preview.mp4

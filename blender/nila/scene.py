@@ -16,7 +16,8 @@ sys.path.insert(0, os.path.join(HERE, "..", "cast"))
 sys.path.append(os.path.join(HERE, "..", "shelter3"))
 import cast, anim  # noqa: E402
 import mpfb_tools as M  # noqa: E402
-import mocap2 as MC  # noqa: E402
+import mocap2 as MC  # noqa: E402,F401
+import motion as MO  # noqa: E402
 import props as P  # noqa: E402
 
 argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
@@ -39,8 +40,7 @@ bpy.ops.wm.read_factory_settings(use_empty=True)
 sc = bpy.context.scene
 sc.render.fps = FPS
 
-CL = {k: MC.load(os.path.join(MOCAP, k + ".fbx")) for k in
-      ("breathing_idle", "nervously_look_around", "thinking", "head_nod_yes", "hands_forward_gesture")}
+CL = MO.load(["breathing_idle", "thinking", "head_nod_yes", "hands_forward_gesture"])
 
 # ------------------------------------------------------------------ the character
 STYLE = dict(cast.CARTOON)
@@ -354,52 +354,20 @@ world.use_nodes = True
 world.node_tree.nodes["Background"].inputs[0].default_value = (0.05, 0.05, 0.055, 1)
 world.node_tree.nodes["Background"].inputs[1].default_value = 0.6
 
-# ------------------------------------------------------------------ motion: mocap, cross-faded
-def smooth(u):
-    u = max(0.0, min(1.0, u))
-    return u * u * (3 - 2 * u)
-
-
-def play(ch, clip, start, length, blend=0, **kw):
-    old = MC.BUF.pop(ch.rig.name, {})
-    MC.apply(ch, clip, start=start, length=length, step=1, **kw)
-    new = MC.BUF[ch.rig.name]
-    merged = {k: dict(v) for k, v in old.items()}
-    quat = {}
-    for (path, idx), pts in new.items():
-        if path.endswith("rotation_quaternion"):
-            quat.setdefault(path, {})[idx] = pts
-            continue
-        dst = merged.setdefault((path, idx), {})
-        for f, v in pts.items():
-            w = smooth((f - start) / blend) if blend and f in dst else 1.0
-            dst[f] = dst.get(f, v) * (1 - w) + v * w
-    for path, comps in quat.items():
-        olds = [merged.setdefault((path, i), {}) for i in range(4)]
-        for f in comps[0]:
-            qn = [comps[i][f] for i in range(4)]
-            if blend and f in olds[0] and f < start + blend:
-                qo = [olds[i][f] for i in range(4)]
-                if sum(a * b for a, b in zip(qo, qn)) < 0:
-                    qn = [-v for v in qn]
-                w = smooth((f - start) / blend)
-                q = [a * (1 - w) + b * w for a, b in zip(qo, qn)]
-                nq = math.sqrt(sum(v * v for v in q)) or 1.0
-                qn = [v / nq for v in q]
-            for i in range(4):
-                olds[i][f] = qn[i]
-    MC.BUF[ch.rig.name] = merged
-
-
+# ------------------------------------------------------------------ motion: the standard motion system
+# (cast/motion.py) — full-rate mocap, overlapping smootherstep cross-fades entered at the best-matching pose,
+# light smoothing, then IK foot planting. Root motion is kept so weight shifts move the hips, not the feet.
 O = Vector((0, 0, 0))
 FACING = 180          # looks along -Y, at the camera
-# 0-3.6 s: calm breathing; glances away and back.  3.2-7 s: thinking (hand to chest, weight shift)
-# 6.8-8.4 s: nods "yes".  8-11 s: both hands forward "listen…", then settles.
-play(nila, CL["breathing_idle"], 1, 96, offset=O, facing=FACING, in_place=True, src_from=1.0)
-play(nila, CL["thinking"], 78, 98, blend=18, offset=O, facing=FACING, in_place=True)
-play(nila, CL["head_nod_yes"], 164, 40, blend=12, offset=O, facing=FACING, in_place=True)
-play(nila, CL["hands_forward_gesture"], 196, 69, blend=14, offset=O, facing=FACING, in_place=True)
-MC.flush(nila)
+# 0-4 s calm breathing, glances away and back; ~3.3-7.3 s thinking (hand to chest, weight shift);
+# ~6.8-8.5 s nods "yes"; ~8.1-11 s both hands forward "listen…", then settles.
+smooth = MO.smooth
+tl = MO.Timeline(nila, FPS)
+tl.add(CL["breathing_idle"], 1, 100, offset=O, facing=FACING, in_place=False, src_from=1.0)
+tl.add(CL["thinking"], 74, 104, blend=30, match=0.6, offset=O, facing=FACING, in_place=False, speed=0.85)
+tl.add(CL["head_nod_yes"], 162, 46, blend=16, match=0.4, offset=O, facing=FACING, in_place=False)
+tl.add(CL["hands_forward_gesture"], 194, 71, blend=18, match=0.4, offset=O, facing=FACING, in_place=False)
+tl.build()
 
 # head/eyes follow a look target that moves in quick darts with holds (how people really look)
 look = P.empty("Look")
@@ -437,6 +405,8 @@ for f in range(1, N + 1):
         if k in nila.keys:
             nila._put(sk, f'key_blocks["{k}"].value', 0, f, max(0.0, min(1.0, v)))
 nila.flush()
+MO.foot_lock(nila, 1, N, free=tl.transitions)
+FINDINGS = MO.check(nila, 1, N, os.path.join(HERE, "motion_report.txt"))
 
 # ------------------------------------------------------------------ camera: full body -> bust, slow
 cam_d = bpy.data.cameras.new("Cam")

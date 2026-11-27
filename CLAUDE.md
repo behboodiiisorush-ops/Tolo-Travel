@@ -1,6 +1,10 @@
 # Tolo Travel — notes for Claude
 
 ## Films (Blender, Python `bpy`)
+- **Technical standard for every film: `blender/STANDARD.md` (read it first, always follow it).** Quality and natural,
+  continuous human motion come before speed. All body motion goes through `blender/cast/motion.py`
+  (Timeline + foot_lock); `motion_check` must report CLEAN and the full Workbench preview must be reviewed
+  frame by frame before any final render. Example: `blender/nila/`.
 - **Realistic films use the permanent cast in `blender/cast/`** — read `blender/cast/CAST.md` first.
   Reuse those characters (من، آرین، مهسا، کیان، مامان، آقای کاظمی، آقای رضایی، گوینده اخبار، سرباز) for every
   new film idea instead of designing new faces. New recurring people get added to `cast.py` + a sheet.

@@ -3,6 +3,10 @@ name: film-3d
 description: Make a realistic 3D short film (vertical 1080x1920, Persian captions) in Blender with the permanent Tolo Travel cast (من، آرین، مهسا، کیان، مامان، آقای کاظمی، آقای رضایی، گوینده اخبار، سرباز، zombies). Use when the user runs /film-3d or asks for a 3D / realistic / Blender video, a new episode, or a film from a story idea (فیلم سه‌بعدی، ویدیو واقعی، قسمت بعد).
 ---
 
+> **Before anything else: read and follow `blender/STANDARD.md`.** Motion through `cast/motion.py`,
+> `motion_check` CLEAN + full preview review before the final render. Quality over speed.
+
+
 # Realistic 3D film with the permanent cast
 
 Reply in the user's language (Persian if they wrote Persian). Work without stopping until the film is
