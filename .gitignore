@@ -48,6 +48,12 @@ blender/BLENDER_ANIMATION/_build/render.log
 # ANIMATION_STUDIO: keep scripts, .blend files, reports and final mp4s — not frames
 blender/ANIMATION_STUDIO/**/*_[0-9][0-9][0-9][0-9].png
 blender/ANIMATION_STUDIO/10_QUALITY_CONTROL/logs/
+blender/wall2/frames/
+blender/wall2/test/
+blender/wall2/post_tmp/
+blender/wall2/*.blend*
+blender/wall2/out/*.wav
+blender/wall2/out/part_*.mp4
 blender/ANIMATION_STUDIO/12_EPISODES/EP_002_SAYEH/frames/
 blender/ANIMATION_STUDIO/12_EPISODES/EP_002_SAYEH/stills/
 blender/ANIMATION_STUDIO/12_EPISODES/EP_002_SAYEH/post_tmp/
