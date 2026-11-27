@@ -57,10 +57,18 @@ def hand(ch, side, keys, ease=6, pole_offset=(0.0, -0.4, -0.3)):
         if p is None and prev is not None and prev[1] is not None:
             c.influence = 1.0; c.keyframe_insert("influence", frame=prev[0])
         prev = (f, p)
-    # elbow pole: below and behind the shoulder, follows the body
+    # elbow pole: below and behind the shoulder, follows the body. Placed with the offset in upper-arm space at a
+    # frame where the IK is off, then re-parented to the CLAVICLE (outside the IK chain: parenting it to the
+    # upper arm itself made a dependency cycle -> unstable elbow).
     sh = rig.pose.bones[f"upperarm_{side}"]
-    pole.parent = rig; pole.parent_type = "BONE"; pole.parent_bone = sh.name
-    pole.location = Vector(pole_offset)
+    f_ref = min(f for f, p in keys if p is not None) - ease - 1
+    sc.frame_set(f_ref)
+    m_sh = rig.matrix_world @ sh.matrix @ Matrix.Translation((0, sh.length, 0))
+    world = m_sh @ Vector(pole_offset)
+    cl = rig.pose.bones.get(f"clavicle_{side}") or sh.parent
+    pole.parent = rig; pole.parent_type = "BONE"; pole.parent_bone = cl.name
+    bpy.context.view_layer.update()
+    pole.matrix_world = Matrix.Translation(world)
     return tg
 
 
