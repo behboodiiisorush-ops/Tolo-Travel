@@ -1,4 +1,4 @@
-# «در رو باز نکن» — voice lines (generated with ElevenLabs eleven_v4, files in voices/)
+# «در رو باز نکن» — voice lines (ElevenLabs eleven_multilingual_v2 for clarity — the user's rule; v4 takes kept in voices/v4/)
 
 من (Arash `Mn0jJ3FC9Ijz7lQe8ELI`, +1.5 semitones in post)
 ```

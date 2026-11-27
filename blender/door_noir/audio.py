@@ -11,8 +11,8 @@ from lines import LINES, END, PITCH, BLACK  # noqa: E402
 SR = 48000
 CARD = 4.0
 HOW = {
-    "phone": ["highpass=f=350", "lowpass=f=3400", "acrusher=bits=10:mix=0.25", "volume=1.0"],
-    "door": ["lowpass=f=1700", "aecho=0.8:0.7:18|37:0.25|0.15", "volume=0.9"],
+    "phone": ["highpass=f=220", "lowpass=f=5500"],                       # light phone colour (clarity rule)
+    "door": ["lowpass=f=3200", "aecho=0.8:0.6:18:0.12"],                  # lightly muffled through the door
     "close": ["highpass=f=120", "aecho=0.8:0.5:9:0.12"],
     "me": [],
 }
@@ -58,10 +58,10 @@ def tracks():
         af = []
         if PITCH.get(who):
             af.append(f"rubberband=pitch={2 ** (PITCH[who] / 12):.4f}:formant=preserved")
-        af += HOW[how]
+        af = ["loudnorm=I=-16:TP=-1.5"] + af + HOW[how]                    # every line at the same loudness
         x = decode(os.path.join(HERE, "voices", fn + ".mp3"), af or None)
-        x /= max(1e-4, np.abs(x).max())
-        g = {"phone": 0.6, "door": 0.62, "close": 0.75, "me": 0.7}[how]
+        x /= max(1e-4, np.sqrt((x ** 2).mean()) * 8)                  # same RMS for every line
+        g = {"phone": 0.95, "door": 0.9, "close": 1.0, "me": 1.0}[how]
         add(voice, x * g, max(0.0, a - lead(x)))
     fx = np.zeros_like(voice)
     room = S("room")
@@ -82,7 +82,7 @@ def tracks():
     add(fx, S("stinger"), 38.85, 1.0, max_len=1.4, fade_out=0.25)        # she is inside
     add(fx, S("send"), 45.0 - 0.1, 0.35)                                 # the message is sent
     env = np.convolve(np.abs(voice), np.ones(int(0.25 * SR)) / int(0.25 * SR), "same")
-    duck = 1.0 - 0.72 * np.clip(env / (env.max() * 0.25 + 1e-6), 0, 1)
+    duck = 1.0 - 0.78 * np.clip(env / (env.max() * 0.15 + 1e-6), 0, 1)      # about -13 dB under every line
     return voice, fx * duck
 
 
