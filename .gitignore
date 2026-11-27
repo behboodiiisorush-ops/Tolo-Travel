@@ -89,3 +89,4 @@ blender/nila/*.log
 blender/nila/out/
 blender/nila/preview/
 blender/nila/preview.mp4
+blender/*/*_motion.txt
