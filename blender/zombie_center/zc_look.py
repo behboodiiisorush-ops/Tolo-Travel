@@ -51,8 +51,10 @@ def brow_scar(ch, side=+1):
     from mathutils.geometry import intersect_point_line
     body = ch.body
     pts, nrm = M.rest_positions(body)
-    top = max(p.z for p in pts)
-    head = [p for p in pts if p.z > top - 0.13]
+    g = body.vertex_groups["body"].index           # real skin only, not MakeHuman's hidden helper geometry
+    real = [pts[v.index] for v in body.data.vertices if any(e.group == g and e.weight > 0.5 for e in v.groups)]
+    top = max(p.z for p in real)
+    head = [p for p in real if p.z > top - 0.13]
     front = min(p.y for p in head)
     cx = sum(p.x for p in head) / len(head)
     bz = top - 0.105

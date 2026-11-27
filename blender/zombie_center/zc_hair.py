@@ -71,7 +71,7 @@ def centre_part_hair(ch, n=20000, seed=1, colour=(0.012, 0.010, 0.010), name=Non
 
     def root_ok(p):      # no sideburn / ear-side roots: those strands hang beside the face
         fy = (p.y - front_y) / max(1e-6, (back_y - front_y))
-        return on_scalp(p) and (abs(p.x - cx) < 0.055 or p.z > ear_z + 0.05 or fy > 0.68)
+        return on_scalp(p) and (abs(p.x - cx) < 0.055 or p.z > ear_z + 0.05 or (fy > 0.68 and p.z > ear_z - 0.01))
     faces = [f for f in bm.faces if root_ok(f.calc_center_median())]
     _darken_scalp(body, on_scalp)
     areas = [f.calc_area() for f in faces]
@@ -112,7 +112,7 @@ def centre_part_hair(ch, n=20000, seed=1, colour=(0.012, 0.010, 0.010), name=Non
         elif top_region:
             L = 0.07 + 0.015 * rnd.random()          # crown
         elif fy > 0.6:
-            L = 0.04 + 0.01 * rnd.random()           # back / nape
+            L = 0.028 + 0.008 * rnd.random()         # back / nape: short, tapered
         else:
             L = 0.022 + 0.008 * rnd.random()         # sides above the ears: short
         if fy < 0.35:
@@ -177,8 +177,8 @@ def centre_part_hair(ch, n=20000, seed=1, colour=(0.012, 0.010, 0.010), name=Non
     out = nt.nodes.new("ShaderNodeOutputMaterial")
     pb = nt.nodes.new("ShaderNodeBsdfPrincipled")     # EEVEE renders the hair BSDF brown: use Principled
     pb.inputs["Base Color"].default_value = (*colour, 1)
-    pb.inputs["Roughness"].default_value = 0.45
-    pb.inputs["Specular IOR Level"].default_value = 0.35
+    pb.inputs["Roughness"].default_value = 0.55
+    pb.inputs["Specular IOR Level"].default_value = 0.2
     nt.links.new(pb.outputs[0], out.inputs["Surface"])
     cv.materials.append(m)
     # follow the head
