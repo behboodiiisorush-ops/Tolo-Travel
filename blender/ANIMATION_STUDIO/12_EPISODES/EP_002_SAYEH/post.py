@@ -84,6 +84,20 @@ def title_card(t, text):
     return img
 
 
+def night(img, t):
+    """The render's dim light was too weak: grade the blackout (7.2 s .. the flash at 27 s) dark and moonlit blue."""
+    if 5.0 <= t < 7.0:                                   # the lights flicker (same pattern as render.py)
+        pat = [1, .15, 1, 1, .1, .6, .05, 1, .1, .1, .7, .05, .05, .4, .05, .05]
+        k = 1 - pat[int((t - 5.0) * 7) % len(pat)]
+    elif t < 7.0 or t >= 27.6:
+        return img
+    else:
+            k = min(1.0, (t - 7.0) / 0.25) if t < 27.0 else max(0.0, 1 - (t - 27.0) / 0.6)
+    r, g, b = img.split()
+    m = [(1 - k) + k * c for c in (0.40, 0.47, 0.66)]
+    return Image.merge("RGB", [ch.point(lambda v, q=q: int(v * q)) for ch, q in zip((r, g, b), m)])
+
+
 def timeline():
     """(kind, film_time) per output frame: cold open, card, the film, question card."""
     out = [("film", COLD[0] + i / FPS) for i in range(int((COLD[1] - COLD[0]) * FPS))]
@@ -107,7 +121,7 @@ def main():
     for i, (kind, t) in enumerate(tl):
         if kind == "film":
             k = min(n_have, int(round(t * FPS)) + 1)
-            img = Image.open(os.path.join(TMP, f"u_{k:04d}.jpg")).convert("RGB")
+            img = night(Image.open(os.path.join(TMP, f"u_{k:04d}.jpg")).convert("RGB"), t)
             if i >= first_film:
                 fade = min(1.0, max(0.0, (END - t) / 0.6), (i - first_film + 1) / 8)
             else:
