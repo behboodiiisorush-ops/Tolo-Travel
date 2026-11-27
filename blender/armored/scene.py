@@ -390,7 +390,9 @@ def point(name, loc, energy, color=(1.0, 0.8, 0.55), soft=0.15):
 # a floodlight on a pole at the storeroom corner, lighting the car
 SET.append(P.cyl((12.85, 11.5, 0), (12.85, 11.5, 4.6), 0.07, M_["pole"], "Flood pole"))
 box((12.7, 11.6, 4.5), (0.4, 0.25, 0.2), "pole", "Flood head")
-spot("Floodlight", (12.6, 11.7, 4.4), (7.5, 16.0, 0.0), 2600, angle=75, color=(0.85, 0.92, 1.0), blend=0.6)
+spot("Floodlight", (12.6, 11.7, 4.4), (7.5, 16.0, 0.0), 9000, angle=95, color=(0.85, 0.92, 1.0), blend=0.6)
+spot("Floodlight 2", (2.0, 9.45, 4.2), (6.5, 17.0, 0.0), 6000, angle=95, color=(0.85, 0.92, 1.0), blend=0.6)
+box((2.0, 9.3, 4.25), (0.4, 0.2, 0.2), "pole", "Flood head")
 # a lamp over the exit door outside (lights the ramp)
 point("Exit lamp", (6.35, 9.45, 2.7), 220, color=(1.0, 0.78, 0.5))
 box((6.35, 9.27, 2.75), (0.35, 0.12, 0.12), "lampglow", "Exit lamp box")
@@ -467,7 +469,7 @@ CABIN = point("Cabin lamp", (0, 2.2, ZR - 0.15), 0, color=(1.0, 0.55, 0.3))
 for o in HL + [CABIN]:
     o.parent = APC
 YARD_AT = Vector((7.0, 11.9, 0.0))
-R0 = Vector((60.0, 0.0, 0.0))                # where the car stands for the last shot (the world slides past)
+R0 = Vector((400.0, 0.0, 0.0))                # where the car stands for the last shot (the world slides past)
 RAMP_DOWN, RAMP_UP = math.radians(26.3), math.radians(-90)
 RAMP_END_Y = YARD_AT.y - 1.4 * math.cos(RAMP_DOWN)
 for t_, a_ in ((0, RAMP_DOWN), (56.6, RAMP_DOWN), (57.4, RAMP_UP), (END, RAMP_UP)):
@@ -523,6 +525,17 @@ for j in range(40):
     o = P.box((R0.x, 4 + j * 5.0, 0.0), (0.14, 2.2, 0.02), M_["roadline"], "Road line")
     o.parent = ROAD
     SET.append(o)
+ROAD_MESH = [o for o in bpy.data.objects if o.name.startswith(("Road pole", "Road lamp", "Road line", "Road"))
+             and o.type == "MESH"]
+show(ROAD_MESH, [(62.3, END)])
+for o in [o for o in bpy.data.objects if o.type == "LIGHT" and o.name.startswith("Road light")]:
+    e_ = o.data.energy
+    for t_, v_ in ((0, 0), (62.3, 0), (62.35, e_), (END, e_)):
+        o.data.energy = v_
+        o.data.keyframe_insert("energy", frame=fr(t_))
+    for fc in fcurves_of(o.data):
+        for k in fc.keyframe_points:
+            k.interpolation = "CONSTANT"
 for t_, y_ in ((0, 0.0), (62.4, 0.0), (END, -105.0)):
     ROAD.location = (0, y_, 0)
     ROAD.keyframe_insert("location", frame=fr(t_))
@@ -540,10 +553,10 @@ for t_, p_ in ((0, KEYS_FLOOR0), (12.6, KEYS_FLOOR0), (13.4, KEYS_FLOOR1)):
 # ------------------------------------------------------------------ lights (night: most tubes off)
 w = bpy.data.worlds.new("W")
 sc.world = w
-w.color = (0.03, 0.04, 0.07)
+w.color = (0.004, 0.006, 0.013)
 sun = bpy.data.objects.new("Moon", bpy.data.lights.new("Moon", "SUN"))
 sc.collection.objects.link(sun)
-sun.data.energy = 1.2
+sun.data.energy = 2.2
 sun.data.color = (0.6, 0.72, 1.0)
 sun.rotation_euler = (math.radians(55), 0, math.radians(-30))
 LAMPS = []
@@ -971,6 +984,7 @@ def ramp_z(p):
 
 
 DOOR_IN, DOOR_OUT = (6.35, 8.45), (6.35, 9.75)
+RUN = os.environ.get("RUN", "jog_in_circle")
 # ---- the start: all of them round the storeroom door, the soldier behind its window
 for k in ("arian", "kian"):
     act(k, "nervously_look_around", 0.0, 29.8 if k == "arian" else 30.4, P0[k], F0(k), loop=True,
@@ -1038,13 +1052,13 @@ walk("mahsa", 55.0, 56.4, [MA_LOW, (7.0, 12.4)], back=True, avoid=False, zfn=ram
 act("mahsa", "breathing_idle", 56.4, 57.4, (7.0, 12.4, ZF), 0)
 # ---- «من»: out, round the car, the gate
 walk("me", 36.6, 38.2, [QUEUE["me"], DOOR_IN, DOOR_OUT, (5.3, 10.6)], avoid=False)
-walk("me", 38.2, 43.0, [(5.3, 10.6), (4.75, 13.0), (4.7, 20.5), (4.6, 22.45)], end_face=270, avoid=False)
+walk("me", 38.2, 43.0, [(5.3, 10.6), (4.75, 13.0), (4.7, 20.5), (4.6, 22.45)], clipname=RUN, end_face=270, avoid=False)
 GATE_P = 4.6
 walk("me", 43.0, 48.0, [(GATE_P, 22.45), (GATE_P + 4.0, 22.45)], clipname="pistol_walk", end_face=270, avoid=False)
 ME_G = (GATE_P + 4.0, 22.45)
 act("me", "nervously_look_around", 48.0, 49.3, ME_G + (0,), face(ME_G, (13.5, 20.5)), speed=1.3)
 walk("me", 49.3, 56.4, [ME_G, (9.35, 19.8), (9.25, 12.5), (7.8, 10.1), (7.0, 10.35), (7.0, 11.9), (7.0, 12.8)],
-     avoid=False, zfn=ramp_z, end_face=0)
+     avoid=False, zfn=ramp_z, end_face=0, clipname=RUN)
 act("me", "breathing_idle", 56.4, 57.4, (7.0, 12.8, ZF), 0)
 for t_, x_ in ((0, 0.0), (43.3, 0.0), (47.8, 4.0), (END, 4.0)):
     GATE.location = (x_, 0, 0)
@@ -1115,11 +1129,11 @@ SHOTS = [
     (36.0, 40.2, (1.2, 10.2, 3.6), (1.4, 10.6, 3.5), (7.0, 13.0, 0.8), (7.2, 14.5, 0.8), 20),
     (40.2, 43.0, (3.0, 15.0, 1.6), (3.4, 17.5, 1.6), (4.6, 19.5, 1.2), (4.8, 22.5, 1.2), 24),
     (43.0, 49.0, (5.8, 19.2, 1.6), (6.3, 19.4, 1.6), (6.3, 22.6, 1.2), (8.2, 22.6, 1.2), 26),
-    (49.0, 52.5, (6.2, 18.0, 1.5), (6.4, 17.6, 1.5), (11.5, 21.0, 1.2), (10.0, 17.0, 1.1), 24),
+    (49.0, 52.5, (4.4, 19.4, 1.6), (4.5, 19.0, 1.6), (11.5, 21.0, 1.2), (9.6, 17.0, 1.1), 24),
     (52.5, 56.8, (4.4, 9.8, 1.5), (4.5, 9.9, 1.5), (8.4, 13.5, 1.2), (7.4, 11.0, 1.2), 22),
     (56.8, 59.8, (3.0, 9.8, 1.5), (3.2, 10.2, 1.5), (7.0, 12.5, 1.3), (7.0, 22.0, 1.5), 22),
     (59.8, 62.4, (11.3, 12.55, 1.65), (11.3, 12.45, 1.65), (11.3, 11.2, 1.62), (11.3, 11.2, 1.62), 30),
-    (62.4, END, (60.0, 0.35, 1.55), (60.0, 0.35, 1.55), (60.0, 4.8, 1.3), (60.0, 4.8, 1.3), 18),
+    (62.4, END, (400.0, 0.35, 1.55), (400.0, 0.35, 1.55), (400.0, 4.8, 1.3), (400.0, 4.8, 1.3), 18),
 ]
 cam = bpy.data.objects.new("Camera", bpy.data.cameras.new("Camera"))
 sc.collection.objects.link(cam)
