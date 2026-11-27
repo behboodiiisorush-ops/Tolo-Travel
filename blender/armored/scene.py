@@ -930,8 +930,22 @@ def asleep(who, t):
     return False
 
 
+import lipsync  # noqa: E402
+LS = lipsync.Voices(fps=FPS)
+VO = os.path.join(HERE, "voices")
+for who_, f_, t_, af_ in (("me", "01_me", 0.6, None), ("soldierZ", "02_soldier", 4.4, "atempo=1.12"),
+                          ("kazemi", "03_kazemi", 9.9, None), ("soldierZ", "04_soldier", 13.2, None),
+                          ("mahsa", "05_mahsa", 16.9, None), ("soldierZ", "06_soldier", 20.0, None),
+                          ("me", "07_me", 26.8, None), ("kazemi", "08_kazemi", 29.2, None),
+                          ("mahsa", "09_mahsa", 50.2, None), ("kian", "11_kian", 68.6, None)):
+    LS.add(who_, os.path.join(VO, f_ + ".mp3"), t_, af=af_)
+
+
 def lips(who, t):
-    return speaking(who, t)
+    """mouth follows the real ElevenLabs voice (loudness); the narrator's first line is a voice-over."""
+    if who == "me" and t < 5.0:
+        return 0.0
+    return LS.level(who, t)
 
 
 WINDOW = (11.38, 9.0)                         # the storeroom door's window (x, y)
