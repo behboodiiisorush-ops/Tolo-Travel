@@ -484,6 +484,54 @@ if TOON:
     T.ink([o for o in bpy.data.objects if o.type == "MESH" and not any(
         k in o.name.lower() for k in ("high-poly", "lash", "brow", "teeth", "tongue", "cyclorama", "eye"))], 0.004)
     cam_d.dof.use_dof = False                                             # comic frames stay crisp
+    # EEVEE shadow maps leave grain on flat cel colours -> no cast shadows; instead soft contact shadows
+    # on the floor that follow the feet and the body (standard toon trick, keeps her weighted on the ground)
+    ee.use_shadows = False
+    bm_ = bpy.data.materials.new("ContactShadow")
+    bm_.use_nodes = True
+    if hasattr(bm_, "surface_render_method"):
+        bm_.surface_render_method = "BLENDED"
+    nt = bm_.node_tree
+    for x in list(nt.nodes):
+        nt.nodes.remove(x)
+    tc_ = nt.nodes.new("ShaderNodeTexCoord")
+    gr = nt.nodes.new("ShaderNodeTexGradient")
+    gr.gradient_type = "SPHERICAL"
+    rp = nt.nodes.new("ShaderNodeValToRGB")
+    rp.color_ramp.elements[0].position, rp.color_ramp.elements[0].color = 0.0, (0, 0, 0, 1)
+    em_ = nt.nodes.new("ShaderNodeEmission")
+    em_.inputs[0].default_value = (0.13, 0.15, 0.19, 1)
+    tr_ = nt.nodes.new("ShaderNodeBsdfTransparent")
+    mx_ = nt.nodes.new("ShaderNodeMixShader")
+    out_ = nt.nodes.new("ShaderNodeOutputMaterial")
+    nt.links.new(tc_.outputs["Generated"], gr.inputs[0])
+    mp_ = nt.nodes.new("ShaderNodeMapping")                               # generated 0..1 -> centred -1..1
+    mp_.inputs["Location"].default_value = (-1, -1, 0)
+    mp_.inputs["Scale"].default_value = (2, 2, 1)
+    nt.links.new(tc_.outputs["Generated"], mp_.inputs[0])
+    nt.links.new(mp_.outputs[0], gr.inputs[0])
+    nt.links.new(gr.outputs["Fac"], rp.inputs[0])
+    nt.links.new(rp.outputs[0], mx_.inputs[0])
+    nt.links.new(tr_.outputs[0], mx_.inputs[1])                            # spherical gradient: 1 centre -> 0 edge
+    nt.links.new(em_.outputs[0], mx_.inputs[2])
+    nt.links.new(mx_.outputs[0], out_.inputs[0])
+    rp.color_ramp.interpolation = "EASE"
+    rp.color_ramp.elements[1].position, rp.color_ramp.elements[1].color = 0.6, (0.7, 0.7, 0.7, 1)
+
+    def blob(name, bone, sx, sy, ox=0.0, oy=0.0):
+        bpy.ops.mesh.primitive_plane_add(size=1, location=(0, 0, 0.003))
+        pl = bpy.context.object
+        pl.name = name
+        pl.scale = (sx, sy, 1)
+        pl.data.materials.append(bm_)
+        cl = pl.constraints.new("COPY_LOCATION")
+        cl.target, cl.subtarget, cl.use_z = rig, bone, False
+        cl.use_offset = True
+        pl.location = (ox, oy, 0.003)
+        return pl
+    blob("Shadow body", "pelvis", 0.62, 0.36)
+    blob("Shadow foot L", "ball_l", 0.17, 0.22, 0, 0.04)
+    blob("Shadow foot R", "ball_r", 0.17, 0.22, 0, 0.04)
 
 # ------------------------------------------------------------------ render
 if TOON:
