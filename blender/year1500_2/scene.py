@@ -208,7 +208,7 @@ act("me", "breathing_idle", 25.0, 30.0, tuple(ME_C), 105, src_from=1.0)
 act("kian", "looking_around", 19.0, 25.5, tuple(KI_C), 80, src_from=1.5)
 act("kian", "nervously_look_around", 25.5, 30.0, tuple(KI_C), 60)
 # ---- D: into the hero shop
-ME_D0, ME_D = Vector((HX + 0.8, 5.9, 0)), Vector((HX + 0.75, 10.0, 0))
+ME_D0, ME_D = Vector((HX + 0.8, 5.9, 0)), Vector((HX + 0.75, 9.72, 0))
 KI_D0, KI_D = Vector((HX - 0.6, 5.7, 0)), Vector((HX - 0.9, 9.25, 0))
 walk("me", 30.0, 35.0, ME_C, ME_D0)
 walk("me", 35.0, 37.8, ME_D0, ME_D)
@@ -436,7 +436,7 @@ pov.data.clip_start = 0.06
 pov.data.clip_end = 800
 LOOK = [  # (t, pitch up deg, yaw left deg) on top of where my head points
     (7.0, 2, 0), (9.6, 2, -22), (12.0, 4, 24), (14.2, 2, 0), (19.0, 2, 0), (22.3, -10, 0), (25.0, -12, 30),
-    (26.5, 0, 34), (30.0, 0, 0), (37.6, -4, 0), (39.0, -26, 34), (41.6, -8, -6), (44.6, -10, 0), (46.5, -22, 34),
+    (26.5, 0, 34), (30.0, 0, 0), (36.6, -4, 20), (39.0, -26, 40), (41.6, -8, -6), (44.6, -10, 0), (46.5, -22, 34),
     (50.2, 24, 58), (57.4, 22, 58), (58.2, 0, 40), (59.4, 0, 0), (64.6, 0, 0), (68.6, 1, 8), (79.6, 1, 10),
     (80.2, -6, 42), (82.6, 1, 10)]
 
@@ -472,8 +472,8 @@ sc.collection.objects.link(cam)
 cam.data.clip_start, cam.data.clip_end = 0.05, 800
 cam.data.sensor_fit, cam.data.sensor_height = "VERTICAL", 36
 mid0 = (ME0 + KI0) / 2
-KEYS = [(fr(0.0), Vector((62, -46, 46)), mid0 + Vector((-2, 0, 1)), 24),
-        (fr(7.0) - 1, Vector((50, -34, 30)), mid0 + Vector((-10.4, 0, 1)), 24),
+KEYS = [(fr(0.0), Vector((22, -3.2, 9.5)), mid0 + Vector((0, 0, 0.8)), 20),        # inside the vault, high,
+        (fr(7.0) - 1, Vector((16, -2.6, 5.5)), mid0 + Vector((-8.4, 0, 0.9)), 20),    # they walk towards us
         (fr(73.0), Vector((-15.2, -2.2, 1.75)), HOUSE + Vector((0.3, 0.2, 1.25)), 28),
         (fr(79.6) - 1, Vector((-16.0, -3.0, 1.6)), HOUSE + Vector((0.3, 0.2, 1.15)), 28)]
 for f, c, a, lens in KEYS:
