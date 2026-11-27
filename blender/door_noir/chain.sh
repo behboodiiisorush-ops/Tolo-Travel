@@ -2,7 +2,7 @@
 # build the scene once, then render frames A..B (default all); restarts the renderer if Blender dies
 # usage: ./chain.sh [A B]
 cd "$(dirname "$0")"
-N=1128
+N=1452
 A=${1:-1}; B=${2:-$N}
 LOG=${LOG:-/tmp/door_render.log}
 [ -f door.blend ] || ../cast/bpy.sh scene.py --save > /tmp/door_build.log 2>&1

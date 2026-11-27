@@ -9,15 +9,16 @@ LINES = [
     (29.30, 32.40, "mom", "کی پشت دره؟... هر کاری می‌کنی، در رو باز نکن!", "06_mom_dont", "phone"),
     (36.80, 37.80, "brother", "داداش؟", "08_brother_call", "close"),
     (39.30, 40.80, "brother", "داداش... ترسیدم.", "09_brother_scared", "me"),
+    (57.20, 59.80, "fake", "منم... مادرت. پسرم، در رو باز کن.", "10_fake_mother", "door"),
 ]
 NAMES = {"me_msg": "پیام صوتی از: من", "fake": "مامان (پشت در)", "me": "من", "mom": "مامان (پشت تلفن)",
          "brother": "داداش کوچیکم"}
-END = 42.0
+END = 60.5
 FPS = 24
-QUESTION = "اگه جای من بودی، در رو باز می‌کردی؟"
+QUESTION = "تو بودی باز می‌کردی؟"
 TITLE = "در رو باز نکن"
 PEEP = [(14.2, 17.7), (26.6, 29.2), (33.0, 36.0)]     # seen through the door's peephole
-BLACK = (41.2, 43.0)                                   # black after my brother; a knock in the dark
+BLACK = (99.0, 99.5)                                   # (no black cut any more)
 PITCH = {}                                             # the user: voices exactly as ElevenLabs made them
 
 

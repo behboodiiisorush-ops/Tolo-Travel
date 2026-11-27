@@ -193,7 +193,8 @@ w = bpy.data.worlds.new("W")
 sc.world = w
 w.color = (0.004, 0.004, 0.006)
 # the corridor light flickers and dies 33.0-35.0
-FLICK = [(0, 1), (33.0, 0), (33.15, 1), (33.4, 0), (33.6, 1), (33.75, 0), (34.3, 0.6), (34.4, 0), (34.9, 1), (35.0, 0)]
+FLICK = [(0, 1), (33.0, 0), (33.15, 1), (33.4, 0), (33.6, 1), (33.75, 0), (34.3, 0.6), (34.4, 0), (34.9, 1), (35.0, 0),
+         (45.5, 1), (49.6, 0), (49.7, 1), (49.85, 0), (50.0, 1), (50.3, 0.4), (57.0, 1)]   # someone is out there again
 for t, v in FLICK:
     f = max(1, fr(t))
     tube_l.data.energy = 55 * v
@@ -249,8 +250,12 @@ hold(ME, "breathing_idle", 0.0, 10.6, ROOM_P, 180)                  # (the arms 
 walk(ME, 10.6, 14.2, ROOM_P[:2], DOOR_P[:2], 180)
 hold(ME, "breathing_idle", 14.2, 26.6, DOOR_P, 180, blend=8)
 hold(ME, "breathing_idle", 26.6, 38.7, DOOR_P, 180, src_from=4.0, blend=8)
-TURN = (38.7, 39.25)
-hold(ME, "breathing_idle", 38.7, END + 0.1, DOOR_P, 0, blend=4, src_from=5.0)
+TURNS = [(38.7, 39.25, 180, 360), (45.6, 46.2, 0, 180)]   # (t0, t1, from, to) degrees of facing
+ME_ROOM = (0.4, 4.9, 0)
+hold(ME, "breathing_idle", 38.7, 41.6, DOOR_P, 0, blend=4, src_from=5.0)
+walk(ME, 41.6, 44.2, DOOR_P[:2], ME_ROOM[:2], 0)                      # we go back into the room together
+hold(ME, "breathing_idle", 44.2, 46.2, ME_ROOM, 0, blend=6)
+hold(ME, "breathing_idle", 46.2, END + 0.1, ME_ROOM, 180, src_from=3.0)  # a knock: I turn to the door
 # the fake mom: in the corridor, facing the door (+Y), until she is gone; then inside, between me and the room
 FAKE_C, FAKE_IN = (0.0, -0.62, 0), (0.0, 1.3, 0)
 hold(FAKE, "breathing_idle", 0.0, 9.9, FAKE_C, 0, speed=0.6)
@@ -259,17 +264,25 @@ hold(FAKE, "breathing_idle", 19.8, 33.5, FAKE_C, 0, speed=0.5, src_from=0.4, ble
 # my little brother (Kian) was in the hallway behind me all along, scared
 KIAN = PP.spawn("kian")
 KIAN_P = (0.0, 1.65, 0)
-hold(KIAN, "nervously_look_around", 36.0, END + 0.1, KIAN_P, 180, speed=0.45)
+KIAN_ROOM, KIAN_DOOR, KIAN_BACK = (-0.5, 5.6, 0), (0.05, 0.78, 0), (-0.35, 4.45, 0)
+hold(KIAN, "nervously_look_around", 36.0, 40.9, KIAN_P, 180, speed=0.45)
+walk(KIAN, 40.9, 43.6, KIAN_P[:2], KIAN_ROOM[:2], 0)                     # into the room, ahead of me
+hold(KIAN, "breathing_idle", 43.6, 46.4, KIAN_ROOM, 160, blend=6)
+walk(KIAN, 46.4, 49.4, KIAN_ROOM[:2], KIAN_DOOR[:2], 180)                 # he goes to open the door
+hold(KIAN, "opening_door_inwards", 49.4, 50.2, KIAN_DOOR, 180, src_from=0.8, blend=4)
+walk(KIAN, 50.2, 52.6, KIAN_DOOR[:2], KIAN_BACK[:2], 0)                   # the laugh: he runs back to me
+hold(KIAN, "terrified", 52.6, END + 0.1, KIAN_BACK, 180, src_from=1.1, speed=0.25, blend=6)
 for ch in (ME, FAKE, KIAN):                          # every segment holds its place (jumps only at cuts)
     for fc in fcurves_of(ch.rig):
         if fc.data_path in ("location", "rotation_euler"):
             for kp in fc.keyframe_points:
                 kp.interpolation = "CONSTANT"
-# my turn around (38.7-39.25): rotate the rig per frame from 180 to 0 degrees
-for f in range(fr(TURN[0]), fr(TURN[1]) + 1):
-    u = seg((f - 1) / FPS, *TURN)
-    ME.rig.rotation_euler = (0, 0, math.radians(180 + 180 * u) + math.pi)
-    ME.rig.keyframe_insert("rotation_euler", index=2, frame=f)
+# my turns: rotate the rig per frame
+for t0_, t1_, a_, b_ in TURNS:
+    for f in range(fr(t0_), fr(t1_) + 1):
+        u = seg((f - 1) / FPS, t0_, t1_)
+        ME.rig.rotation_euler = (0, 0, math.radians(a_ + (b_ - a_) * u) + math.pi)
+        ME.rig.keyframe_insert("rotation_euler", index=2, frame=f)
 
 
 def tilt_head(ch, spans):
@@ -295,7 +308,7 @@ PRESENT = {"me": [(0, END + 1)], "fake": [(0, 33.4)], "kian": [(36.0, END + 1)]}
 
 # ------------------------------------------------------------------ the phone (follows my hands, faces my eyes)
 scr_m = {}
-for nm in ("msg", "incoming", "call", "ended", "record", "sent"):
+for nm in ("msg", "incoming", "call", "ended", "calling", "noanswer"):
     m = bpy.data.materials.new("Phone " + nm)
     nt = m.node_tree
     nt.nodes.clear()
@@ -307,7 +320,7 @@ for nm in ("msg", "incoming", "call", "ended", "record", "sent"):
     e_.inputs["Strength"].default_value = 1.4
     nt.links.new(e_.outputs[0], o_.inputs[0])
     scr_m[nm] = m
-SCREENS = {"msg": [(0.0, 3.6)], "incoming": [(17.7, 19.0)], "call": [(19.0, 33.2)], "ended": [(33.2, END + 1)],
+SCREENS = {"msg": [(0.0, 3.6)], "incoming": [(17.7, 19.0)], "call": [(19.0, 33.2)], "ended": [(33.2, 52.6)], "calling": [(52.6, 56.6)], "noanswer": [(56.6, END + 1)],
            }
 PHONE_ON = [(0.0, 3.6), (17.7, END + 1)]
 phone = P.empty("Phone")
@@ -349,6 +362,11 @@ LOOK = [  # (t, where I look, seconds to turn there)
     (36.0, PHONE_T, 0.4),
     (36.9, (0.3, 0.0, 1.35), 0.5),            # the whisper: a half turn of the head
     (38.7, FAKE_FACE, 0.55),                  # it is my little brother
+    (41.0, (-0.4, 6.8, 1.1), 0.6),            # we go back into the room
+    (44.0, (-0.5, 5.6, 1.3), 0.5),            # my brother
+    (45.6, (0.0, 0.0, 1.1), 0.6),             # a knock: I turn to the door, he goes to open it
+    (52.6, PHONE_T, 0.4),                     # I call mom
+    (57.0, (0.0, 0.0, 1.1), 0.6),             # her voice behind the door
 ]
 
 
@@ -476,7 +494,7 @@ sc["peep"] = json.dumps(PEEP)
 # ------------------------------------------------------------------ faces
 LS = lipsync.Voices(fps=FPS)
 for a, b, who, text, fn, how in LINES:
-    if who in ("fake", "brother"):
+    if who in ("fake", "brother") and os.path.exists(os.path.join(HERE, "voices", fn + ".mp3")):
         LS.add(who, os.path.join(HERE, "voices", fn + ".mp3"), a)
 
 
@@ -508,8 +526,9 @@ for f in range(fr(36.0), N + 1):                               # my brother: fri
     t = (f - 1) / FPS
     sc.frame_set(f)
     lv = LS.level("brother", t)
+    la = Vector(EYE[f]) if (t < 41.0 or 44.0 <= t < 46.4 or t >= 52.6) else None
     KIAN.face_pose(f, t, dict(t=t, seed=KIAN.seed, worry=1.9, talking=lv if lv > 0.05 else False,
-                              look_at=Vector(EYE[f]), brows="worried"))
+                              look_at=la, brows="worried"))
 KIAN.flush()
 ME.flush()
 sc.frame_set(1)

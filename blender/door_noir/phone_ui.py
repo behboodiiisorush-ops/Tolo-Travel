@@ -83,4 +83,13 @@ header(d, "من")
 bubble(d, 130, 0.0, "ارسال شد", seed=3)
 txt(d, (W // 2, 270), "تحویل: دیروز ۲۳:۵۸", 26, RED)
 save(im, "sent")
+for name, sub, col in (("calling", "در حال تماس...", (190, 190, 200)), ("noanswer", "پاسخ نمی‌دهد", RED)):
+    im, d = base("۰۰:۱۶")
+    d.ellipse((W // 2 - 70, 150, W // 2 + 70, 290), fill=(70, 70, 80))
+    txt(d, (W // 2, 218), "م", 70)
+    txt(d, (W // 2, 350), "مامان", 44)
+    txt(d, (W // 2, 400), sub, 24, col)
+    if name == "calling":
+        d.ellipse((W // 2 - 40, 600, W // 2 + 40, 680), fill=RED)
+    save(im, name)
 print("ok")

@@ -54,16 +54,21 @@ def tracks():
         if PITCH.get(who):
             af.append(f"rubberband=pitch={2 ** (PITCH[who] / 12):.4f}:formant=preserved")
         af = ["loudnorm=I=-16:TP=-1.5"] + af + HOW[how]                    # every line at the same loudness
-        x = decode(os.path.join(HERE, "voices", fn + ".mp3"), af or None)
+        p = os.path.join(HERE, "voices", fn + ".mp3")
+        if not os.path.exists(p):
+            print("no voice yet:", fn)
+            continue
+        x = decode(p, af or None)
         x /= max(1e-4, np.sqrt((x ** 2).mean()) * 8)                  # same RMS for every line
         g = {"phone": 0.95, "door": 0.9, "close": 1.0, "me": 1.0}[how]
         add(voice, x * g, max(0.0, a - lead(x)))
     fx = np.zeros_like(voice)
     room = S("room")
-    add(fx, room, 0.0, 0.07, fade_out=0.1, max_len=BLACK[0])
+    add(fx, room, 0.0, 0.07, fade_out=0.6, max_len=END)
     drone = S("drone")
     add(fx, drone, 2.6, 0.22, fade_in=3.0, max_len=17.0, src_from=0.6)
-    add(fx, drone, 19.6, 0.26, max_len=BLACK[0] - 19.6, src_from=2.0, fade_out=0.08)
+    add(fx, drone, 19.6, 0.26, max_len=22.0, src_from=2.0, fade_out=1.0)
+    add(fx, drone, 41.0, 0.24, src_from=4.0, max_len=END - 41.0, fade_in=1.0, fade_out=0.8)
     add(fx, S("knock"), 4.4 - 1.10, 0.95)                               # three knocks on the front door
     add(fx, S("steps"), 10.65 - 0.70, 0.45, max_len=4.4, fade_out=0.4)    # my socks on the hall floor
     add(fx, S("lean"), 14.05 - 2.25, 0.55)                               # my cheek against the door
@@ -73,8 +78,20 @@ def tracks():
     add(fx, S("flicker"), 33.0 - 1.6, 0.5, src_from=0.0, max_len=3.6, fade_out=0.3)   # the corridor light dies
     add(fx, heart, 35.0, 0.6, src_from=1.5, max_len=3.8, fade_in=0.3, fade_out=0.3)
     add(fx, S("stinger"), 38.85, 0.8, max_len=1.4, fade_out=0.25)        # I turn: someone is behind me
+    # the new ending (41-60.5): we go back in, a knock, he goes to the door, the laugh, he runs back, mom does not
+    # answer, "mom" behind the door
+    add(fx, S("steps_two"), 41.0 - 1.2, 0.45, src_from=0.0, max_len=4.4, fade_in=0.3, fade_out=0.5)
     k2 = S("knock_dark")
-    add(fx, k2, BLACK[0] + 0.35 - lead(k2), 1.0)                         # in the dark: she knocks again
+    add(fx, k2, 45.5 - lead(k2), 1.0, max_len=3.0, fade_out=0.3)          # someone knocks again
+    add(fx, S("kid_walk_away"), 46.4 - 1.4, 0.4, src_from=0.0, max_len=4.4, fade_in=0.4, fade_out=0.6)
+    add(fx, S("handle"), 49.55 - 1.2, 0.5)                                 # his hand on the handle
+    lg = S("laugh")
+    add(fx, lg, 49.6 - 0.6, 1.0, max_len=4.5, fade_out=0.8)               # the laugh behind the door
+    add(fx, S("kid_run"), 50.2 - 1.0, 0.6, max_len=3.4, fade_out=0.4)     # he runs back to me
+    rb = S("ringback")
+    add(fx, rb, 52.8 - 0.2, 0.55, max_len=2.4, fade_out=0.1)               # ringing... nobody answers
+    add(fx, rb, 55.1 - 5.2, 0.55, src_from=5.0, max_len=1.6, fade_out=0.1)
+    add(fx, heart, 53.0, 0.4, src_from=2.0, max_len=7.5, fade_in=0.5, fade_out=0.6)
     env = np.convolve(np.abs(voice), np.ones(int(0.25 * SR)) / int(0.25 * SR), "same")
     duck = 1.0 - 0.78 * np.clip(env / (env.max() * 0.15 + 1e-6), 0, 1)      # about -13 dB under every line
     return voice, fx * duck
