@@ -8,6 +8,7 @@ Checks, on every frame (24 fps):
   POP      a bone's world position accelerates far more than its own usual motion (snap / blend error)
   SPIN     a bone turns more than 20 degrees in one frame (quaternion flip, broken cross-fade)
   JITTER   high-frequency back-and-forth (direction flips every frame) on hands, head, feet
+  JUMP     a bone moves >3x further in one frame than in its neighbours (and >2 cm): a teleport inside a shot
   SLIDE    a planted foot (low and meant to be still) moves sideways faster than 6 cm/s
   FLOOR    a foot goes into the floor (more than 1 cm below its own standing height)
 Zero findings is the delivery standard (see blender/STANDARD.md, «کنترل حرکت»).
@@ -55,6 +56,12 @@ def check(rig, a, b, fps=24, floor=0.0):
                 and A[j].dot(A[j - 1]) < -0.5 * g * A[j - 1].length
             if kink or spike:
                 out.append((a + j + 1, "POP", name, f"{g:.1f} m/s² ({'kink' if kink else 'spike'})"))
+    # JUMP: a bone moves much further in one frame than in the frames around it (a teleport inside a shot)
+    for name, P in pos.items():
+        d = [(P[i] - P[i - 1]).length for i in range(1, n)]
+        for j in range(1, len(d) - 1):
+            if d[j] > 0.02 and d[j] > 3 * max(d[j - 1], d[j + 1]):
+                out.append((a + j + 1, "JUMP", name, f"{d[j] * 100:.1f} cm in one frame"))
     # SPIN: angular step per frame
     for name, R in rot.items():
         for i in range(1, n):
