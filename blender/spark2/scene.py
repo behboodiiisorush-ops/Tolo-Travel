@@ -1,4 +1,4 @@
-"""«جرقه ۲» — the morning after: kitchen, hallway, courtyard; the street lamp; something stops in the sky.
+"""«جرقه ۲» — the next evening: kitchen, hallway, courtyard; the street lamp; something stops in the sky.
     ../cast/bpy.sh scene.py --still 60,170 | --save   (render: chain.sh -> render.py, then sound.py, post.py)
 """
 import bpy, sys, os, math, random
@@ -165,7 +165,7 @@ P.box((KX - 2.5, -1.55, 1.4), (0.1, 1.9, 2.8), m_kwall, "K left a")
 P.box((KX - 2.5, 1.7, 1.4), (0.1, 1.6, 2.8), m_kwall, "K left b")
 P.box((KX - 2.5, 0.15, 0.45), (0.1, 1.5, 0.9), m_kwall, "K sill")
 P.box((KX - 2.5, 0.15, 2.5), (0.1, 1.5, 0.6), m_kwall, "K lintel")
-P.plane((KX - 4.0, 0.15, 1.5), (6, 4), P.emit("K outside", (0.75, 0.85, 1.0), 2.0), (math.pi / 2, 0, math.pi / 2),
+P.plane((KX - 4.0, 0.15, 1.5), (6, 4), P.emit("K outside", (0.06, 0.08, 0.18), 1.0), (math.pi / 2, 0, math.pi / 2),
         "K outside")
 # cabinets + counter along the back wall, fridge
 P.box((KX + 0.6, 2.15, 0.45), (2.8, 0.6, 0.9), m_cab, "Cabinets", bevel=0.01)
@@ -196,8 +196,8 @@ PEND = Vector((KX, 0.2, 2.1))
 P.cyl(PEND + Vector((0, 0, 0.1)), (KX, 0.2, 2.8), 0.006, m_dark, "Pendant cord")
 m_pend = P.emit("Pendant", (1.0, 0.82, 0.55), 6.0)
 P.cyl(PEND, PEND + Vector((0, 0, 0.12)), 0.18, m_pend, "Pendant shade")
-L_pend = lamp("Pendant light", PEND - Vector((0, 0, 0.08)), 70, (1.0, 0.8, 0.55), 0.2)
-P.area_light((KX - 2.2, 0.15, 1.6), (0, -math.pi / 2, 0), 260, 1.4, (1.0, 0.92, 0.8), name="K window")
+L_pend = lamp("Pendant light", PEND - Vector((0, 0, 0.08)), 110, (1.0, 0.8, 0.55), 0.2)
+P.area_light((KX - 2.2, 0.15, 1.6), (0, -math.pi / 2, 0), 40, 1.4, (0.55, 0.65, 1.0), name="K window")
 P.area_light((KX + 0.5, -1.0, 2.7), (0, 0, 0), 60, 2.0, (1.0, 0.95, 0.9), name="K fill")
 
 # ---------------- hallway / stairwell landing: a corridor along Y with wall lamps
@@ -225,11 +225,18 @@ m_fac_a = P.mat("Facade A", (0.78, 0.62, 0.5), 0.9)
 m_fac_b = P.mat("Facade B", (0.6, 0.66, 0.72), 0.9)
 P.box((CX, -6.5, 7), (20, 1, 14), m_fac_a, "Building A")
 P.box((CX, 9.0, 7), (20, 1, 14), m_fac_b, "Building B")
-win = P.mat("Window", (0.15, 0.2, 0.28), 0.1)
+win = P.mat("Window", (0.03, 0.04, 0.07), 0.1)
+win_lit = P.emit("Lit window", (1.0, 0.72, 0.42), 2.5)
 for ix in range(-5, 6):
     for iz in range(1, 5):
-        P.box((CX + ix * 1.7, -5.99, iz * 3.0), (0.9, 0.02, 1.3), win, "Win A")
-        P.box((CX + ix * 1.7, 8.49, iz * 3.0), (0.9, 0.02, 1.3), win, "Win B")
+        P.box((CX + ix * 1.7, -5.99, iz * 3.0), (0.9, 0.02, 1.3), win_lit if (ix * 5 + iz * 3) % 4 == 0 else win, "Win A")
+        P.box((CX + ix * 1.7, 8.49, iz * 3.0), (0.9, 0.02, 1.3), win_lit if (ix * 3 + iz) % 3 == 0 else win, "Win B")
+lamp("Entrance lamp", (CX, -5.7, 2.5), 60, (1.0, 0.8, 0.55), 0.1)
+P.sphere((CX, -5.9, 2.5), 0.08, P.emit("Entrance bulb", (1.0, 0.85, 0.6), 8.0), "Entrance bulb")
+P.area_light((CX, 4.0, 6.0), (math.radians(40), 0, 0), 120, 8.0, (0.5, 0.6, 1.0), name="Night fill")
+m_starlet = P.emit("Star", (0.9, 0.92, 1.0), 6.0)
+for i in range(160):
+    P.sphere((CX + random.uniform(-55, 55), -39, random.uniform(12, 48)), random.uniform(0.04, 0.1), m_starlet, "Star")
 P.box((CX, -5.98, 1.05), (1.0, 0.04, 2.1), P.wood("Entrance door", (0.45, 0.3, 0.18), planks=False), "Entrance")
 for k in range(5):                                       # a few planters + a bench
     P.box((CX - 6 + k * 3.2, 7.6, 0.3), (1.2, 0.6, 0.6), P.mat(f"Planter{k}", (0.5, 0.5, 0.48), 0.8), "Planter")
@@ -244,17 +251,17 @@ m_street = P.emit("Street lamp", (1.0, 0.9, 0.65), 0.0)
 P.cyl(LAMP_HEAD, LAMP_HEAD + Vector((0, 0, 0.12)), 0.13, m_street, "Street lamp head")
 L_street = lamp("Street light", LAMP_HEAD - Vector((0, 0, 0.1)), 0, (1.0, 0.85, 0.6), 0.2)
 sun = bpy.data.lights.new("Sun", "SUN")
-sun.energy, sun.color, sun.angle = 3.2, SUNNY, math.radians(2)
+sun.energy, sun.color, sun.angle = 0.35, (0.55, 0.65, 1.0), math.radians(1)   # moonlight
 so = bpy.data.objects.new("Sun", sun)
 sc.collection.objects.link(so)
 so.rotation_euler = (math.radians(50), math.radians(10), math.radians(-35))
-world = bpy.data.worlds.new("Day")
+world = bpy.data.worlds.new("Night")
 sc.world = world
 world.use_nodes = True
-world.node_tree.nodes["Background"].inputs[0].default_value = (0.45, 0.6, 0.9, 1)
+world.node_tree.nodes["Background"].inputs[0].default_value = (0.015, 0.02, 0.05, 1)
 world.node_tree.nodes["Background"].inputs[1].default_value = 1.0
 # far sky backdrop behind building A's roofline so the object in the sky reads clearly
-P.plane((CX, -40, 20), (120, 60), P.emit("Sky", (0.5, 0.65, 0.95), 1.0), (math.pi / 2, 0, 0), "Sky")
+P.plane((CX, -40, 20), (120, 60), P.emit("Sky", (0.02, 0.03, 0.08), 1.0), (math.pi / 2, 0, 0), "Sky")
 
 # ---------------- the thing in the sky: a streak like a meteor that slows down and stops (only a hint)
 m_star = P.emit("Visitor", (0.75, 0.9, 1.0), 80.0)
@@ -496,7 +503,7 @@ pend_s, street_s = strength(m_pend), strength(m_street)
 for f in range(1, N + 1):
     t = (f - 1) / FPS
     p = pend(t)
-    L_pend.energy = 70 * p
+    L_pend.energy = 110 * p
     L_pend.keyframe_insert("energy", frame=f)
     pend_s.default_value = 6.0 * p
     pend_s.keyframe_insert("default_value", frame=f)
@@ -645,6 +652,10 @@ for prop, v in (("use_raytracing", False), ("use_shadows", True), ("use_fast_gi"
         setattr(ee, prop, v)
 sc.view_settings.view_transform = "AgX"
 sc.view_settings.exposure = 0.0
+for f in range(1, N + 1, 6):
+    t = (f - 1) / FPS
+    sc.view_settings.exposure = 0.9 * smooth((t - 16.9) / 0.1)
+    sc.view_settings.keyframe_insert("exposure", frame=f)
 sc.render.resolution_x, sc.render.resolution_y = 540, 960
 sc.render.resolution_percentage = 100
 sc.render.image_settings.file_format = "PNG"
