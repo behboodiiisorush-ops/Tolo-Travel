@@ -1,0 +1,6 @@
+frames/
+test/
+*.blend
+post_tmp/
+out/*.wav
+__pycache__/
