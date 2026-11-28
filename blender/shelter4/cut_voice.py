@@ -9,7 +9,7 @@ TRIM = ("silenceremove=start_periods=1:start_threshold=-45dB,areverse,"
         "silenceremove=start_periods=1:start_threshold=-45dB,areverse")
 VISOR = "highpass=f=180,lowpass=f=5200,aecho=0.8:0.5:12|24:0.25|0.15"          # inside a glass helmet
 RADIO = "highpass=f=280,lowpass=f=4800,acrusher=bits=14:mix=0.06"               # light walkie-talkie colour
-FX = {"str1a": VISOR, "str1b": VISOR, "str1c": VISOR, "str1e": VISOR, "str2a": VISOR,
+FX = {"str1a": VISOR, "str1b": VISOR, "str1c": "highpass=f=180,lowpass=f=6000", "str1e": VISOR, "str2a": VISOR,
       "str2b": RADIO, "str1d": RADIO}
 out = os.path.join(HERE, "voices", "clips")
 os.makedirs(out, exist_ok=True)
