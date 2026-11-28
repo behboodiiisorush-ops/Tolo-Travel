@@ -111,3 +111,11 @@ blender/tailor_test/post_tmp/
 blender/tailor_test/out/
 blender/tailor_test/render.log
 blender/tailor_test/marks.json
+blender/park/preview/
+blender/park/test/
+blender/park/frames/
+blender/park/post_tmp/
+blender/park/out/
+blender/park/audio/
+blender/park/*.log
+blender/park/__pycache__/
