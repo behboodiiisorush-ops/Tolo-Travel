@@ -173,7 +173,7 @@ if MODE4 in ("preview", "final"):
         sc.render.resolution_x, sc.render.resolution_y = 480, 270
         sc.render.filepath = os.path.join(OUT4, "prev_")
     else:
-        sc.eevee.taa_render_samples = 48
+        sc.eevee.taa_render_samples = int(os.environ.get("FINAL_SAMPLES", 32))
         sc.render.resolution_x, sc.render.resolution_y = 1280, 720
         sc.render.filepath = os.path.join(OUT4, "f_")
     bpy.ops.render.render(animation=True)

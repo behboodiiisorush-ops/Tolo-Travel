@@ -137,6 +137,9 @@ A.carry(ph, arin, "r", T(30.2), F1)
 ph.location = hold - up * 5.0; ph.keyframe_insert("location", frame=F0); ph.keyframe_insert("location", frame=T(29.5))   # in his pocket
 ph.location = hold; ph.keyframe_insert("location", frame=T(29.6))
 
+# a soft cold fill on his face for the call (the street light through the window would reach the aisle)
+P.area_light(CB + Vector((1.4, -0.9, 1.9)), CB + Vector((0, 0, 1.3)), 25, size=1.2, color=(0.75, 0.82, 1.0), name="PH_FaceFill")
+
 # ---------------------------------------------------------------- face, lips, look
 LS = lipsync.Voices(fps=FPS)
 for who, name, t0 in LINES:
@@ -232,7 +235,7 @@ if MODE in ("preview", "final"):
         sc.render.resolution_x, sc.render.resolution_y = 480, 270
         sc.render.filepath = os.path.join(OUT, "prev_")
     else:
-        sc.eevee.taa_render_samples = 48
+        sc.eevee.taa_render_samples = int(os.environ.get("FINAL_SAMPLES", 32))
         sc.render.resolution_x, sc.render.resolution_y = 1280, 720
         sc.render.filepath = os.path.join(OUT, "f_")
     bpy.ops.render.render(animation=True)

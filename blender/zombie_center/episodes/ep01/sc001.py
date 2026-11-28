@@ -242,3 +242,11 @@ if MODE == "preview":    # real-speed check of the whole scene: every 2nd frame,
     sc.render.image_settings.file_format = "PNG"
     sc.render.filepath = os.path.join(OUT, "prev_")
     bpy.ops.render.render(animation=True)
+
+if MODE == "final":      # 1280x720 frames f_####.png (workers: PREV_START / PREV_END)
+    sc.frame_start = int(os.environ.get("PREV_START", 1)); sc.frame_end = int(os.environ.get("PREV_END", 1080))
+    sc.eevee.taa_render_samples = int(os.environ.get("FINAL_SAMPLES", 32))
+    sc.render.resolution_x, sc.render.resolution_y = 1280, 720
+    sc.render.image_settings.file_format = "PNG"
+    sc.render.filepath = os.path.join(OUT, "f_")
+    bpy.ops.render.render(animation=True)
