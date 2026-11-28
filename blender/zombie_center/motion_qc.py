@@ -166,3 +166,29 @@ def ground(ch, f0, f1, floor=0.0, smooth=2, keep_flight=False):
         rig.location.z = base[i] - sm[i]
         rig.keyframe_insert("location", index=2, frame=f)
     return [round(-x * 100, 2) for x in sm]
+
+
+def ground_body(ch, f0, f1, floor=0.0, step=3):
+    """For lying / falling / crawling: put the lowest point of the WHOLE body (skin + clothes) on the floor
+    (feet-only grounding can't see a body hanging in the air above its feet). Keys rig location z."""
+    import bpy
+    sc = bpy.context.scene
+    rig = ch.rig
+    objs = [ch.body] + list(ch.parts.get("Clothes", []))
+    keys = []
+    for f in list(range(f0, f1 + 1, step)) + [f1]:
+        sc.frame_set(f)
+        dg = bpy.context.evaluated_depsgraph_get()
+        low = 1e9
+        for o in objs:
+            ev = o.evaluated_get(dg); me = ev.to_mesh()
+            mw = o.matrix_world
+            for v in me.vertices[::7]:
+                z = (mw @ v.co).z
+                if z < low:
+                    low = z
+            ev.to_mesh_clear()
+        keys.append((f, rig.location.z - (low - floor)))
+    for f, z in keys:
+        rig.location.z = z
+        rig.keyframe_insert("location", index=2, frame=f)

@@ -65,7 +65,7 @@ roof_y = max(p.y for p in bv if p.z < 1.45)
 K = Vector((xmax - 1.4, roof_y + 0.22, 0.0))          # where SC002 left him kneeling
 
 # ---------------------------------------------------------------- extra props for the chase
-CAR_BUMP = Vector((7.3, 15.6, 0.0))
+CAR_BUMP = Vector((4.2, 19.6, 0.0))
 CAR_VAULT = Vector((12.6, 21.7, 0.0))
 car_b = env_city.car(tuple(CAR_BUMP), 172, (0.32, 0.34, 0.36), "PROP_CAR_ALARM", damaged=True)
 car_v = env_city.car(tuple(CAR_VAULT), 78, (0.42, 0.12, 0.1), "PROP_CAR_VAULT", damaged=True)
@@ -148,11 +148,13 @@ fall = mocap.load(os.path.join(MOCAP, "falling_down.fbx"))
 lie = mocap.load(os.path.join(MOCAP, "laying_breathless.fbx"))
 BOLT = T(3.6)
 mocap.apply(arin, kneel, start=F0, length=BOLT - F0, offset=tuple(K), facing=0.0, in_place=True, loop=True)
-VA = 4.6                                                    # m/s: a panicked sprint off a kneel
-legA = [K, K + Vector((1.4, 1.6, 0)), CAR_BUMP + Vector((-1.25, -0.4, 0)), CAR_BUMP + Vector((-1.1, 1.6, 0)),
+VA = 4.2                                                    # m/s: a panicked sprint off a kneel
+# weaves between the abandoned cars toward the mouth of side street B (around the car at (-3.4, 16))
+legA = [K, K + Vector((-1.6, 1.8, 0)), Vector((-0.6, 15.2, 0)), Vector((-1.2, 18.2, 0)),
+        CAR_BUMP + Vector((-1.25, -0.3, 0)), CAR_BUMP + Vector((-1.15, 1.2, 0)), Vector((8.4, 21.2, 0)),
         CAR_VAULT + Vector((-1.6, -0.35, 0))]
 fA, lenA = path_fn(legA, VA); nA = frames_for(lenA, VA)
-bump_j = frames_for((legA[1] - legA[0]).length + (legA[2] - legA[1]).length, VA)
+bump_j = frames_for(sum((b - a).length for a, b in zip(legA[:4], legA[1:5])), VA)
 
 
 def placeA(j):
@@ -193,10 +195,15 @@ mocap.apply(arin, fall, start=FALL, length=NF, offset=(FALL_AT.x, FALL_AT.y, 0.0
 LIE = FALL + NF
 mocap.apply(arin, lie, start=LIE, length=F1 - LIE + 1, offset=(FALL_AT.x, FALL_AT.y, 0.0),
             facing=math.degrees(math.atan2(-fall_dir.x, fall_dir.y)), in_place=True, loop=True, blend=10)
-Q.ground(arin, F0, F1, keep_flight=True)
+Q.ground(arin, F0, FALL - 1, keep_flight=True)   # the vault really leaves the ground
+Q.ground_body(arin, FALL, F1)                     # fall + lying: the whole body on the asphalt, never floating or sunk
 footlock.lock(arin, BOLT, V0 - 1, mode="plant")
 footlock.lock(arin, R0, FALL - 1, mode="plant")
 print("ARIN bolt", BOLT, "vault", V0, "run2", R0, "fall", FALL, "lie", LIE, "end", F1)
+for f in range(FALL, LIE + 30, 16):
+    sc.frame_set(f)
+    print("  fall f", f, "head z", round((arin.rig.matrix_world @ arin.rig.pose.bones["head"].head).z, 2),
+          "pelvis z", round((arin.rig.matrix_world @ arin.rig.pose.bones["pelvis"].head).z, 2))
 # where is he lying? crouch over his chest, facing his head (measured on the body, not guessed)
 sc.frame_set(LIE + 8)
 a_head = arin.rig.matrix_world @ arin.rig.pose.bones["head"].head
@@ -243,7 +250,8 @@ if PIN > D2 + nD2:
 mocap.apply(drv, zbite, start=PIN, length=F1 - PIN + 1, offset=(chest_at.x, chest_at.y, 0.0),
             facing=math.degrees(math.atan2(-body_dir.x, body_dir.y)), in_place=True, loop=True, blend=8)
 print("LYING head", tuple(round(v, 2) for v in a_head), "pelvis", tuple(round(v, 2) for v in a_pel))
-Q.ground(drv, F0, F1, keep_flight=True)
+Q.ground(drv, F0, PIN - 1, keep_flight=True)
+Q.ground_body(drv, PIN, F1)
 footlock.lock(drv, D_START, D_ARRIVE - 1, mode="plant")
 print("DRIVER start", D_START, "bonnet", D_ARRIVE, "pin", PIN)
 
@@ -293,6 +301,8 @@ F1 = PIN + 40 + HOLD
 sc.frame_end = F1
 NO_LINE_F = PIN + 64
 EV = [F0, BOLT - 6, BOLT + 30, BUMP - 12, V0 - 4, V0 + NV + 6, D_ARRIVE + ND + 4, FALL - 34, FALL - 12, FALL + 40, PIN + 40, F1 + 1]
+for i in range(1, len(EV)):                              # keep the cuts in order and every shot >= 14 frames
+    EV[i] = max(EV[i], EV[i - 1] + 14)
 SHOTS = [(a, b - 1) for a, b in zip(EV, EV[1:])]
 print("SHOTS", SHOTS)
 

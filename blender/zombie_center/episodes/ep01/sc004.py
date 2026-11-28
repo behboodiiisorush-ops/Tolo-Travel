@@ -45,7 +45,8 @@ AWAY = [chest_at + Vector((0.6, 0, 0)), Vector((34.0, 22.6, 0)), Vector((44.0, 2
 fW, lenW = path_fn(AWAY, 6.4)
 mocap.apply(drv, zrun, start=U(16), length=G1 - U(16) + 1, in_place=True, loop=True, speed=1.2,
             place=lambda j: (lambda p, h, d: ((p.x, p.y, 0.0), h))(*fW(j)), blend=4)
-Q.ground(drv, G0, G1, keep_flight=True)
+Q.ground_body(drv, G0, U(16) - 1)
+Q.ground(drv, U(16), G1, keep_flight=True)
 neck = a_head + Vector((0, 0, -0.05)) - body_dir * 0.12
 cheek = a_head + Vector((0, 0, 0.04))
 A.look(drv, G0 + 2, U(10), lambda f: neck.lerp(cheek, min(1.0, max(0.0, (f - G0) / (6 * FPS)))), weight=0.85)
@@ -69,7 +70,8 @@ RUN_TO = [C_TO + Vector((-0.4, -0.3, 0)), Vector((19.0, 18.8, 0)), Vector((15.6,
 fR, lenR = path_fn(RUN_TO, 4.2)
 mocap.apply(arin, run, start=U(39.2), length=G1 - U(39.2) + 1, in_place=True, loop=True, speed=1.3,
             place=lambda j: (lambda p, h, d: ((p.x, p.y, 0.0), h))(*fR(j)), blend=5)
-Q.ground(arin, G0, G1, keep_flight=True)
+Q.ground_body(arin, G0, U(39.2) - 1)
+Q.ground(arin, U(39.2), G1)
 footlock.lock(arin, U(39.2), G1, mode="plant")
 LS4 = lipsync.Voices(fps=FPS)
 LS4.add("arin", os.path.join(VOICE, "sc004_arin_04.wav"), start=(U(24) - 1) / FPS)
@@ -101,7 +103,7 @@ SHOP = Vector((20.0, 16.7, 0.0))
 fS, lenS = path_fn([Vector((GRAB_AT.x, GRAB_AT.y, 0)), Vector((21.2, 19.0, 0)), SHOP], 0.65)
 mocap.apply(crawler, zcr, start=U(35.6), length=G1 - U(35.6) + 1, in_place=True, loop=True, speed=1.1,
             place=lambda j: (lambda p, h, d: ((p.x, p.y, 0.0), h))(*fS(j)), blend=6)
-Q.ground(crawler, G0, G1, keep_flight=True)
+Q.ground_body(crawler, G0, G1)
 A.face(crawler, G0, G1, lambda f, t: dict())
 
 # ---------------------------------------------------------------- the broken bottle + the cut
