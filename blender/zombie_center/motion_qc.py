@@ -182,11 +182,12 @@ def ground_body(ch, f0, f1, floor=0.0, step=3):
         low = 1e9
         for o in objs:
             ev = o.evaluated_get(dg); me = ev.to_mesh()
-            mw = o.matrix_world
-            for v in me.vertices[::7]:
-                z = (mw @ v.co).z
-                if z < low:
-                    low = z
+            import numpy as np
+            co = np.empty(len(me.vertices) * 3, dtype=np.float32); me.vertices.foreach_get("co", co)
+            co = co.reshape(-1, 3)
+            m = np.array(o.matrix_world)
+            z = co @ m[2, :3] + m[2, 3]
+            low = min(low, float(z.min())) if len(z) else low
             ev.to_mesh_clear()
         keys.append((f, rig.location.z - (low - floor)))
     for f, z in keys:
