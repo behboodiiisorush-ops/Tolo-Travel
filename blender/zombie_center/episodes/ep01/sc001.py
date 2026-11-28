@@ -248,5 +248,6 @@ if MODE == "final":      # 1280x720 frames f_####.png (workers: PREV_START / PRE
     sc.eevee.taa_render_samples = int(os.environ.get("FINAL_SAMPLES", 32))
     sc.render.resolution_x, sc.render.resolution_y = 1280, 720
     sc.render.image_settings.file_format = "PNG"
+    import finalize; finalize.apply(sc)
     sc.render.filepath = os.path.join(OUT, "f_")
     bpy.ops.render.render(animation=True)

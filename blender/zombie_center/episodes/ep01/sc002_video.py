@@ -214,5 +214,6 @@ if MODE in ("preview", "final"):
         sc.render.filepath = os.path.join(OUT, "prev_")
     else:
         sc.eevee.taa_render_samples = 24
+        import finalize; finalize.apply(sc, -0.0)
         sc.render.filepath = os.path.join(OUT, "f_")
     bpy.ops.render.render(animation=True)

@@ -242,5 +242,6 @@ if MODE in ("preview", "final"):
     else:
         sc.eevee.taa_render_samples = int(os.environ.get("FINAL_SAMPLES", 32))
         sc.render.resolution_x, sc.render.resolution_y = 1280, 720
+        import finalize; finalize.apply(sc, -1.6)
         sc.render.filepath = os.path.join(OUT, "f_")
     bpy.ops.render.render(animation=True)

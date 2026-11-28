@@ -390,5 +390,6 @@ if MODE in ("preview", "final"):
             sc.cycles.transmission_bounces = 2; sc.cycles.volume_bounces = 0; sc.cycles.transparent_max_bounces = 8
             sc.render.threads_mode = "AUTO"
         sc.render.resolution_x, sc.render.resolution_y = 1280, 720
+        import finalize; finalize.apply(sc, -1.6)
         sc.render.filepath = os.path.join(OUT, "f_")
     bpy.ops.render.render(animation=True)
