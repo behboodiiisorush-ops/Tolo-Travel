@@ -145,3 +145,8 @@ Workers running (2026-11-27 ~19:00 Berlin): SC001 preview a1 (1–179), a2 (181�
 **Next:** QC the SC001 preview (motion, hands, phone, face, cuts); SC002 scene (`sc002.py`: Arin behind the bus,
 POV phone playing the video frames, scrub-back, the Driver Z6 stops far down the avenue and turns his head);
 then SC003–SC005, captions, sound mix, branding, QC report, final render split over workers.
+
+### EP01 final render (started 28 Nov 2026, 20:56 Berlin)
+- Look: Cycles CPU 24 spp + OIDN, `ZC_FOG=0`, `finalize.py` (city: sky ×0.22, moon ×0.3, exposure −1.5; interiors −1.6).
+- 23 sonnet worker chats, branches `claude/zc-ep01-final-01..23` (SC001 4 parts, SC002 6, SC003 2, SC004 4, SC005 7, ~270 frames each).
+- Collect with `blender/zombie_center/tools/collect_final.sh` (prints missing frames per scene), then `post.py`.
