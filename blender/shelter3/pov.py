@@ -29,6 +29,7 @@ from captions import END, KEY_OF  # noqa: E402
 random.seed(8)
 T = KEY_OF
 N = int(END * FPS)
+WIDE = os.environ.get("WIDE", "") == "1"      # 16:9 long-form version (1280x720)
 
 
 def at(key, k=0):
@@ -291,7 +292,11 @@ def far_car():
     sp.data.energy = 0
     sp.data.spot_size = D(50)
     sp.data.color = (1.0, 0.95, 0.85)
-    return heads, sp
+    root = empty("Far car root", (x, ROAD_Y - 1.5, 0))
+    for o in [o for o in bpy.data.objects if o.name.startswith("Far ")] + [sp]:
+        if o is not root and o.parent is None:
+            parent_keep(o, root)
+    return heads, sp, root
 
 
 # ================================================================== the bunker (as in episodes 1-2)
@@ -610,6 +615,83 @@ def make_dog(i):
     return root, legs, rnd.uniform(0, 6.28)
 
 
+# ================================================================== the creature from the wall (end of the film)
+def make_beast():
+    """Tall hunched beast: black shaggy fur, long arms with claws reaching the ground, glowing white eyes,
+    a wide mouth glowing red inside with rows of teeth. Faces +X (towards the bus). ~2.6 m tall."""
+    fur = toon("Beast fur", (0.05, 0.04, 0.045), 0.0)
+    claw_m = toon("Beast claws", (0.12, 0.1, 0.09), 0.05)
+    eye_m = glow_mat("Beast eyes", (1.0, 0.97, 0.92), 60.0)
+    mouth_m = glow_mat("Beast mouth", (1.0, 0.08, 0.04), 18.0)
+    tooth_m = toon("Beast teeth", (0.92, 0.88, 0.8), 0.25)
+    root = empty("Beast")
+    parts = []
+    torso = ball((0, 0, 1.55), 0.62, fur, "Beast torso", scale=(1.0, 1.15, 1.25))
+    torso.rotation_euler = (0, D(35), 0)                     # hunched forward
+    belly = ball((0.05, 0, 1.05), 0.48, fur, "Beast hips", scale=(0.95, 1.05, 0.9))
+    head_piv = empty("Beast head pivot", (0.55, 0, 2.05))
+    head = ball((0.78, 0, 2.05), 0.36, fur, "Beast head", scale=(1.05, 1.0, 0.95))
+    jaw = ball((0.92, 0, 1.86), 0.27, fur, "Beast jaw", scale=(1.0, 1.05, 0.55))
+    mouth = ball((1.06, 0, 1.95), 0.21, mouth_m, "Beast mouth", scale=(0.45, 1.25, 0.5))
+    hp = [head, jaw, mouth]
+    for dy in (-0.15, 0.15):
+        hp.append(ball((1.07, dy, 2.16), 0.055, eye_m, "Beast eye", seg=10))
+        bpy.ops.mesh.primitive_cone_add(radius1=0.1, depth=0.35, location=(0.62, dy * 1.5, 2.36),
+                                        rotation=(D(-25 if dy < 0 else 25), D(-25), 0), vertices=8)
+        hp.append(finish(bpy.context.object, fur, "Beast ear"))
+    for k in range(9):                                        # teeth, upper and lower rows
+        y = -0.2 + 0.05 * k
+        for z, rot in ((2.03, 180), (1.87, 0)):
+            bpy.ops.mesh.primitive_cone_add(radius1=0.018, depth=0.09, location=(1.12, y, z),
+                                            rotation=(D(rot), 0, 0), vertices=6)
+            hp.append(finish(bpy.context.object, tooth_m, "Beast tooth"))
+    for o in hp:
+        parent_keep(o, head_piv)
+    parent_keep(head_piv, root)
+    rnd = random.Random(77)
+    for _ in range(46):                                       # shaggy tufts over back and shoulders
+        a, b = rnd.uniform(-1.2, 1.2), rnd.uniform(-0.2, 1.4)
+        c = Vector((0.6 * math.cos(b) * 0.8 - 0.1, 0.7 * math.sin(a), 1.4 + 0.6 * math.sin(b)))
+        bpy.ops.mesh.primitive_cone_add(radius1=0.1, depth=0.42, location=c, vertices=6,
+                                        rotation=(rnd.uniform(-0.6, 0.6), D(-60) + rnd.uniform(-0.4, 0.4), 0))
+        parts.append(finish(bpy.context.object, fur, "Beast tuft"))
+    parts += [torso, belly]
+    for o in parts:
+        parent_keep(o, root)
+    limbs = []
+    for side in (-1, 1):                                      # long arms reaching to the ground, claws
+        sh = empty("Beast shoulder", (0.45, side * 0.62, 1.85))
+        parent_keep(sh, root)
+        up = rod((0.45, side * 0.62, 1.85), (0.75, side * 0.78, 1.0), 0.12, fur, "Beast arm")
+        lo = rod((0.75, side * 0.78, 1.0), (0.95, side * 0.8, 0.12), 0.1, fur, "Beast forearm")
+        hand = ball((1.0, side * 0.8, 0.1), 0.14, fur, "Beast hand", scale=(1.3, 1.1, 0.5))
+        for o in (up, lo, hand):
+            parent_keep(o, sh)
+        for c in range(4):
+            bpy.ops.mesh.primitive_cone_add(radius1=0.03, depth=0.26, location=(1.18, side * (0.68 + 0.08 * c), 0.07),
+                                            rotation=(0, D(100), 0), vertices=6)
+            parent_keep(finish(bpy.context.object, claw_m, "Beast claw"), sh)
+        sh.rotation_mode = "XYZ"
+        hip = empty("Beast hip", (-0.05, side * 0.35, 0.95))
+        parent_keep(hip, root)
+        th = rod((-0.05, side * 0.35, 0.95), (0.25, side * 0.4, 0.5), 0.15, fur, "Beast thigh")
+        sn = rod((0.25, side * 0.4, 0.5), (-0.05, side * 0.4, 0.08), 0.11, fur, "Beast shin")
+        ft = ball((0.08, side * 0.4, 0.06), 0.13, fur, "Beast foot", scale=(1.6, 0.9, 0.45))
+        for o in (th, sn, ft):
+            parent_keep(o, hip)
+        hip.rotation_mode = "XYZ"
+        limbs.append((sh, hip, side))
+    bpy.ops.object.light_add(type="POINT", location=(1.3, 0, 2.0))      # red glow from the mouth and eyes
+    glow = bpy.context.object
+    glow.data.energy = 60
+    glow.data.color = (1.0, 0.12, 0.06)
+    glow.data.shadow_soft_size = 0.3
+    parent_keep(glow, root)
+    root.rotation_mode = "XYZ"
+    head_piv.rotation_mode = "XYZ"
+    return root, head_piv, limbs, glow
+
+
 # ================================================================== build
 def build():
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -631,13 +713,14 @@ def build():
     print("build: world", flush=True)
     ground_and_road()
     school()
-    heads, far_spot = far_car()
+    heads, far_spot, far_root = far_car()
+    beast = make_beast()
     dead_city()
     eyes = forest()
     print("build: animation", flush=True)
     show_at(masks_late, [(T_IN, END + 20)])
     cam = make_camera(scene)
-    cam.data.lens = 13
+    cam.data.lens = 17 if WIDE else 13
     arms = POVArms(cam)
     arms.reach = 1.1
     # the radio in our hands (POV) and our own mask's filters at the bottom of the view once we board
@@ -998,11 +1081,39 @@ def build():
             arms.set(f, "R", (0.28, -0.45, -0.5))
             arms.set(f, "L", (-0.3, -0.45, -0.5))
 
+    # ---------------- the end: the beast walks up the road towards the bus, the car comes on behind it
+    broot, bhead, blimbs, bglow = beast
+    B_IN = at("radio2") - 0.5                                 # it steps out of the dark onto the road
+    for f in range(1, N + 1, 2):
+        t = (f - 1) / FPS
+        vis = t >= B_IN
+        show([broot], f, vis)
+        u = seg(t, B_IN, END)
+        x = X_STOP - 34 + 24 * u                              # 34 m ahead of the bus front -> 10 m
+        step = (t - B_IN) * 2.6
+        broot.location = (x, ROAD_Y + 2 + 0.6 * math.sin(step * 0.5), 0.06 * abs(math.sin(step * math.pi)))
+        broot.rotation_euler = (D(3) * math.sin(step * math.pi), 0, D(6) * math.sin(step * 0.5))
+        broot.keyframe_insert("location", frame=f)
+        broot.keyframe_insert("rotation_euler", frame=f)
+        for sh, hip, side in blimbs:
+            ph = step * math.pi + (0 if side < 0 else math.pi)
+            sh.rotation_euler = (0, D(25) * math.sin(ph), 0)
+            hip.rotation_euler = (0, D(-22) * math.sin(ph + math.pi), 0)
+            sh.keyframe_insert("rotation_euler", frame=f)
+            hip.keyframe_insert("rotation_euler", frame=f)
+        bhead.rotation_euler = (D(8) * math.sin(step * 0.7), D(-10) + D(5) * math.sin(step * 1.3), 0)
+        bhead.keyframe_insert("rotation_euler", frame=f)
+        bglow.data.energy = (60 + 25 * math.sin(t * 7.0)) if vis else 0.0
+        bglow.data.keyframe_insert("energy", frame=f)
+        cu = seg(t, T_LIGHTS, END + 4)                         # the car rolls slowly towards us, lights on
+        far_root.location = (X_STOP - 60 + 14 * cu, ROAD_Y - 1.5, 0)
+        far_root.keyframe_insert("location", frame=f)
+
     # ---------------- light & sky: grey day -> dusk -> night (keyed)
     bpy.ops.object.light_add(type="SUN", rotation=(D(55), D(15), D(-30)))
     sun = bpy.context.object
     sun.data.angle = D(10)
-    setup_render(scene, samples=int(os.environ.get("SAMPLES", "12")), res=(540, 960), sky=(0.66, 0.66, 0.67),
+    setup_render(scene, samples=int(os.environ.get("SAMPLES", "12")), res=((1280, 720) if WIDE else (540, 960)), sky=(0.66, 0.66, 0.67),
                  sky_strength=1.0)
     scene.cycles.max_bounces = 3
     scene.cycles.transparent_max_bounces = 16
@@ -1065,7 +1176,7 @@ def build():
 if __name__ == "__main__":
     sc = build()
     if arg("--save"):
-        bpy.ops.wm.save_as_mainfile(filepath=os.path.join(HERE, "pov.blend"))
+        bpy.ops.wm.save_as_mainfile(filepath=os.path.join(HERE, "pov_wide.blend" if WIDE else "pov.blend"))
     if arg("--still"):
         os.makedirs(os.path.join(HERE, "test"), exist_ok=True)
         for fr_ in str(arg("--still")).split(","):
