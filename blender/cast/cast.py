@@ -69,6 +69,18 @@ CAST = {
         hair="short04", hair_col=(0.08, 0.06, 0.05), brow="eyebrow006",
         clothes={"male_worksuit01": (0.25, 0.3, 0.18), "shoes03": (0.15, 0.13, 0.1),
                  "mrgreaterthan_m1_helmet": (0.28, 0.32, 0.2), "toigo_gloves_short": (0.06, 0.06, 0.06)}),
+    "nina": dict(
+        fa="نینا", role="Arian's neighbour, 15, calm and mysterious, brown bob, navy sweater. Watches the house cameras on her laptop.",
+        gender=0.0, age=0.4, height=0.42, weight=0.42, muscle=0.4, skin="young_caucasian_female", skin_tint=WARM,
+        hair="bob01", hair_set=(0.45, 0.25, 0.11), brow="eyebrow010",
+        clothes={"mindfront_knitted_sweater_02": (0.13, 0.16, 0.27), "toigo_wool_pants": (0.15, 0.15, 0.17),
+                 "culturalibre_sneakers": (0.92, 0.92, 0.9)}),
+    "masked": dict(
+        fa="نقاب‌دار", role="Masked intruder (several), black knit mask with eye holes, dark work clothes, boots.",
+        gender=1.0, age=0.6, height=0.62, weight=0.6, muscle=0.6, skin="middleage_caucasian_male", skin_tint=WARM,
+        hair=None, brow="eyebrow006", balaclava=(0.05, 0.05, 0.055),
+        clothes={"elvs_hooded_sweat_jacket1": (0.07, 0.07, 0.08), "punkduck_male_classic_jeans": (0.08, 0.08, 0.09),
+                 "shoes03": (0.05, 0.05, 0.05)}),
 }
 
 EXTRA_HAIR_M = ["short01", "short02", "short03", "short04", "o4saken_curly01", "elvs_short_side_do"]
@@ -241,6 +253,38 @@ def add_gasmask(ch):
     for sx in (-1, 1):
         parts.append(_prim("cylinder", c + Vector((sx * 0.032, -0.042, 0.03)), (0.024, 0.024, 0.01), lens, "Mask lens",
                            rot=(math.pi / 2, 0, 0), vertices=20))
+    for o in parts:
+        M.attach(o, ch.rig, "head")
+    ch.objects += parts
+    return parts
+
+
+def add_balaclava(ch, col):
+    """Black knit mask over the whole head (built in the rest pose, facing -Y); comic eyes look out of two holes."""
+    eyes = [o.matrix_world @ v.co for o in ch.parts.get("Eyes", []) for v in o.data.vertices]
+    front = min(p.y for p in eyes)
+    ez = sum(p.z for p in eyes) / len(eyes)
+    cx = sum(p.x for p in eyes) / len(eyes)
+    knit = _mat("Balaclava", col, 0.95)
+    rx, ry, rz = 0.1, 0.118, 0.142
+    c = Vector((cx, front - 0.012 + ry, ez + 0.035))
+    parts = [_prim("uv_sphere", c, (rx, ry, rz), knit, "Balaclava", segments=28, ring_count=16),
+             _prim("uv_sphere", Vector((cx, front + 0.045, ez - 0.075)), (0.085, 0.09, 0.1), knit, "Balaclava",
+                   segments=28, ring_count=16),
+             _prim("cylinder", Vector((cx, front + 0.1, ez - 0.17)), (0.072, 0.072, 0.07), knit, "Balaclava", vertices=20)]
+    white = _mat("Mask eye white", (0.92, 0.9, 0.86), 0.4)
+    black = _mat("Mask eye pupil", (0.02, 0.02, 0.02), 0.3)
+    hole = _mat("Mask eye hole", (0.55, 0.4, 0.32), 0.8)
+    for side in (-1, 1):
+        ex = [p.x for p in eyes if (p.x - cx) * side > 0]
+        x = sum(ex) / len(ex)
+        y = front - 0.012
+        parts.append(_prim("uv_sphere", Vector((x, y + 0.004, ez)), (0.024, 0.008, 0.016), hole, "Mask eye hole",
+                           segments=16, ring_count=8))
+        parts.append(_prim("uv_sphere", Vector((x, y - 0.002, ez)), (0.017, 0.006, 0.011), white, "Mask eye white",
+                           segments=16, ring_count=8))
+        parts.append(_prim("uv_sphere", Vector((x, y - 0.006, ez)), (0.007, 0.004, 0.007), black, "Mask eye pupil",
+                           segments=12, ring_count=6))
     for o in parts:
         M.attach(o, ch.rig, "head")
     ch.objects += parts
@@ -503,6 +547,8 @@ def _build(key, d, quality):
                 M.set_color(o, col)
     if d.get("gasmask"):
         ch.mask = add_gasmask(ch)
+    if d.get("balaclava"):
+        ch.mask = add_balaclava(ch, d["balaclava"])
     if d.get("backpack"):
         add_backpack(ch, d["backpack"])
     return ch
