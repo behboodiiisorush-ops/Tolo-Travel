@@ -23,5 +23,13 @@ def apply(sc, exposure_shift=-1.6):
     vs = sc.view_settings
     if "FINAL_EXPOSURE" in os.environ:
         vs.exposure = float(os.environ["FINAL_EXPOSURE"])
-    elif not (vs.animation_data and vs.animation_data.action):
-        vs.exposure = vs.exposure + exposure_shift
+    else:
+        ad = sc.animation_data
+        animated = bool(ad and ad.action and any("exposure" in fc.data_path for fc in getattr(ad.action, "fcurves", [])))
+        if animated:                                   # keyed exposure (e.g. a flash): shift every key
+            for fc in ad.action.fcurves:
+                if "exposure" in fc.data_path:
+                    for k in fc.keyframe_points:
+                        k.co.y += exposure_shift; k.handle_left.y += exposure_shift; k.handle_right.y += exposure_shift
+        else:
+            vs.exposure = vs.exposure + exposure_shift
