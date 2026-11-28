@@ -123,22 +123,33 @@ cut.hide_render = False; cut.keyframe_insert("hide_render", frame=U(37.7))
 # ---------------------------------------------------------------- cameras
 EV4 = [G0, U(6), U(14), U(19), U(30), U(34), U(37), U(39), U(40), G1 + 1]
 SHOTS4 = [(a, b - 1) for a, b in zip(EV4, EV4[1:])]
-hd0 = head(drv, U(3)); ah = a_head
-mid = (hd0 + ah) / 2; sd = (hd0 - ah).cross(Vector((0, 0, 1))).normalized()
-cam("CAM4_S1_ECU", mid + sd * 0.55 + Vector((0, 0, 0.04)), mid, 85, SHOTS4[0][0], (0.55, 2.0))
-hd1 = head(drv, U(10))
-cam("CAM4_S2_CU", hd1 + sd * 1.1 + Vector((0, 0, 0.1)), hd1 - Vector((0, 0, 0.2)), 50, SHOTS4[1][0], (1.1, 2.4))
-cam("CAM4_S3_wide", Vector((a_head.x, a_head.y, 0.25)) - body_dir * 0.4 + sd * 0.5, Vector((30.0, 22.6, 1.0)), 28, SHOTS4[2][0], (6.0, 5.6))
+Z = Vector((0, 0, 1))
+
+
+def side_of(a, b):                                  # horizontal direction perpendicular to a->b
+    v = Vector(((b - a).x, (b - a).y, 0)).normalized()
+    return v.cross(Z).normalized()
+
+
+hd0 = head(drv, U(3)); ah = head(arin, U(3))
+sd = side_of(ah, hd0)
+mid = (hd0 + ah) / 2
+c1 = mid + sd * 1.05 + Z * 0.18
+cam("CAM4_S1_ECU", c1, mid, 85, SHOTS4[0][0], ((c1 - mid).length, 2.2))
+hd1 = head(drv, U(10.5))
+c2 = hd1 + sd * 1.7 + Z * 0.15
+cam("CAM4_S2_CU", c2, hd1 - Z * 0.15, 50, SHOTS4[1][0], ((c2 - hd1).length, 2.4))
+cam("CAM4_S3_wide", Vector((ah.x, ah.y, 0.3)) - sd * 0.6, Vector((30.0, 22.6, 1.0)), 28, SHOTS4[2][0], (6.0, 5.6))
 cam("CAM4_S4_top", (a_head + a_pel) / 2 + Vector((0.15, 0.1, 2.8)), (a_head + a_pel) / 2, 35, SHOTS4[3][0], (2.6, 2.8))
 cam("CAM4_S5_ins", ankle + Vector((0.2, -1.6, 0.35)), ankle + Vector((0.4, 0.4, 0.1)), 50, SHOTS4[4][0], (1.7, 2.8))
 cam("CAM4_S6_med", C_TO + Vector((0.5, -3.2, 1.0)), C_TO + Vector((0.3, 0.6, 0.4)), 35, SHOTS4[5][0], (3.3, 4.0))
-cam("CAM4_S7_ECU", palm + Vector((0.12, -0.35, 0.12)), palm, 85, SHOTS4[6][0], (0.39, 2.8))
-cam("CAM4_S8_med", C_TO + Vector((-0.6, -3.0, 1.1)), C_TO + Vector((0, 0, 0.9)), 35, SHOTS4[7][0], (3.1, 4.0))
-cam("CAM4_S9_wide", SHOP + Vector((-5.0, 3.4, 1.4)), SHOP + Vector((0.4, 1.0, 0.3)), 35, SHOTS4[8][0], (6.0, 4.0))
-
-import json
-os.makedirs(os.path.join(HERE, "out", "sc004"), exist_ok=True)
-json.dump(dict(G0=G0, G1=G1, SHOTS=SHOTS4), open(os.path.join(HERE, "out", "sc004", "events.json"), "w"))
+c7 = palm + Vector((0.22, -0.42, 0.32))
+cam("CAM4_S7_ECU", c7, palm, 85, SHOTS4[6][0], ((c7 - palm).length, 2.8))
+a8 = head(arin, U(39.5))
+cam("CAM4_S8_med", a8 + Vector((0.6, -3.0, -0.3)), a8 - Z * 0.4, 35, SHOTS4[7][0], (3.1, 4.0))
+cr = head(crawler, U(43.0))
+c9 = cr + Vector((-3.6, 2.6, 1.0))
+cam("CAM4_S9_wide", c9, cr - Z * 0.1, 35, SHOTS4[8][0], ((c9 - cr).length, 4.0))
 
 # ---------------------------------------------------------------- render
 OUT4 = os.path.join(HERE, "out", "sc004"); os.makedirs(OUT4, exist_ok=True)
