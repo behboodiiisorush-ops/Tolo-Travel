@@ -27,7 +27,10 @@ def apply(sc, exposure_shift=-1.6):
         for n in w.node_tree.nodes:
             if n.type == "BACKGROUND":
                 n.inputs[1].default_value *= sky
-        exposure_shift = float(os.environ.get("FINAL_CITY_SHIFT", -0.6))
+        import bpy
+        mo = bpy.data.lights.get("LGT_Moon")
+        if mo: mo.energy *= float(os.environ.get("FINAL_MOON", 0.3))
+        exposure_shift = float(os.environ.get("FINAL_CITY_SHIFT", -1.5))
         try: vs.look = "AgX - Medium High Contrast"
         except TypeError: pass
     if "FINAL_EXPOSURE" in os.environ:
