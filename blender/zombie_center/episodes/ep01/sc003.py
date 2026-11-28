@@ -342,7 +342,7 @@ cam("CAM_S10_top", FALL_AT + fall_dir * 0.5 + Vector((0.4, 0.3, 4.4)), FALL_AT +
 hf = head(arin, PIN + 90); hz = head(drv, PIN + 90)
 mid = (hf + hz) / 2
 side = (hz - hf).cross(Vector((0, 0, 1))).normalized()
-c11 = mid + side * 1.35 + Vector((0, 0, 0.22))
+c11 = mid + side * 0.75 + Vector((0, 0, 1.05))      # above the hands and shoulders, looking down at both faces
 cam("CAM_S11_ECU", c11, mid, 85, SHOTS[10][0], ((c11 - mid).length, 2.4))
 
 import json
@@ -381,6 +381,7 @@ if MODE in ("preview", "final"):
         sc.render.filepath = os.path.join(OUT, "prev_")
     else:
         sc.eevee.taa_render_samples = int(os.environ.get("FINAL_SAMPLES", 32))
+        sc.eevee.use_raytracing = os.environ.get("FINAL_RT", "1") == "1"
         sc.render.resolution_x, sc.render.resolution_y = 1280, 720
         sc.render.filepath = os.path.join(OUT, "f_")
     bpy.ops.render.render(animation=True)
