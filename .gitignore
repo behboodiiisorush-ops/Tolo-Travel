@@ -1,0 +1,5 @@
+bundle/venv/
+bundle/rules_2.blend
+bundle/render.log
+bundle/frames/
+bundle/__pycache__/
