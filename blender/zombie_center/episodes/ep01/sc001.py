@@ -168,6 +168,9 @@ A.place(ph, 935, PH_HOLD, q_face)
 A.place(ph, 1080, PH_HOLD, q_face)
 _s = 1 if SIDE == "l" else -1     # camera on the far side from the hand that holds the phone
 c7 = cam("CAM_S07_CU", eyec + fwd * 0.38 + right * (0.22 * _s), eyec, 50, 1009)
+from mathutils import Matrix
+_z = (c7.location - eyec).normalized(); _x = up.cross(_z).normalized(); _y = _z.cross(_x)
+c7.rotation_euler = Matrix((_x, _y, _z)).transposed().to_euler()      # roll: his face upright on screen (he lies on his back)
 # head turns toward the dragging feet while she passes; face: fear, then shock at the name
 A.look(arin, 560, 860, lambda f: zfeet, weight=0.45)
 A.face(arin, 1, 1080, lambda f, t: dict(worry=(1.5 if f < 940 else 1.0), talking=(1040 <= f <= 1068)))
