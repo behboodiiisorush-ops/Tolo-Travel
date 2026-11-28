@@ -358,13 +358,17 @@ def build():
     # world: night sky + atmospheric fog
     w = bpy.data.worlds.new("WORLD_City_Night"); sc.world = w; w.use_nodes = True
     bg = w.node_tree.nodes["Background"]; bg.inputs[0].default_value = (0.03, 0.045, 0.085, 1); bg.inputs[1].default_value = 6.0      # readable night: silhouettes against the sky
+    import os as _os
+    FOG = _os.environ.get("ZC_FOG", "1") == "1"        # ZC_FOG=0: no volumes (finals on CPU: volumes are the noise + cost)
     vol = w.node_tree.nodes.new("ShaderNodeVolumePrincipled")
     vol.inputs["Density"].default_value = 0.0025; vol.inputs["Color"].default_value = (0.55, 0.6, 0.7, 1)
-    w.node_tree.links.new(vol.outputs[0], w.node_tree.nodes["World Output"].inputs["Volume"])
+    if FOG:
+        w.node_tree.links.new(vol.outputs[0], w.node_tree.nodes["World Output"].inputs["Volume"])
     moon = bpy.data.lights.new("LGT_Moon", "SUN"); moon.energy = 14.0; moon.color = (0.6, 0.7, 1.0); moon.angle = math.radians(1)
     mo = bpy.data.objects.new("LGT_Moon", moon); mo.rotation_euler = (math.radians(55), 0, math.radians(-35)); _coll().objects.link(mo)
     # low ground fog layer
     fog = P.box((0, 5, 0.45), (14, 90, 0.9), bpy.data.materials.new("MAT_GroundFog"), "FX_GroundFog"); _own(fog)
+    fog.hide_render = not FOG
     fm = fog.data.materials[0]; fm.use_nodes = True; nt = fm.node_tree
     nt.nodes.remove(nt.nodes["Principled BSDF"])
     v = nt.nodes.new("ShaderNodeVolumePrincipled"); v.inputs["Density"].default_value = 0.012

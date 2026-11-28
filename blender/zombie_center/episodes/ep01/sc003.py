@@ -151,7 +151,7 @@ mocap.apply(arin, kneel, start=F0, length=BOLT - F0, offset=tuple(K), facing=0.0
 VA = 4.2                                                    # m/s: a panicked sprint off a kneel
 # weaves between the abandoned cars toward the mouth of side street B (around the car at (-3.4, 16))
 legA = [K, K + Vector((-1.6, 1.8, 0)), Vector((-0.6, 15.2, 0)), Vector((-1.2, 18.2, 0)),
-        CAR_BUMP + Vector((-1.25, -0.3, 0)), CAR_BUMP + Vector((-1.15, 1.2, 0)), Vector((8.4, 21.2, 0)),
+        CAR_BUMP + Vector((-1.45, -0.3, 0)), CAR_BUMP + Vector((-1.4, 1.2, 0)), Vector((8.4, 21.2, 0)),
         CAR_VAULT + Vector((-1.6, -0.35, 0))]
 fA, lenA = path_fn(legA, VA); nA = frames_for(lenA, VA)
 bump_j = frames_for(sum((b - a).length for a, b in zip(legA[:4], legA[1:5])), VA)
@@ -161,7 +161,7 @@ def placeA(j):
     p, h, _ = fA(j)
     if abs(j - bump_j) < 10:                              # the bump: shoulder into the car, a lurch sideways
         k = 1 - abs(j - bump_j) / 10.0
-        p = p + Vector((-0.18 * k, 0, 0)); h += 14 * k
+        p = p + Vector((0.12 * k, 0, 0)); h -= 12 * k     # shoulder glances off the car's flank
     return ((p.x, p.y, 0.0), h)
 
 
