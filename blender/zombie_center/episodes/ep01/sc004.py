@@ -134,22 +134,23 @@ def side_of(a, b):                                  # horizontal direction perpe
 hd0 = head(drv, U(3)); ah = head(arin, U(3))
 sd = side_of(ah, hd0)
 mid = (hd0 + ah) / 2
-c1 = mid + sd * 1.05 + Z * 0.18
+c1 = mid + sd * 0.6 + Z * 1.0                      # above them: his nose along Arin's neck
 cam("CAM4_S1_ECU", c1, mid, 85, SHOTS4[0][0], ((c1 - mid).length, 2.2))
 hd1 = head(drv, U(10.5))
 c2 = hd1 + sd * 1.7 + Z * 0.15
 cam("CAM4_S2_CU", c2, hd1 - Z * 0.15, 50, SHOTS4[1][0], ((c2 - hd1).length, 2.4))
-cam("CAM4_S3_wide", Vector((ah.x, ah.y, 0.3)) - sd * 0.6, Vector((30.0, 22.6, 1.0)), 28, SHOTS4[2][0], (6.0, 5.6))
+cam("CAM4_S3_wide", Vector((ah.x, ah.y, 0.12)) + sd * 0.7 - Vector(((30.0 - ah.x), 0, 0)).normalized() * 0.5,
+    Vector((30.0, 22.6, 1.1)), 28, SHOTS4[2][0], (6.0, 5.6))                       # low beside his head, past it
 cam("CAM4_S4_top", (a_head + a_pel) / 2 + Vector((0.15, 0.1, 2.8)), (a_head + a_pel) / 2, 35, SHOTS4[3][0], (2.6, 2.8))
 cam("CAM4_S5_ins", ankle + Vector((0.2, -1.6, 0.35)), ankle + Vector((0.4, 0.4, 0.1)), 50, SHOTS4[4][0], (1.7, 2.8))
 cam("CAM4_S6_med", C_TO + Vector((0.5, -3.2, 1.0)), C_TO + Vector((0.3, 0.6, 0.4)), 35, SHOTS4[5][0], (3.3, 4.0))
-c7 = palm + Vector((0.22, -0.42, 0.32))
+c7 = palm + Vector((-0.1, -0.35, 0.45))
 cam("CAM4_S7_ECU", c7, palm, 85, SHOTS4[6][0], ((c7 - palm).length, 2.8))
 a8 = head(arin, U(39.5))
 cam("CAM4_S8_med", a8 + Vector((0.6, -3.0, -0.3)), a8 - Z * 0.4, 35, SHOTS4[7][0], (3.1, 4.0))
-cr = head(crawler, U(43.0))
-c9 = cr + Vector((-3.6, 2.6, 1.0))
-cam("CAM4_S9_wide", c9, cr - Z * 0.1, 35, SHOTS4[8][0], ((c9 - cr).length, 4.0))
+c9 = Vector((24.5, 21.0, 1.5))                     # locked wide over the crawler's whole path to the shop light
+cam("CAM4_S9_wide", c9, Vector((20.8, 17.6, 0.2)), 28, SHOTS4[8][0], (5.0, 5.6))
+print("CRAWLER head at 43 s", tuple(round(v, 2) for v in head(crawler, U(43.0))))
 
 # ---------------------------------------------------------------- render
 OUT4 = os.path.join(HERE, "out", "sc004"); os.makedirs(OUT4, exist_ok=True)
