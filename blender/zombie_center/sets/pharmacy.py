@@ -98,6 +98,7 @@ def build(tex_dir):
     tv_m = P.image("MAT_PH_TV", card, strength=2.2)
     P.box((-W / 2 + 0.06, 0.6, 2.05), (0.06, 1.0, 0.6), P.mat("MAT_PH_TVbody", (0.03, 0.03, 0.03), 0.4), "PH_TV_body")
     scr = P.plane((-W / 2 + 0.095, 0.6, 2.05), (0.92, 0.52), tv_m, rot=(math.radians(90), 0, math.radians(-90)), name="PH_TV_screen")
+    scr.scale.x = -1.0                                             # the card must read correctly (not mirrored)
     tvl = P.area_light((-W / 2 + 0.4, 0.6, 2.0), (1.0, 0.6, 1.0), 45, size=0.9, color=(0.45, 0.6, 1.0), name="PH_TV_glow")
     # cold street light through the door and the dirty window, a faint red exit light, nothing else
     P.area_light((dx, -D / 2 - 1.2, 2.2), (dx + 0.6, 0.5, 0.2), 180, size=1.0, color=(0.7, 0.8, 1.0), name="PH_Street")
@@ -105,4 +106,4 @@ def build(tex_dir):
     P.area_light((2.6, 2.2, 2.6), (2.0, 1.5, 1.6), 6, size=0.2, color=(1.0, 0.15, 0.1), name="PH_Exit")
     w = bpy.context.scene.world or bpy.data.worlds.new("World"); bpy.context.scene.world = w
     w.use_nodes = True; w.node_tree.nodes["Background"].inputs["Color"].default_value = (0.01, 0.012, 0.02, 1)
-    return dict(door=(dx, -D / 2, 0.0), counter_back=(0.4, 1.55, 0.0), tv=(-W / 2 + 0.1, 0.6, 2.05), shelf_drag=drag)
+    return dict(door=(dx, -D / 2, 0.0), counter_back=(0.0, 1.63, 0.0), tv=(-W / 2 + 0.1, 0.6, 2.05), shelf_drag=drag)

@@ -65,11 +65,11 @@ def walk_place(j, n=T(14) - T(8)):
 
 mocap.apply(arin, kneel, start=F0, length=T(8) - F0, offset=(W0.x, W0.y, 0), facing=0.0, in_place=True, loop=True)
 mocap.apply(arin, walk, start=T(8), length=T(14) - T(8), in_place=True, loop=True, speed=0.9, place=walk_place, blend=8)
-# 14–43.4: kneels behind the counter, back to the drawers (facing -Y, toward the room)
-mocap.apply(arin, kneel, start=T(14), length=T(43.4) - T(14), offset=(CB.x, CB.y, 0), facing=180.0, in_place=True,
+# 14–43.4: kneels in the narrow aisle behind the counter, side-on to it (facing +X, along the aisle)
+mocap.apply(arin, kneel, start=T(14), length=T(43.4) - T(14), offset=(CB.x, CB.y, 0), facing=-90.0, in_place=True,
             loop=True, blend=14)
 # 43.4–80: stands on «تو کی هستی؟», paces two steps with the phone at his ear
-mocap.apply(arin, pace, start=T(43.4), length=F1 - T(43.4) + 1, offset=(CB.x, CB.y - 0.1, 0), facing=180.0,
+mocap.apply(arin, pace, start=T(43.4), length=F1 - T(43.4) + 1, offset=(CB.x, CB.y, 0), facing=-90.0,
             in_place=False, src_from=2.0, speed=0.8, blend=24)
 Q.ground(arin, F0, F1)
 sc.frame_set(T(18))
@@ -85,7 +85,7 @@ def eyes_at(f):
 
 
 ek = eyes_at(T(18))
-fwd = Vector((0, -1, 0)); up = Vector((0, 0, 1)); right = fwd.cross(up)
+fwd = Vector((1, 0, 0)); up = Vector((0, 0, 1)); right = fwd.cross(up)
 # bandaging (14–24): left hand held out palm-up, right hand works over it; disinfectant bottle, then gauze
 work = ek + fwd * 0.38 - up * 0.42
 A.hand(arin, "l", [(T(14.5), None), (T(15.5), work - right * 0.04), (T(23.5), work - right * 0.04), (T(24.5), None)], ease=10)
@@ -185,25 +185,25 @@ def cam(name, loc, tgt, lens, f0, dof=None, keys=None):
 
 outside = Vector((DOOR.x, DOOR.y - 1.6, 1.6))
 cam("CAM5_S1_POV", outside, DOOR + Vector((0.4, 2.0, 1.2)), 24, SHOTS[0][0],
-    keys=[(T(0), outside, DOOR + Vector((0.3, 2.0, 1.3))), (T(2.5), DOOR + Vector((0, 0.3, 1.6)), DOOR + Vector((0.6, 2.5, 1.2))),
-          (T(4.0), DOOR + Vector((0.2, 0.9, 1.55)), DOOR + Vector((0.6, 0.2, 0.6))),
-          (T(7.5), DOOR + Vector((0.4, 1.3, 1.5)), DOOR + Vector((0.3, 0.2, 0.7)))])
+    keys=[(T(0), outside, DOOR + Vector((0.6, 3.0, 1.4))), (T(2.5), DOOR + Vector((0, 0.35, 1.62)), DOOR + Vector((1.4, 3.2, 1.3))),
+          (T(4.0), DOOR + Vector((0.3, 1.0, 1.6)), DOOR + Vector((1.6, 0.6, 0.9))),
+          (T(7.5), DOOR + Vector((0.5, 1.4, 1.6)), DOOR + Vector((0.4, 0.3, 0.9)))])
 cam("CAM5_S2_TV", Vector((0.8, -1.0, 1.55)), TV + Vector((0, 0, -0.15)), 50, SHOTS[1][0], (3.8, 2.8))
-cam("CAM5_S3_counter", CB + Vector((1.6, -1.3, 0.75)), Vector((ek.x, ek.y, ek.z - 0.3)), 35, SHOTS[2][0], (2.0, 2.8))
-cam("CAM5_S4_flash", FL + Vector((0.0, -1.1, 1.0)), grip, 35, SHOTS[3][0], (1.1, 2.0))
+cam("CAM5_S3_counter", CB + Vector((2.3, 0.15, 1.15)), Vector((ek.x + 0.2, ek.y, ek.z - 0.35)), 35, SHOTS[2][0], (2.2, 2.8))
+cam("CAM5_S4_flash", grip + Vector((0.12, -0.42, 0.06)), grip, 50, SHOTS[3][0], (0.44, 1.6))     # the two hands only
 cam("CAM5_S5_CU", ek + fwd * 0.6 + right * 0.15 - up * 0.02, ek - up * 0.04, 50, SHOTS[4][0], (0.62, 2.0))
 cam("CAM5_S6_phone", hold + fwd * 0.22 + up * 0.08, hold, 50, SHOTS[5][0], (0.24, 2.8))
 e7 = eyes_at(T(50))
 cam("CAM5_S7_CU", e7 + fwd * 1.3 - right * 0.2, e7, 85, SHOTS[6][0], (1.3, 2.0),
     keys=[(SHOTS[6][0], e7 + fwd * 1.35 - right * 0.22, e7 - up * 0.03), (SHOTS[6][1], e7 + fwd * 0.75 - right * 0.12, e7 - up * 0.02)])
-cam("CAM5_S8_med", DOOR + Vector((1.9, 1.2, 1.2)), Vector((CB.x - 0.4, CB.y - 0.3, 1.1)), 35, SHOTS[7][0], (2.6, 4.0))
+cam("CAM5_S8_med", Vector((-1.2, -0.6, 1.45)), Vector((CB.x + 0.3, CB.y, 1.3)), 35, SHOTS[7][0], (2.6, 4.0))
 
 # ---------------------------------------------------------------- render (the flash shot gets a blown-out exposure)
 sc.render.engine = "BLENDER_EEVEE"
 sc.view_settings.view_transform = "AgX"; sc.view_settings.look = "AgX - Base Contrast"
 ex = sc.view_settings
 ex.exposure = 1.6; ex.keyframe_insert("exposure", frame=SHOTS[3][0] - 1)
-ex.exposure = 4.5; ex.keyframe_insert("exposure", frame=SHOTS[3][0])
+ex.exposure = 3.2; ex.keyframe_insert("exposure", frame=SHOTS[3][0])
 ex.keyframe_insert("exposure", frame=SHOTS[3][1])
 ex.exposure = 1.6; ex.keyframe_insert("exposure", frame=SHOTS[3][1] + 1)
 try:
