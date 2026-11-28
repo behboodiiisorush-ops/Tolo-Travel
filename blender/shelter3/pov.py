@@ -688,6 +688,7 @@ def make_beast():
     glow.data.shadow_soft_size = 0.3
     parent_keep(glow, root)
     root.rotation_mode = "XYZ"
+    root.scale = (1.25, 1.25, 1.25)
     head_piv.rotation_mode = "XYZ"
     return root, head_piv, limbs, glow
 
@@ -867,6 +868,8 @@ def build():
             pos = pos.lerp(W(t, S_ME[0] - 0.2, 1.08, FLOOR + 1.45), lean_w)
             # n7: I stand up in the aisle to look through the windshield at the far lights
             pos = pos.lerp(W(t, S_ME[0] - 0.5, 0.12, FLOOR + EYE + 0.05), seg(t, at("n7") - 1.2, at("n7")))
+            # ... and walk up the aisle to just behind the windshield: the beast and the car fill the glass
+            pos = pos.lerp(W(t, 1.5, 0.35, FLOOR + EYE + 0.05), seg(t, at("n7") + 0.3, at("n7") + 2.6))
             fwd = W(t, -5.0, 0.0, FLOOR + 1.0)
             yaw, pitch = look(pos, fwd)
             targets = [
@@ -1089,7 +1092,7 @@ def build():
         vis = t >= B_IN
         show([broot], f, vis)
         u = seg(t, B_IN, END)
-        x = X_STOP - 34 + 24 * u                              # 34 m ahead of the bus front -> 10 m
+        x = X_STOP - 20 + 13 * u                              # 20 m ahead of the bus front -> 7 m
         step = (t - B_IN) * 2.6
         broot.location = (x, ROAD_Y + 2 + 0.6 * math.sin(step * 0.5), 0.06 * abs(math.sin(step * math.pi)))
         broot.rotation_euler = (D(3) * math.sin(step * math.pi), 0, D(6) * math.sin(step * 0.5))
@@ -1106,7 +1109,7 @@ def build():
         bglow.data.energy = (60 + 25 * math.sin(t * 7.0)) if vis else 0.0
         bglow.data.keyframe_insert("energy", frame=f)
         cu = seg(t, T_LIGHTS, END + 4)                         # the car rolls slowly towards us, lights on
-        far_root.location = (X_STOP - 60 + 14 * cu, ROAD_Y - 1.5, 0)
+        far_root.location = (X_STOP - 60 + 22 * cu, ROAD_Y - 1.5, 0)
         far_root.keyframe_insert("location", frame=f)
 
     # ---------------- light & sky: grey day -> dusk -> night (keyed)
