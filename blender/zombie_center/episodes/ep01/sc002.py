@@ -182,7 +182,13 @@ for i in (2, 3, 4):
     cam(f"CAM_S0{i + 1}_screen", scr + (pov - scr).normalized() * 0.2, scr, 50, SHOTS[i][0], (0.2, 5.6))
 cam("CAM_S06_POV", pov, scr, 35, SHOTS[5][0], ((scr - pov).length, 2.8))
 cam("CAM_S07_CU", eyec + fwd * 0.55 + right * 0.18 - up * 0.08, eyec - up * 0.04, 50, SHOTS[6][0], (0.57, 2.0))
-cam("CAM_S08_wide", K - right * 1.3 + up * 0.75 - fwd * 0.2, DP + up * 1.0, 24, SHOTS[7][0], (30.0, 4.0))
+# behind Arin's right shoulder: his head and the phone glow at frame left, the avenue and the Driver deep in frame
+c8 = K + right * 0.55 - fwd * 0.12 + up * 1.15
+cam("CAM_S08_wide", c8, (DP + up * 1.0).lerp(eyec, 0.04) + right * -0.9, 28, SHOTS[7][0], (30.0, 4.0))
+# the Driver stands under a dying street lamp: a hard top light that makes him a silhouette with a lit outline
+ld = bpy.data.lights.new("LAMP_Driver", "SPOT"); ld.energy = 900; ld.spot_size = math.radians(55); ld.color = (1.0, 0.72, 0.42)
+lo = bpy.data.objects.new("LAMP_Driver", ld); sc.collection.objects.link(lo)
+lo.location = DP + Vector((0.6, 1.8, 5.5)); lo.rotation_euler = (DP - lo.location).to_track_quat("-Z", "Y").to_euler()
 cam("CAM_S09_CU", eyec + fwd * 0.5 - right * 0.16 - up * 0.06, eyec - up * 0.03, 50, SHOTS[8][0], (0.52, 2.0))
 
 # ---------------------------------------------------------------- render
