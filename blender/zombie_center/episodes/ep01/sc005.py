@@ -70,7 +70,7 @@ mocap.apply(arin, kneel, start=T(14), length=T(43.4) - T(14), offset=(CB.x, CB.y
             loop=True, blend=14)
 # 43.4–80: stands on «تو کی هستی؟», paces two steps with the phone at his ear
 mocap.apply(arin, pace, start=T(43.4), length=F1 - T(43.4) + 1, offset=(CB.x, CB.y, 0), facing=-90.0,
-            in_place=False, src_from=2.0, speed=0.8, blend=24)
+            in_place=True, src_from=2.0, speed=0.8, blend=24)      # paces on the spot: stays in the aisle
 Q.ground(arin, F0, F1)
 sc.frame_set(T(18))
 eyes = arin.parts["Eyes"][0]
@@ -134,8 +134,8 @@ hold = ek + fwd * 0.28 - up * 0.2
 ph.location = hold; ph.rotation_mode = "QUATERNION"; ph.rotation_quaternion = (ek - hold).normalized().to_track_quat("Z", "Y")
 A.hand(arin, "r", [(T(29.6), None), (T(30.2), hold + right * 0.03), (T(39.4), hold + right * 0.03), (T(40.0), None)], ease=6)
 A.carry(ph, arin, "r", T(30.2), F1)
-ph.hide_render = True; ph.keyframe_insert("hide_render", frame=F0)
-ph.hide_render = False; ph.keyframe_insert("hide_render", frame=T(29.6))
+ph.location = hold - up * 5.0; ph.keyframe_insert("location", frame=F0); ph.keyframe_insert("location", frame=T(29.5))   # in his pocket
+ph.location = hold; ph.keyframe_insert("location", frame=T(29.6))
 
 # ---------------------------------------------------------------- face, lips, look
 LS = lipsync.Voices(fps=FPS)
@@ -192,7 +192,7 @@ cam("CAM5_S2_TV", Vector((0.8, -1.0, 1.55)), TV + Vector((0, 0, -0.15)), 50, SHO
 cam("CAM5_S3_counter", CB + Vector((2.3, 0.15, 1.15)), Vector((ek.x + 0.2, ek.y, ek.z - 0.35)), 35, SHOTS[2][0], (2.2, 2.8))
 cam("CAM5_S4_flash", grip + Vector((0.12, -0.42, 0.06)), grip, 50, SHOTS[3][0], (0.44, 1.6))     # the two hands only
 cam("CAM5_S5_CU", ek + fwd * 0.6 + right * 0.15 - up * 0.02, ek - up * 0.04, 50, SHOTS[4][0], (0.62, 2.0))
-cam("CAM5_S6_phone", hold + fwd * 0.22 + up * 0.08, hold, 50, SHOTS[5][0], (0.24, 2.8))
+cam("CAM5_S6_phone", ek + up * 0.04 - right * 0.1 - fwd * 0.04, hold, 50, SHOTS[5][0], ((hold - ek).length, 2.8))   # over his shoulder onto the screen
 e7 = eyes_at(T(50))
 cam("CAM5_S7_CU", e7 + fwd * 1.3 - right * 0.2, e7, 85, SHOTS[6][0], (1.3, 2.0),
     keys=[(SHOTS[6][0], e7 + fwd * 1.35 - right * 0.22, e7 - up * 0.03), (SHOTS[6][1], e7 + fwd * 0.75 - right * 0.12, e7 - up * 0.02)])

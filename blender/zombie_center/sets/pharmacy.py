@@ -27,7 +27,8 @@ def tv_card(path):
              "افراد دارای تب، خود را معرفی کنند."]
     for i, t in enumerate(lines):
         d.text((640, 260 + i * 110), t, font=f2, fill=(240, 244, 255), anchor="mm", direction="rtl", language="fa")
-    im.save(path)
+    from PIL import ImageOps
+    ImageOps.mirror(im).save(path)        # the screen plane's UVs run right-to-left: pre-mirror so it reads correctly
     return path
 
 
@@ -98,7 +99,6 @@ def build(tex_dir):
     tv_m = P.image("MAT_PH_TV", card, strength=2.2)
     P.box((-W / 2 + 0.06, 0.6, 2.05), (0.06, 1.0, 0.6), P.mat("MAT_PH_TVbody", (0.03, 0.03, 0.03), 0.4), "PH_TV_body")
     scr = P.plane((-W / 2 + 0.095, 0.6, 2.05), (0.92, 0.52), tv_m, rot=(math.radians(90), 0, math.radians(-90)), name="PH_TV_screen")
-    scr.scale.x = -1.0                                             # the card must read correctly (not mirrored)
     tvl = P.area_light((-W / 2 + 0.4, 0.6, 2.0), (1.0, 0.6, 1.0), 45, size=0.9, color=(0.45, 0.6, 1.0), name="PH_TV_glow")
     # cold street light through the door and the dirty window, a faint red exit light, nothing else
     P.area_light((dx, -D / 2 - 1.2, 2.2), (dx + 0.6, 0.5, 0.2), 180, size=1.0, color=(0.7, 0.8, 1.0), name="PH_Street")

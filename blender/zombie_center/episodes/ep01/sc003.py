@@ -342,7 +342,8 @@ cam("CAM_S10_top", FALL_AT + fall_dir * 0.5 + Vector((0.4, 0.3, 4.4)), FALL_AT +
 hf = head(arin, PIN + 90); hz = head(drv, PIN + 90)
 mid = (hf + hz) / 2
 side = (hz - hf).cross(Vector((0, 0, 1))).normalized()
-cam("CAM_S11_ECU", mid + side * 0.8 + Vector((0, 0, 0.05)), mid, 85, SHOTS[10][0], (0.8, 2.0))
+c11 = mid + side * 1.35 + Vector((0, 0, 0.22))
+cam("CAM_S11_ECU", c11, mid, 85, SHOTS[10][0], ((c11 - mid).length, 2.4))
 
 import json
 os.makedirs(os.path.join(HERE, "out", "sc003"), exist_ok=True)
