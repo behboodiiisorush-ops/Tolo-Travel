@@ -136,7 +136,7 @@ def car_extras(root):
     thing = empty("Caged thing", (cx, y0, cz + 0.35))
     body = ball((cx, y0, cz + 0.35), 0.35, fur, "Caged body", scale=(1.0, 1.2, 0.9))
     eye_m = glow_mat("Caged eyes", (1.0, 0.96, 0.9), 0.0)
-    eyes = [ball((cx + 0.33, y0 + dy, cz + 0.5), 0.05, eye_m, "Caged eye", seg=10) for dy in (-0.11, 0.11)]
+    eyes = [ball((cx + 0.36, y0 + dy, cz + 0.52), 0.08, eye_m, "Caged eye", seg=10) for dy in (-0.14, 0.14)]
     for o in [body] + eyes:
         parent_keep(o, thing)
     parts.append(thing)
@@ -384,7 +384,7 @@ def build():
             ("n3", front, car_view + Vector((4, 2, 0))),
             ((at("str1a") - 1.2, at("str1c", 1)), aisle, DOOR_OUT + Vector((-0.3, 0.3, 1.75))),
             ("resc2", aisle, W(1.3, -0.65, FLOOR + 1.3)),
-            ((at("mom1"), at("lena2", 1)), W(ROW(1) + 0.45, 0.02, FLOOR + EYE - 0.1), W(ROW(2), -0.08, FLOOR + 1.0)),
+            ((at("mom1"), at("lena2", 1)), W(ROW(1) - 0.35, 0.0, FLOOR + EYE - 0.05), W(ROW(2), -0.08, FLOOR + 1.05)),
             ("resc3", aisle, W(1.3, -0.65, FLOOR + 1.3)),
             ((at("old2"), at("old3", 1)), aisle, sit_world(S_OLD, 1.35)),
             ("me2", aisle, sit_world(S_OLD, 1.35)),
