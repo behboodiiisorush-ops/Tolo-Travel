@@ -315,7 +315,8 @@ box((2.6, 2.82, 0.41), (0.34, 0.24, 0.015), "lap", "Laptop base")
 LAP_SCREEN_C = Vector((2.6, 2.7, 0.53))
 centred(box(tuple(LAP_SCREEN_C), (0.34, 0.012, 0.22), "lap", "Laptop lid"), tuple(LAP_SCREEN_C)).rotation_euler = (math.radians(12), 0, 0)
 lapm = P.image("Laptop screen", os.path.join(TEX, "doorcam.png"), strength=1.4)
-lscr = centred(P.plane((0, 0, 0), (0.3, 0.19), lapm, name="Laptop screen"), tuple(LAP_SCREEN_C + Vector((0, 0.0075, 0.0016))))
+lscr = P.plane((0, 0, 0), (0.3, 0.19), lapm, name="Laptop screen")      # made at the origin: just move it
+lscr.location = LAP_SCREEN_C + Vector((0, 0.0075, 0.0016))
 _s, _c = math.sin(math.radians(12)), math.cos(math.radians(12))
 _m = Matrix.Identity(3)
 _m.col[0], _m.col[1], _m.col[2] = Vector((-1, 0, 0)), Vector((0, -_s, _c)), Vector((0, _c, _s))
@@ -358,7 +359,7 @@ box((7.3, SY1 - 0.22, 1.7), (0.3, 0.2, 0.25), "box", "Shed box")
 P.cyl((8.6, 10.2, 0), (8.6, 10.3, 1.4), 0.015, M_["tool"], "Rake handle")
 P.cyl((6.6, 10.6, 0), (6.55, 10.7, 1.2), 0.015, M_["tool"], "Shovel handle")
 # the hidden camera on the top shelf: a small black box with a blinking red light
-CAM_AT = Vector((8.35, SY1 - 0.2, 1.62))
+CAM_AT = Vector((8.35, SY1 - 0.33, 1.6))
 box(tuple(CAM_AT), (0.08, 0.06, 0.06), "phone", "Spy camera")
 led = P.sphere(tuple(CAM_AT + Vector((0, -0.035, 0.015))), 0.008, P.emit("Spy LED", (1.0, 0.05, 0.05), 30.0), "Spy LED")
 key_vis(led, [(0, True)] + [(t, (k % 2) == 1) for k, t in enumerate([60 + 0.6 * i for i in range(27)])])
@@ -520,7 +521,7 @@ act("masked2", "breathing_idle", 0.0, END, tuple(M2), facing_to(M2, (7.8, 10.2, 
 
 # who is visible when
 PRESENT = {"me": [(0, END + 1)], "arian": [(0, END + 1)], "nina": [(0, END + 1)],
-           "masked": [(33.0, 38.0)], "masked2": [(55.0, END + 1)]}
+           "masked": [(33.0, 38.0)], "masked2": [(68.0, END + 1)]}
 
 # ------------------------------------------------------------------ props in hands
 M_["phone"] = P.mat("Phone body 2", (0.06, 0.06, 0.07), 0.3)
@@ -655,7 +656,7 @@ for who, ch in CH.items():
 SHOTS = [
     (0.0, 6.0, (4.7, 1.0, 1.65), (4.55, 1.15, 1.6), (1.9, 3.4, 1.05), (1.8, 3.4, 1.1), 22, 24),
     (6.0, 11.5, (2.85, 0.45, 1.55), (2.75, 0.5, 1.5), (1.45, 2.4, 1.3), (1.6, 1.9, 1.35), 22, 24),
-    (11.5, 18.5, (3.15, 3.85, 1.3), (3.08, 3.72, 1.22), (2.6, 2.7, 0.52), (2.6, 2.7, 0.52), 26, 34),
+    (11.5, 18.5, (3.1, 3.8, 1.25), (3.0, 3.62, 1.12), (2.6, 2.72, 0.52), (2.6, 2.72, 0.53), 28, 42),
     (18.5, 24.5, (0.78, 2.42, 1.32), (0.8, 2.47, 1.3), (1.12, 3.0, 1.25), (1.12, 3.0, 1.25), 28, 32),
     (24.5, 33.0, (4.3, 1.1, 1.5), (4.2, 1.2, 1.5), (2.0, 2.8, 1.25), (2.0, 2.7, 1.25), 24, 26),
     (33.0, 38.0, (5.4, 3.9, 1.7), (5.3, 3.7, 1.65), (2.0, 0.2, 1.1), (2.1, 0.2, 1.15), 20, 21),
@@ -699,7 +700,17 @@ for o in (led, ):                          # keep the spy LED a pure glowing red
     o.data.materials.append(P.emit("Spy LED 2", (1.0, 0.05, 0.05), 40.0))
 # the cel pass flattens image / emission screens to one dull colour: give the screens their glow back
 lscr.data.materials.clear()
-lscr.data.materials.append(P.image("Laptop screen 2", os.path.join(TEX, "doorcam.png"), strength=1.6))
+_lm = bpy.data.materials.new("Laptop screen 2")
+_lm.use_nodes = True
+_nt = _lm.node_tree
+_nt.nodes.clear()
+_tx = _nt.nodes.new("ShaderNodeTexImage")
+_tx.image = bpy.data.images.load(os.path.join(TEX, "doorcam.png"), check_existing=True)
+_em = _nt.nodes.new("ShaderNodeEmission")
+_em.inputs["Strength"].default_value = 2.2
+_nt.links.new(_tx.outputs["Color"], _em.inputs["Color"])
+_nt.links.new(_em.outputs[0], _nt.nodes.new("ShaderNodeOutputMaterial").inputs[0])
+lscr.data.materials.append(_lm)
 glow2 = P.emit("Phone glow 2", (0.75, 0.85, 1.0), 5.0)
 for o in bpy.data.objects:
     if o.type == "MESH" and o.name.endswith("phone screen") or o.name == "Nina phone screen":
@@ -707,7 +718,7 @@ for o in bpy.data.objects:
         o.data.materials.append(glow2)
 inked = [o for o in bpy.data.objects if o.type == "MESH" and not any(
     k in o.name.lower() for k in ("high-poly", "lash", "brow", "teeth", "tongue", "screen", "led", "floor", "ceiling",
-                                  "grass", "street", "rug", "far house", "yard far", "mask eye"))]
+                                  "grass", "street", "rug", "far house", "yard far", "mask eye", "laptop lid", "phone"))]
 T.ink(inked, 0.005)
 sc.render.resolution_x, sc.render.resolution_y = 540, 960
 sc.render.film_transparent = False
@@ -717,9 +728,9 @@ if "--spy" in args:                        # the photo the hidden camera sends m
     sc.frame_set(fr(60.0))
     spy = bpy.data.objects.new("Spy cam", bpy.data.cameras.new("Spy cam"))
     sc.collection.objects.link(spy)
-    spy.location = CAM_AT + Vector((0, -0.06, 0.0))
-    spy.rotation_euler = (Vector((7.7, 9.6, 0.6)) - spy.location).to_track_quat("-Z", "Y").to_euler()
-    spy.data.lens = 16
+    spy.location = CAM_AT + Vector((0, -0.05, 0.02))
+    spy.rotation_euler = (Vector((7.75, 10.1, 0.55)) - spy.location).to_track_quat("-Z", "Y").to_euler()
+    spy.data.lens = 18
     sc.camera = spy
     sc.render.resolution_x, sc.render.resolution_y = 720, 540
     sc.render.filepath = os.path.join(TEX, "spy.png")

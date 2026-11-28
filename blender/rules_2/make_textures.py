@@ -7,17 +7,17 @@ W, H = 960, 600
 
 
 def doorcam():
-    im = Image.new("RGB", (W, H), (14, 16, 22))
+    im = Image.new("RGB", (W, H), (120, 128, 118))
     d = ImageDraw.Draw(im)
-    d.rectangle((0, 380, W, H), fill=(32, 32, 36))                       # street
-    d.polygon([(0, 380), (W, 380), (W, 300), (0, 330)], fill=(22, 24, 30))
+    d.rectangle((0, 380, W, H), fill=(150, 156, 146))                    # street (night-vision grey-green)
+    d.polygon([(0, 380), (W, 380), (W, 300), (0, 330)], fill=(105, 112, 102))
     for x, w, h in ((40, 180, 200), (260, 150, 250), (650, 240, 220)):  # houses across the street
-        d.rectangle((x, 380 - h, x + w, 380), fill=(26, 28, 36))
-    d.rounded_rectangle((330, 300, 640, 400), 30, fill=(20, 20, 24))     # a plain dark car (no markings)
+        d.rectangle((x, 380 - h, x + w, 380), fill=(80, 86, 78))
+    d.rounded_rectangle((330, 300, 640, 400), 30, fill=(40, 42, 40))     # a plain dark car (no markings)
     d.rectangle((420, 285, 470, 300), fill=(230, 40, 40))                # a light on its roof
     d.rectangle((470, 285, 520, 300), fill=(40, 80, 240))
     glow = Image.new("RGB", (W, H), (0, 0, 0))
-    ImageDraw.Draw(glow).ellipse((330, 200, 640, 380), fill=(90, 30, 60))
+    ImageDraw.Draw(glow).ellipse((330, 200, 640, 380), fill=(255, 120, 160))
     im = Image.blend(im, Image.composite(glow, im, glow.convert("L")), 0.4)
     d = ImageDraw.Draw(im)
     for cx, sc_ in ((260, 1.0), (720, 0.9)):                              # two masked men, one with a megaphone
