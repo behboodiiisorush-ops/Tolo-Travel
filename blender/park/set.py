@@ -92,12 +92,15 @@ def build():
             continue
         ellipse_mesh("patch%d" % k, c, rnd.uniform(1.2, 2.6), rnd.uniform(0.6, 1.4), -0.004, grass_d, line=False)
     # pond
-    ellipse_mesh("shore", POND, PRX + 0.35, PRY + 0.32, -0.002, sand, lw=0.02)
-    ellipse_mesh("water", POND, PRX, PRY, WATER_Z - 0.012, water, lw=0.015)
+    ink_c = L.flat("pond_ink", "#2d4a22")
+    ellipse_mesh("shore_line", POND, PRX + 0.39, PRY + 0.36, -0.004, ink_c, line=False)
+    ellipse_mesh("shore", POND, PRX + 0.35, PRY + 0.32, -0.002, sand, line=False)
+    ellipse_mesh("water_line", POND, PRX + 0.03, PRY + 0.03, WATER_Z - 0.014, L.flat("water_ink", "#1f6d99"), line=False)
+    ellipse_mesh("water", POND, PRX, PRY, WATER_Z - 0.012, water, line=False)
     for k, (dx, dy, rx, ry) in enumerate(((-1.2, 0.5, 0.9, 0.12), (1.0, -0.6, 0.7, 0.1), (0.3, 1.2, 0.6, 0.08))):
         ellipse_mesh("glint%d" % k, POND + Vector((dx, dy, 0)), rx, ry, WATER_Z - 0.0005, water_l, line=False)
     pads = []
-    for k, (dx, dy) in enumerate(((2.1, 0.9), (2.5, 0.3), (-2.4, 1.0), (1.6, 1.4), (-1.9, -0.1))):
+    for k, (dx, dy) in enumerate(((2.1, 0.9), (2.5, 0.3), (2.0, -1.3), (1.6, 1.4), (-1.9, -0.1))):
         pads.append(((POND.x + dx, POND.y + dy, WATER_Z), (0.28, 0.24, 0.012), (0, 0, k), 0))
     L.merged("pads", pads, [pad], lw=0.01)
     for k in range(16):                                    # reeds on the far bank
@@ -143,8 +146,8 @@ def build():
                           (0, 0, 0), (k + j) % 4))
         L.merged("canopy%d" % k, parts, leaves, lw=0.03)
     # bushes
-    for k, (x, y) in enumerate(((-4.2, -0.8), (4.6, 0.2), (-5.5, 5.0), (5.6, 5.6), (-2.5, 9.6), (2.8, 10.0),
-                                (7.5, -4.8), (-7.5, -1.0))):
+    for k, (x, y) in enumerate(((-3.0, -5.6), (4.6, 0.2), (-5.5, 5.0), (5.6, 5.6), (-2.5, 9.6), (2.8, 10.0),
+                                (9.5, 0.8), (-7.5, -1.0))):
         parts = [((x + dx, y + dy, r * 0.7), (r, r * 0.9, r * 0.8), (0, 0, 0), 0)
                  for dx, dy, r in ((0, 0, 0.6), (0.5, 0.1, 0.45), (-0.5, 0.05, 0.42), (0.1, 0.3, 0.4))]
         L.merged("bush%d" % k, parts, [bush], lw=0.02)
