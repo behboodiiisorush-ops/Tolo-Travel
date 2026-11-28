@@ -28,7 +28,7 @@ import env_city, phone, zc_cast, mocap, motion_qc as Q, footlock, perform as A, 
 import props as P
 from mathutils import Vector
 
-MODE = sys.argv[-1] if sys.argv[-1] in ("layout", "preview", "final", "debug") else "layout"
+MODE = os.environ.get("ZC_MODE") or (sys.argv[-1] if sys.argv[-1] in ("layout", "preview", "final", "debug") else "layout")   # ZC_MODE=build: set up only (sc004 continues it)
 MOCAP = os.path.join(ZC, "..", "mocap")
 VOICE = os.path.join(HERE, "audio", "voice")
 FPS = 24
