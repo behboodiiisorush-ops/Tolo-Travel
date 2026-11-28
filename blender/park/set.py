@@ -100,7 +100,7 @@ def build():
     for k, (dx, dy, rx, ry) in enumerate(((-1.2, 0.5, 0.9, 0.12), (1.0, -0.6, 0.7, 0.1), (0.3, 1.2, 0.6, 0.08))):
         ellipse_mesh("glint%d" % k, POND + Vector((dx, dy, 0)), rx, ry, WATER_Z - 0.0005, water_l, line=False)
     pads = []
-    for k, (dx, dy) in enumerate(((2.1, 0.9), (2.5, 0.3), (2.0, -1.3), (1.6, 1.4), (2.6, -0.6))):
+    for k, (dx, dy) in enumerate(((2.1, 0.9), (2.5, 0.3), (2.0, -1.3), (1.6, 1.4))):
         pads.append(((POND.x + dx, POND.y + dy, WATER_Z), (0.28, 0.24, 0.012), (0, 0, k), 0))
     L.merged("pads", pads, [pad], lw=0.01)
     for k in range(16):                                    # reeds on the far bank

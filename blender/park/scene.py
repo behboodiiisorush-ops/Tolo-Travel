@@ -385,8 +385,8 @@ SHOTS = [  # (t0, t1, [from keys], [look keys], lens)
     (19.0, 24.0, [(-2.4, 6.9, 1.1), (-2.2, 6.7, 1.1)], [(-0.6, 3.4, 0.45), (-0.6, 3.3, 0.45)], 22),
     (24.0, 30.4, [(3.3, 4.0, 1.3), (3.0, 4.1, 1.2)], [(-0.6, 4.8, 0.25), (-0.7, 4.1, 0.25)], 28),
     (30.4, 35.5, [(-0.4, 6.1, 1.0), (-0.35, 6.0, 1.0)], [(-0.4, 2.8, 0.55), (-0.4, 2.75, 0.55)], 24),
-    (35.5, 46.0, "parade", "parade", 22),
-    (46.0, 55.0, [(0.25, -2.6, 0.8), (0.25, -2.45, 0.78)], [(0.25, 0.8, 0.45), (0.25, 0.8, 0.42)], 24),
+    (35.5, 45.6, "parade", "parade", 26),
+    (45.6, 55.0, [(0.25, -2.6, 0.8), (0.25, -2.45, 0.78)], [(0.25, 0.8, 0.45), (0.25, 0.8, 0.42)], 24),
     (55.0, 60.0, [(0.25, -2.8, 0.9), (0.25, -6.0, 2.4)], [(0.25, 0.9, 0.5), (0.25, 0.9, 0.5)], 24),
 ]
 
@@ -399,9 +399,9 @@ def parade_look(t):
     f = frame_of(t)
     if f in _PAR:
         return _PAR[f]
-    w = L.track([(35.5, 0.0), (39.5, 1.0)], t)
+    w = L.track([(35.5, 0.0), (40.5, 1.0)], t)
     a = mom.act.pos[f]
-    b = (babies[2].act.pos[f] + girl.act.pos[f]) * 0.5
+    b = (girl.act.pos[f] + boy.act.pos[f]) * 0.5
     p = a.lerp(b, w) + Vector((0, 0, 0.45))
     if f - 1 in _PAR:
         p = _PAR[f - 1].lerp(p, 0.12)
@@ -416,8 +416,8 @@ def pose_cam(f):
             if fr == "parade":
                 for g in range(frame_of(35.5), f + 1):          # smoothing needs the history
                     parade_look(g / FPS)
-                a = Vector((-0.4, 0.9, 1.5))
                 b = parade_look(t)
+                a = Vector((b.x * 0.8, -3.7, 1.45))
                 co.location = a
                 co.rotation_euler = (b - a).to_track_quat("-Z", "Y").to_euler()
                 cam.lens = lens
@@ -508,5 +508,5 @@ elif "--still" in argv:
 elif "--render" in argv:
     i = argv.index("--render")
     a, b = int(argv[i + 1]), int(argv[i + 2])
-    render_frames(list(range(a, b + 1)), os.path.join(HERE, "frames"))
+    render_frames(list(range(a, b + 1)), os.path.join(HERE, "frames"), samples=int(os.environ.get("SAMPLES", 8)))
 print("DONE", flush=True)
