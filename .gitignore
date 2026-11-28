@@ -86,3 +86,7 @@ blender/shelter3/*.blend1
 blender/shelter3/frames_wide/
 blender/shelter3/post_wide_tmp/
 blender/shelter3/post_tmp/
+blender/shelter4/frames/
+blender/shelter4/post_tmp/
+blender/shelter4/*.blend
+blender/shelter4/test/
