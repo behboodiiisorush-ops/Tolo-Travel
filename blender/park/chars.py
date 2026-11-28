@@ -387,7 +387,7 @@ class Kid:
         lean = min(0.25, sp * 0.09) * (1 - low) - 0.12 * sit - 0.25 * fall
         shake = laugh * 0.05 * math.sin(t * 30)
         self.hips.location = (0, 0, 0.30 - 0.17 * low + bob / k + 0.01 * math.sin(t * 2.2))
-        self.hips.rotation_euler = (-lean + shake, 0.0, 0)
+        self.hips.rotation_euler = (lean + shake, 0.0, 0)
         # head look
         hy, hp = 0.0, 0.0
         bpy.context.view_layer.update()
@@ -649,10 +649,10 @@ class Duck:
         self.shadow.location = (p.x, p.y, 0.004)
         for j, r in enumerate(self.ripples):
             age = ((t * 0.9 + j / 3.0) % 1.0)
-            r.hide_render = not water
-            if water:
+            r.hide_render = not water or sp < 0.05
+            if water and sp >= 0.05:
                 back = a.pos[max(0, f - int(age * FPS / 0.9))]
-                rr = (0.12 + 0.35 * age) * k
+                rr = (0.10 + 0.20 * age) * k
                 r.location = (back.x, back.y, 0.021)
                 r.scale = (rr, rr * 1.0, 1)
                 r.hide_render = age > 0.85

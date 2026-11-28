@@ -58,7 +58,7 @@ G_SPOT, B_SPOT, S_SPOT = Vector((-1.5, 0.5, 0)), Vector((1.8, 1.2, 0)), Vector((
 D_SPOT = Vector((2.7, -0.6, 0))
 BALL_IN = Vector((-0.8, 4.9, 0))
 EDGE = {"girl": (-2.1, 2.9), "boy": (0.95, 3.0), "small": (0.0, 2.55)}
-SIT = {"girl": (1.2, 0.95), "boy": (0.25, 1.3), "small": (-0.7, 0.95), "dog": (0.25, 0.5)}
+SIT = {"girl": (-0.7, 0.95), "boy": (0.25, 1.3), "small": (1.2, 0.95), "dog": (0.25, 0.5)}
 CAM_END = (0.25, -3.0)
 
 # ---------------------------------------------------------------- 1. run in (5 - 11.4 s)
@@ -383,18 +383,45 @@ SHOTS = [  # (t0, t1, [from keys], [look keys], lens)
     (11.4, 16.3, [(-0.2, -4.1, 1.25), (-0.1, -4.0, 1.25)], [(0.2, 0.4, 0.55), (0.3, 0.3, 0.55)], 24),
     (16.3, 19.0, [(-1.9, -3.4, 0.6), (-1.7, -3.2, 0.85)], [(0.3, -0.9, 0.4), (0.0, 1.2, 1.3)], 22),
     (19.0, 24.0, [(-2.4, 6.9, 1.1), (-2.2, 6.7, 1.1)], [(-0.6, 3.4, 0.45), (-0.6, 3.3, 0.45)], 22),
-    (24.0, 30.4, [(2.3, 5.7, 0.85), (2.0, 5.3, 0.8)], [(-0.7, 4.9, 0.3), (-0.7, 4.0, 0.3)], 24),
-    (30.4, 35.5, [(-0.4, 7.9, 1.6), (-0.3, 7.7, 1.55)], [(-0.5, 2.8, 0.5), (-0.4, 2.7, 0.5)], 20),
-    (35.5, 47.0, [(0.3, -6.6, 4.2), (3.5, -5.2, 3.6)], [(-0.3, 1.2, 0.2), (0.0, 1.0, 0.3)], 20),
-    (47.0, 55.0, [(0.25, -2.6, 0.8), (0.25, -2.45, 0.78)], [(0.25, 0.8, 0.45), (0.25, 0.8, 0.42)], 24),
+    (24.0, 30.4, [(3.3, 4.0, 1.3), (3.0, 4.1, 1.2)], [(-0.6, 4.8, 0.25), (-0.7, 4.1, 0.25)], 28),
+    (30.4, 35.5, [(-0.4, 6.1, 1.0), (-0.35, 6.0, 1.0)], [(-0.4, 2.8, 0.55), (-0.4, 2.75, 0.55)], 24),
+    (35.5, 46.0, "parade", "parade", 22),
+    (46.0, 55.0, [(0.25, -2.6, 0.8), (0.25, -2.45, 0.78)], [(0.25, 0.8, 0.45), (0.25, 0.8, 0.42)], 24),
     (55.0, 60.0, [(0.25, -2.8, 0.9), (0.25, -6.0, 2.4)], [(0.25, 0.9, 0.5), (0.25, 0.9, 0.5)], 24),
 ]
+
+
+_PAR = {}
+
+
+def parade_look(t):
+    """Smoothed look point for the parade: the mother duck first, then the middle of the line."""
+    f = frame_of(t)
+    if f in _PAR:
+        return _PAR[f]
+    w = L.track([(35.5, 0.0), (39.5, 1.0)], t)
+    a = mom.act.pos[f]
+    b = (babies[2].act.pos[f] + girl.act.pos[f]) * 0.5
+    p = a.lerp(b, w) + Vector((0, 0, 0.45))
+    if f - 1 in _PAR:
+        p = _PAR[f - 1].lerp(p, 0.12)
+    _PAR[f] = p
+    return p
 
 
 def pose_cam(f):
     t = f / FPS
     for t0, t1, fr, lk, lens in SHOTS:
         if t0 <= t < t1 or (t >= t1 and t1 == SHOTS[-1][1]):
+            if fr == "parade":
+                for g in range(frame_of(35.5), f + 1):          # smoothing needs the history
+                    parade_look(g / FPS)
+                a = Vector((-0.4, 0.9, 1.5))
+                b = parade_look(t)
+                co.location = a
+                co.rotation_euler = (b - a).to_track_quat("-Z", "Y").to_euler()
+                cam.lens = lens
+                return
             u = (t - t0) / (t1 - t0)
             a = Vector(L.track([(0, fr[0]), (1, fr[-1])], u, fn=lambda x: L.ease(x) * 0.5 + x * 0.5))
             b = Vector(L.track([(0, lk[0]), (1, lk[-1])], u, fn=lambda x: L.ease(x) * 0.5 + x * 0.5))
@@ -470,8 +497,11 @@ if "--check" in argv:
     check()
     dump_events()
 elif "--preview" in argv:
-    step = int(argv[argv.index("--preview") + 1]) if len(argv) > argv.index("--preview") + 1 else 2
-    render_frames(list(range(0, NF, step)), os.path.join(HERE, "preview"), res=34, samples=1)
+    i = argv.index("--preview")
+    step = int(argv[i + 1]) if len(argv) > i + 1 else 2
+    a = int(argv[i + 2]) if len(argv) > i + 2 else 0
+    b = int(argv[i + 3]) if len(argv) > i + 3 else NF
+    render_frames(list(range(a, b, step)), os.path.join(HERE, "preview"), res=34, samples=1)
 elif "--still" in argv:
     fr = [int(x) for x in argv[argv.index("--still") + 1].split(",")]
     render_frames(fr, os.path.join(HERE, "test"), res=100, samples=12, skip=False)
