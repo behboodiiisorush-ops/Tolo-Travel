@@ -382,6 +382,13 @@ if MODE in ("preview", "final"):
     else:
         sc.eevee.taa_render_samples = int(os.environ.get("FINAL_SAMPLES", 32))
         sc.eevee.use_raytracing = os.environ.get("FINAL_RT", "1") == "1"
+        if os.environ.get("FINAL_ENGINE") == "CYCLES":        # CPU path tracing + denoiser (no GPU here)
+            sc.render.engine = "CYCLES"; sc.cycles.device = "CPU"
+            sc.cycles.samples = int(os.environ.get("FINAL_SAMPLES", 24)); sc.cycles.use_denoising = True
+            sc.cycles.denoiser = "OPENIMAGEDENOISE"; sc.cycles.use_adaptive_sampling = True
+            sc.cycles.max_bounces = 4; sc.cycles.diffuse_bounces = 2; sc.cycles.glossy_bounces = 2
+            sc.cycles.transmission_bounces = 2; sc.cycles.volume_bounces = 0; sc.cycles.transparent_max_bounces = 8
+            sc.render.threads_mode = "AUTO"
         sc.render.resolution_x, sc.render.resolution_y = 1280, 720
         sc.render.filepath = os.path.join(OUT, "f_")
     bpy.ops.render.render(animation=True)
