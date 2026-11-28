@@ -102,32 +102,42 @@ def final_card(img, k):
     return brand(img, FILM)
 
 
+def _job(n):
+    i = int(n[2:7]) - 1                    # d_00001.png is frame index 0
+    src = Image.open(os.path.join(TMP, n)).convert("RGB")
+    overlay(src.copy(), i / FPS).save(os.path.join(TMP, f"c_{i:05d}.png"))
+    overlay(src, i / FPS, captions=False).save(os.path.join(TMP, f"k_{i:05d}.png"))
+    os.remove(os.path.join(TMP, n))
+
+
 def main():
+    """resumable: keeps post_tmp/ (drawn frames survive a restart of the machine)"""
+    from multiprocessing import Pool
     assert features.check("raqm"), "Pillow needs raqm for Persian text"
-    shutil.rmtree(TMP, ignore_errors=True)
-    os.makedirs(TMP)
+    os.makedirs(TMP, exist_ok=True)
     os.makedirs(OUT, exist_ok=True)
-    seq = os.path.join(TMP, "seq")
-    os.makedirs(seq)
-    for i in range(1, LAST + 1):          # rendered on twos: each drawing held for two frames
-        os.symlink(os.path.join(FRAMES, f"f_{i - (1 - i % 2):04d}.png"), os.path.join(seq, f"s_{i:04d}.png"))
-    subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-framerate", str(FPS), "-i", os.path.join(seq, "s_%04d.png"),
-                    "-vf", f"lenscorrection=k1=0.22:k2=0.05:i=bilinear,scale={int(W * 1.2)}:{int(H * 1.2)}:flags=lanczos,"
-                           f"crop={W}:{H}", os.path.join(TMP, "d_%05d.png")], check=True)
+    started = any(n.startswith(("c_", "d_")) for n in os.listdir(TMP))
+    if not started:
+        seq = os.path.join(TMP, "seq")
+        os.makedirs(seq, exist_ok=True)
+        for i in range(1, LAST + 1):          # rendered on twos: each drawing held for two frames
+            p_ = os.path.join(seq, f"s_{i:04d}.png")
+            if not os.path.lexists(p_):
+                os.symlink(os.path.join(FRAMES, f"f_{i - (1 - i % 2):04d}.png"), p_)
+        subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-framerate", str(FPS), "-i",
+                        os.path.join(seq, "s_%04d.png"), "-vf",
+                        f"lenscorrection=k1=0.22:k2=0.05:i=bilinear,scale={int(W * 1.2)}:{int(H * 1.2)}:flags=lanczos,"
+                        f"crop={W}:{H}", os.path.join(TMP, "d_%05d.png")], check=True)
     names = sorted(n for n in os.listdir(TMP) if n.startswith("d_"))
-    i = 0
-    for n in names:
-        src = Image.open(os.path.join(TMP, n)).convert("RGB")
-        overlay(src.copy(), i / FPS).save(os.path.join(TMP, f"c_{i:05d}.png"))
-        overlay(src, i / FPS, captions=False).save(os.path.join(TMP, f"k_{i:05d}.png"))
-        os.remove(os.path.join(TMP, n))
-        i += 1
+    with Pool(max(1, (os.cpu_count() or 2) - 1)) as pool:
+        pool.map(_job, names, chunksize=8)
+    i = len([n for n in os.listdir(TMP) if n.startswith("c_")])
+    i = min(i, LAST)
     last = Image.open(os.path.join(FRAMES, sorted(os.listdir(FRAMES))[-1])).convert("RGB").resize((W, H))
     for j in range(CARD_SECONDS * FPS):
         card = final_card(last.copy(), min(1.0, j / 12))
-        card.save(os.path.join(TMP, f"c_{i:05d}.png"))
-        card.save(os.path.join(TMP, f"k_{i:05d}.png"))
-        i += 1
+        card.save(os.path.join(TMP, f"c_{LAST + j:05d}.png"))
+        card.save(os.path.join(TMP, f"k_{LAST + j:05d}.png"))
     enc = ["-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "20", "-movflags", "+faststart"]
     cap, clean = os.path.join(OUT, "shelter4_captions.mp4"), os.path.join(OUT, "shelter4_clean.mp4")
     for pre, out in (("c", cap), ("k", clean)):
@@ -141,7 +151,6 @@ def main():
                             "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest", os.path.join(OUT, name)],
                            check=True)
             print(os.path.join(OUT, name))
-    shutil.rmtree(TMP, ignore_errors=True)
 
 
 if __name__ == "__main__":
