@@ -98,7 +98,7 @@ def make_stranger(name, s=1.05):
         if key in bsdf.inputs:
             bsdf.inputs[key].default_value = 1.0
     p.add(ball(hc + Vector((0, -0.05 * R, 0.08 * R)), 1.32 * R, helm, "helmet", scale=(1.02, 1.02, 1.05)), head)
-    p.add(ball(hc + Vector((0, 0.42 * R, 0.0)), 1.08 * R, visor, "visor", scale=(1.0, 0.75, 0.85)), head)
+    p.add(ball(hc + Vector((0, 0.66 * R, -0.02 * R)), 1.0 * R, visor, "visor", scale=(1.0, 0.75, 0.8)), head)
     p.add(box((0, 0.17, 0.86 * p.s + 0.29 * p.s), (0.5, 0.02, 0.06), toon("Reflective", (0.7, 0.72, 0.75), 0.4),
               "suit stripe"), p.p["torso"])
     return p
@@ -146,18 +146,18 @@ def car_extras(root):
     return flood, flood_m, eye_m, thing
 
 
-def forest_eyes(n=26):
+def forest_eyes(n=40):
     """pairs of eyes deep among the trees on both sides and far down the road (they light up at the end)."""
     rnd = random.Random(44)
     m = glow_mat("Forest eyes", (1.0, 0.85, 0.3), 0.0)
     out = []
     for k in range(n):
         side = 1 if k % 2 else -1
-        x = X_STOP - 2 - rnd.uniform(0, 34)
-        y = ROAD_Y + side * rnd.uniform(6.0, 13.0)
+        x = X_STOP - 6 - rnd.uniform(0, 34) if k % 4 else X_STOP - 22 - rnd.uniform(0, 20)
+        y = ROAD_Y + side * rnd.uniform(5.0, 11.0) if k % 4 else ROAD_Y + rnd.uniform(-3.5, 3.5)
         z = rnd.uniform(0.4, 1.2)
         for dx in (-0.1, 0.1):
-            out.append(ball((x, y + dx, z), 0.05, m, "Forest eye", seg=8))
+            out.append(ball((x, y + dx * 1.6, z), 0.085, m, "Forest eye", seg=8))
     return m
 
 
@@ -232,16 +232,16 @@ def build():
         far_spot.data.keyframe_insert("energy", frame=f)
         show(heads, f, t < T_DARK)
         k = seg(t, T_FLOOD, T_FLOOD + 0.15) if lit else 0.0
-        flood.data.energy = 60000 * k
+        flood.data.energy = 250000 * k
         flood.data.keyframe_insert("energy", frame=f)
-        flood_m.node_tree.nodes["Emission"].inputs["Strength"].default_value = 400 * k
+        flood_m.node_tree.nodes["Emission"].inputs["Strength"].default_value = 2500 * k
         flood_m.node_tree.nodes["Emission"].inputs["Strength"].keyframe_insert("default_value", frame=f)
         cage_eye_m.node_tree.nodes["Emission"].inputs["Strength"].default_value = \
-            40 * seg(t, at("str1d") - 0.5, at("str1d")) * (0.6 + 0.4 * abs(math.sin(t * 1.7)))
+            120 * seg(t, at("str1d") - 0.5, at("str1d")) * (0.6 + 0.4 * abs(math.sin(t * 1.7)))
         cage_eye_m.node_tree.nodes["Emission"].inputs["Strength"].keyframe_insert("default_value", frame=f)
         caged.rotation_euler = (D(8) * math.sin(t * 3.1), D(6) * math.sin(t * 2.3), D(25) * math.sin(t * 1.3))
         caged.keyframe_insert("rotation_euler", frame=f)
-        feye_m.node_tree.nodes["Emission"].inputs["Strength"].default_value = 30 * seg(t, T_DARK + 0.3, T_DARK + 2.0)
+        feye_m.node_tree.nodes["Emission"].inputs["Strength"].default_value = 90 * seg(t, T_DARK + 0.3, T_DARK + 2.0)
         feye_m.node_tree.nodes["Emission"].inputs["Strength"].keyframe_insert("default_value", frame=f)
         beam.data.energy = 900
         beam.data.keyframe_insert("energy", frame=f)
@@ -384,7 +384,7 @@ def build():
             ("n3", front, car_view + Vector((4, 2, 0))),
             ((at("str1a") - 1.2, at("str1c", 1)), aisle, DOOR_OUT + Vector((-0.3, 0.3, 1.75))),
             ("resc2", aisle, W(1.3, -0.65, FLOOR + 1.3)),
-            ((at("mom1"), at("lena2", 1)), aisle, W(ROW(2), -0.05, FLOOR + 1.1)),
+            ((at("mom1"), at("lena2", 1)), W(ROW(1) + 0.45, 0.02, FLOOR + EYE - 0.1), W(ROW(2), -0.08, FLOOR + 1.0)),
             ("resc3", aisle, W(1.3, -0.65, FLOOR + 1.3)),
             ((at("old2"), at("old3", 1)), aisle, sit_world(S_OLD, 1.35)),
             ("me2", aisle, sit_world(S_OLD, 1.35)),
@@ -413,6 +413,8 @@ def build():
         amp = 0.05 + 0.5 * win(t, at("resc1"), at("lena1", 1), 0.2) + 0.9 * win(t, T_HORN, T_FLOOD + 0.8, 0.1) \
             + 0.6 * lunge + 0.3 * win(t, at("mom2"), at("mom2", 1), 0.2)
         sx_, sy_, sz_ = shake[f]
+        cam.data.lens = 13 + 17 * win(t, at("n5") + 0.4, at("me4", 1), 0.8)
+        cam.data.keyframe_insert("lens", frame=f)
         cam.location = pos
         cam.rotation_euler = (D(90 + pitch + sx_ * amp), D(sy_ * amp * 0.6), D(yaw + sz_ * amp))
         cam.keyframe_insert("location", frame=f)
@@ -425,8 +427,8 @@ def build():
             arms.set(f, "R", (0.15, 0.05, -0.85))
             arms.set(f, "L", (-0.2, -0.1, -0.8))
         elif ducking > 0.3:
-            arms.set(f, "R", (0.25, -0.2, -0.6))
-            arms.set(f, "L", (-0.25, -0.2, -0.6))
+            arms.set(f, "R", (0.3, -0.55, -0.5))
+            arms.set(f, "L", (-0.32, -0.55, -0.5))
         else:
             arms.set(f, "R", (0.28, -0.5, -0.45))
             arms.set(f, "L", (-0.3, -0.5, -0.45))
