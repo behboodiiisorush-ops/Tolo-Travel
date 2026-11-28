@@ -172,7 +172,7 @@ def main():
         overlay(img, TITLE)
         img.save(os.path.join(TMP, f"n_{i:04d}.jpg"), quality=94)
         if i < n_film:
-            delivered(img, t)
+            pass  # (the old «تحویل» payoff text is gone with the old ending)
             for a, b, who, text, *_ in LINES:
                 if a <= t <= b:
                     caption(img, who, text, t)
