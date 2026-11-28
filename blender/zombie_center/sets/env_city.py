@@ -238,7 +238,7 @@ def street_lamp(loc, on=True, name="PROP_STREET_LAMP", sodium=False):
     for o in ps:
         _own(o); P.parent_keep(o, root)
     if on:
-        L = bpy.data.lights.new(name + "_light", "SPOT"); L.energy = 1400; L.color = col
+        L = bpy.data.lights.new(name + "_light", "SPOT"); L.energy = 2400; L.color = col
         L.spot_size = math.radians(110); L.spot_blend = 0.6; L.shadow_soft_size = 0.3
         lo = bpy.data.objects.new(name + "_light", L); lo.location = (side * 1.5, 0, 7.35)
         _coll().objects.link(lo); P.parent_keep(lo, root)
@@ -357,16 +357,16 @@ def build():
     S["side_street_origin"] = (10.0, 22.0, 0.0)
     # world: night sky + atmospheric fog
     w = bpy.data.worlds.new("WORLD_City_Night"); sc.world = w; w.use_nodes = True
-    bg = w.node_tree.nodes["Background"]; bg.inputs[0].default_value = (0.03, 0.045, 0.085, 1); bg.inputs[1].default_value = 3.0
+    bg = w.node_tree.nodes["Background"]; bg.inputs[0].default_value = (0.03, 0.045, 0.085, 1); bg.inputs[1].default_value = 6.0      # readable night: silhouettes against the sky
     vol = w.node_tree.nodes.new("ShaderNodeVolumePrincipled")
-    vol.inputs["Density"].default_value = 0.004; vol.inputs["Color"].default_value = (0.55, 0.6, 0.7, 1)
+    vol.inputs["Density"].default_value = 0.0025; vol.inputs["Color"].default_value = (0.55, 0.6, 0.7, 1)
     w.node_tree.links.new(vol.outputs[0], w.node_tree.nodes["World Output"].inputs["Volume"])
-    moon = bpy.data.lights.new("LGT_Moon", "SUN"); moon.energy = 6.0; moon.color = (0.6, 0.7, 1.0); moon.angle = math.radians(1)
+    moon = bpy.data.lights.new("LGT_Moon", "SUN"); moon.energy = 14.0; moon.color = (0.6, 0.7, 1.0); moon.angle = math.radians(1)
     mo = bpy.data.objects.new("LGT_Moon", moon); mo.rotation_euler = (math.radians(55), 0, math.radians(-35)); _coll().objects.link(mo)
     # low ground fog layer
     fog = P.box((0, 5, 0.45), (14, 90, 0.9), bpy.data.materials.new("MAT_GroundFog"), "FX_GroundFog"); _own(fog)
     fm = fog.data.materials[0]; fm.use_nodes = True; nt = fm.node_tree
     nt.nodes.remove(nt.nodes["Principled BSDF"])
-    v = nt.nodes.new("ShaderNodeVolumePrincipled"); v.inputs["Density"].default_value = 0.025
+    v = nt.nodes.new("ShaderNodeVolumePrincipled"); v.inputs["Density"].default_value = 0.012
     nt.links.new(v.outputs[0], nt.nodes["Material Output"].inputs["Volume"])
     return S
