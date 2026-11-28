@@ -136,6 +136,10 @@ cam("CAM4_S7_ECU", palm + Vector((0.12, -0.35, 0.12)), palm, 85, SHOTS4[6][0], (
 cam("CAM4_S8_med", C_TO + Vector((-0.6, -3.0, 1.1)), C_TO + Vector((0, 0, 0.9)), 35, SHOTS4[7][0], (3.1, 4.0))
 cam("CAM4_S9_wide", SHOP + Vector((-5.0, 3.4, 1.4)), SHOP + Vector((0.4, 1.0, 0.3)), 35, SHOTS4[8][0], (6.0, 4.0))
 
+import json
+os.makedirs(os.path.join(HERE, "out", "sc004"), exist_ok=True)
+json.dump(dict(G0=G0, G1=G1, SHOTS=SHOTS4), open(os.path.join(HERE, "out", "sc004", "events.json"), "w"))
+
 # ---------------------------------------------------------------- render
 OUT4 = os.path.join(HERE, "out", "sc004"); os.makedirs(OUT4, exist_ok=True)
 if MODE4 == "layout":

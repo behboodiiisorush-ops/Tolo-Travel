@@ -344,6 +344,12 @@ mid = (hf + hz) / 2
 side = (hz - hf).cross(Vector((0, 0, 1))).normalized()
 cam("CAM_S11_ECU", mid + side * 0.8 + Vector((0, 0, 0.05)), mid, 85, SHOTS[10][0], (0.8, 2.0))
 
+import json
+os.makedirs(os.path.join(HERE, "out", "sc003"), exist_ok=True)
+json.dump(dict(F0=F0, F1=F1, BOLT=BOLT, BUMP=BUMP, V0=V0, D_START=D_START, D_ARRIVE=D_ARRIVE, R0=R0, FALL=FALL,
+               LIE=LIE, PIN=PIN, NO_LINE=NO_LINE_F, SHOTS=SHOTS),
+          open(os.path.join(HERE, "out", "sc003", "events.json"), "w"))       # post + sound read the real event frames
+
 # ---------------------------------------------------------------- render
 sc.render.engine = "BLENDER_EEVEE"
 sc.view_settings.view_transform = "AgX"; sc.view_settings.look = "AgX - Base Contrast"; sc.view_settings.exposure = 2.0
