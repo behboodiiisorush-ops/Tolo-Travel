@@ -105,3 +105,9 @@ blender/spark2/post_tmp/
 blender/nila/frames_toon/
 blender/nila/build_toon.log
 blender/spark2/motion_report_raw.txt
+blender/tailor_test/layer/
+blender/tailor_test/test/
+blender/tailor_test/post_tmp/
+blender/tailor_test/out/
+blender/tailor_test/render.log
+blender/tailor_test/marks.json
