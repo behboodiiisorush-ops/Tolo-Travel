@@ -54,3 +54,9 @@ blender/armored/*.log
 blender/armored/voices/fitted/
 blender/armored/out/*.wav
 blender/armored/out/armored_sfx.mp4
+blender/radio/frames/
+blender/radio/test/
+blender/radio/post_tmp/
+blender/radio/*.blend
+blender/radio/*.blend1
+blender/radio/out/*.wav
