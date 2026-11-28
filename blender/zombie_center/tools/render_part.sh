@@ -14,6 +14,6 @@ for i in $(seq 1 50); do
   find "$OUT" -name "${PREFIX}*.png" -size 0 -delete 2>/dev/null
   # resume after the last finished frame
   S0=$A; for f in $(seq $A $STEP $B); do [ -s "$OUT/${PREFIX}$(printf %04d $f).png" ] || { S0=$f; break; }; done
-  PREV_START=$S0 PREV_END=$B blender/cast/bpy.sh "$S" "$MODE" >> /tmp/zc_render.log 2>&1
+  ZC_FOG=${ZC_FOG:-0} PREV_START=$S0 PREV_END=$B blender/cast/bpy.sh "$S" "$MODE" >> /tmp/zc_render.log 2>&1
 done
 echo "missing: $(missing)"

@@ -21,6 +21,15 @@ def apply(sc, exposure_shift=-1.6):
     sc.render.resolution_x, sc.render.resolution_y = 1280, 720
     sc.render.image_settings.file_format = "PNG"
     vs = sc.view_settings
+    w = sc.world
+    if w and w.name.startswith("WORLD_City_Night") and w.use_nodes:      # Cycles reads the sky far brighter
+        sky = float(os.environ.get("FINAL_SKY", 0.22))                  # than EEVEE: darken sky, keep lamps
+        for n in w.node_tree.nodes:
+            if n.type == "BACKGROUND":
+                n.inputs[1].default_value *= sky
+        exposure_shift = float(os.environ.get("FINAL_CITY_SHIFT", -0.6))
+        try: vs.look = "AgX - Medium High Contrast"
+        except TypeError: pass
     if "FINAL_EXPOSURE" in os.environ:
         vs.exposure = float(os.environ["FINAL_EXPOSURE"])
     else:
