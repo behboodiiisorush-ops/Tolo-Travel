@@ -1100,7 +1100,7 @@ def build():
         u = seg(t, B_IN, END)
         x = X_STOP - 20 + 13 * u                              # 20 m ahead of the bus front -> 7 m
         step = (t - B_IN) * 2.6
-        broot.location = (x, ROAD_Y + 2 + 0.6 * math.sin(step * 0.5), 0.06 * abs(math.sin(step * math.pi)))
+        broot.location = (x, ROAD_Y + 2.6 + 0.3 * math.sin(step * 0.5), 0.06 * abs(math.sin(step * math.pi)))
         broot.rotation_euler = (D(3) * math.sin(step * math.pi), 0, D(6) * math.sin(step * 0.5))
         broot.keyframe_insert("location", frame=f)
         broot.keyframe_insert("rotation_euler", frame=f)
@@ -1115,7 +1115,7 @@ def build():
         bglow.data.energy = (60 + 25 * math.sin(t * 7.0)) if vis else 0.0
         bglow.data.keyframe_insert("energy", frame=f)
         cu = seg(t, T_LIGHTS, END + 4)                         # the car rolls slowly towards us, lights on
-        far_root.location = (X_STOP - 42 + 10 * cu, ROAD_Y - 1.5, 0)
+        far_root.location = (X_STOP - 42 + 10 * cu, ROAD_Y - 2.5, 0)
         far_root.keyframe_insert("location", frame=f)
 
     # ---------------- light & sky: grey day -> dusk -> night (keyed)
