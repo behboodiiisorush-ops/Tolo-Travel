@@ -34,9 +34,7 @@ VOICE = os.path.join(HERE, "audio", "voice")
 FPS = 24
 F0 = 2685
 T = lambda s: F0 + int(round(s * FPS))                 # scene seconds -> frame
-F1 = T(33.0) - 1
-SHOT_T = [0.0, 3.0, 5.5, 8.0, 9.5, 11.2, 13.0, 15.0, 16.5, 18.5, 23.0, 33.0]
-SHOTS = [(T(a), T(b) - 1) for a, b in zip(SHOT_T, SHOT_T[1:])]
+F1 = T(33.0) - 1                                        # provisional; trimmed to the events below (PIN + hold)
 
 sc = bpy.context.scene
 for o in list(bpy.data.objects):
@@ -115,6 +113,10 @@ pts = [Vector((CABLE_X + 0.3 * math.sin(i * 0.7), 18.6 + i * 0.5, 0.03 + 0.06 * 
 for a, b in zip(pts, pts[1:]):
     P.cyl(a, b, 0.012, cab_m, "PROP_CABLE_FALLEN", 8)
 pole = P.cyl((CABLE_X + 0.2, 18.2, 0.12), (CABLE_X - 3.2, 17.0, 1.0), 0.09, bpy.data.materials.get("MAT_Pole") or steel, "PROP_POLE_FALLEN", 12)
+
+# side street B needs light where the action is: two more working lamps (cold LED, like the avenue)
+env_city.street_lamp((CABLE_X + 1.0, 18.3, 0.15), True, "PROP_STREET_LAMP_B2")
+env_city.street_lamp((CAR_VAULT.x - 1.5, 25.6, 0.15), True, "PROP_STREET_LAMP_B3")
 
 # ---------------------------------------------------------------- path helper (arc length -> position, heading)
 def path_fn(pts, speed):
@@ -195,6 +197,12 @@ Q.ground(arin, F0, F1, keep_flight=True)
 footlock.lock(arin, BOLT, V0 - 1, mode="plant")
 footlock.lock(arin, R0, FALL - 1, mode="plant")
 print("ARIN bolt", BOLT, "vault", V0, "run2", R0, "fall", FALL, "lie", LIE, "end", F1)
+# where is he lying? crouch over his chest, facing his head (measured on the body, not guessed)
+sc.frame_set(LIE + 8)
+a_head = arin.rig.matrix_world @ arin.rig.pose.bones["head"].head
+a_pel = arin.rig.matrix_world @ arin.rig.pose.bones["pelvis"].head
+body_dir = Vector(((a_head - a_pel).x, (a_head - a_pel).y, 0)).normalized()
+chest_at = a_pel + body_dir * 0.15
 
 # ---------------------------------------------------------------- the Driver (Z6, fresh: sprints)
 drv = zc_cast.spawn("zc_z6_driver")
@@ -223,7 +231,7 @@ def placeD(j):
 
 mocap.apply(drv, zcrawl, start=D_ARRIVE, length=ND, in_place=True, loop=True, place=placeD, blend=3)
 legD2 = [CAR_VAULT + Vector((1.7, 0.2, 0)), TROLLEY + Vector((-1.2, 1.4, 0)), TROLLEY + Vector((0.7, 1.5, 0)),
-         FALL_AT - fall_dir * 0.9]
+         chest_at - body_dir * 0.9]
 fD2, lenD2 = path_fn(legD2, VD); nD2 = frames_for(lenD2, VD)
 D2 = D_ARRIVE + ND
 mocap.apply(drv, zrun, start=D2, length=nD2, in_place=True, loop=True, speed=1.2,
@@ -232,9 +240,9 @@ PIN = max(D2 + nD2, LIE - 6)                                 # drops onto him: c
 if PIN > D2 + nD2:
     mocap.apply(drv, zrun, start=D2 + nD2, length=PIN - (D2 + nD2), in_place=True, loop=True, speed=0.6,
                 place=lambda j: ((legD2[-1].x, legD2[-1].y, 0.0), math.degrees(math.atan2(-fall_dir.x, fall_dir.y))), blend=3)
-chest_at = FALL_AT + fall_dir * 0.35
 mocap.apply(drv, zbite, start=PIN, length=F1 - PIN + 1, offset=(chest_at.x, chest_at.y, 0.0),
-            facing=math.degrees(math.atan2(-fall_dir.x, fall_dir.y)), in_place=True, loop=True, blend=8)
+            facing=math.degrees(math.atan2(-body_dir.x, body_dir.y)), in_place=True, loop=True, blend=8)
+print("LYING head", tuple(round(v, 2) for v in a_head), "pelvis", tuple(round(v, 2) for v in a_pel))
 Q.ground(drv, F0, F1, keep_flight=True)
 footlock.lock(drv, D_START, D_ARRIVE - 1, mode="plant")
 print("DRIVER start", D_START, "bonnet", D_ARRIVE, "pin", PIN)
@@ -252,10 +260,9 @@ for f, p, rz in ((FALL + 6, FALL_AT + fall_dir * 0.5, 0.0), (FALL + 16, FALL_AT 
 
 # ---------------------------------------------------------------- faces and looks
 LS = lipsync.Voices(fps=FPS)
-NO_LINE = T(24.5)
-LS.add("arin", os.path.join(VOICE, "sc003_arin_03.wav"), start=(NO_LINE - 1) / FPS)
+LS.add("arin", os.path.join(VOICE, "sc003_arin_03.wav"), start=(PIN + 64 - 1) / FPS)
 A.face(arin, F0, F1, lambda f, t: dict(worry=(1.4 if f < BOLT else 1.9), talking=LS.level("arin", t)))
-A.face(drv, F0, F1, lambda f, t: dict(scream=(0.6 if PIN <= f < T(28) else 0.0)))
+A.face(drv, F0, PIN + 40 + 8 * FPS, lambda f, t: dict(scream=(0.6 if PIN <= f < PIN + 60 else 0.0)))
 A.look(arin, F0 + 6, BOLT + 10, lambda f: DP + Vector((0, 0, 1.6)), weight=0.6)
 
 
@@ -280,33 +287,52 @@ def cam(name, loc, tgt, lens, f0, dof=None, keys=None):
     return c
 
 
-hk = head(arin, T(1.5))
+BUMP = BOLT + bump_j
+HOLD = 8 * FPS                                          # the face-to-face hold after the pin
+F1 = PIN + 40 + HOLD
+sc.frame_end = F1
+NO_LINE_F = PIN + 64
+EV = [F0, BOLT - 6, BOLT + 30, BUMP - 12, V0 - 4, V0 + NV + 6, D_ARRIVE + ND + 4, FALL - 34, FALL - 12, FALL + 40, PIN + 40, F1 + 1]
+SHOTS = [(a, b - 1) for a, b in zip(EV, EV[1:])]
+print("SHOTS", SHOTS)
+
+
+def eyes_at(ch, f):
+    sc.frame_set(f)
+    e = ch.parts["Eyes"][0]
+    dg = bpy.context.evaluated_depsgraph_get(); me = e.evaluated_get(dg).to_mesh()
+    c = sum((e.matrix_world @ v.co for v in me.vertices), Vector()) / len(me.vertices)
+    e.evaluated_get(dg).to_mesh_clear()
+    return c
+
+
+def pov(fn, f0, f1, first, look_fn):
+    keys = []
+    for f in range(f0, f1 + 2, 3):
+        ec = eyes_at(arin, f); tg = look_fn(f)
+        d = (tg - ec).normalized()
+        keys.append((f, ec + d * 0.16 + Vector((0, 0, 0.02)), tg))   # just in front of the eyes: no hair, no head
+    return keys
+
+
+hk = head(arin, (SHOTS[0][0] + SHOTS[0][1]) // 2)
 cam("CAM_S01_CU", hk + Vector((0.35, 0.45, 0.02)), hk, 50, SHOTS[0][0], (0.57, 2.2))
 cam("CAM_S02_wide", K + Vector((-2.6, -1.2, 0.9)), K + Vector((3.0, 9.0, 1.0)), 24, SHOTS[1][0], (6.0, 5.6))
-pov_keys = []
-for f in range(SHOTS[2][0], SHOTS[2][1] + 2, 3):            # head-mounted but damped: eye height, looking ahead
-    h = head(arin, f); p_ahead, hd, _ = fA(max(0, f - BOLT + 12))
-    pov_keys.append((f, h + Vector((0, 0, 0.06)), Vector((p_ahead.x, p_ahead.y, 1.45))))
-cam("CAM_S03_POV", pov_keys[0][1], pov_keys[0][2], 24, SHOTS[2][0], keys=pov_keys)
+k3 = pov(fA, SHOTS[2][0], SHOTS[2][1], BOLT, lambda f: (lambda p: Vector((p[0].x, p[0].y, 1.35)))(fA(max(0, f - BOLT + 14))))
+cam("CAM_S03_POV", k3[0][1], k3[0][2], 24, SHOTS[2][0], keys=k3)
 cam("CAM_S04_side", CAR_BUMP + Vector((-4.2, -0.8, 1.1)), CAR_BUMP + Vector((-0.9, 0.3, 1.0)), 35, SHOTS[3][0], (3.4, 4.0))
-cam("CAM_S05_vault", CAR_VAULT + Vector((0.4, -4.0, 1.0)), CAR_VAULT + Vector((0.0, 0.0, 0.9)), 35, SHOTS[4][0], (4.0, 4.0))
-cam("CAM_S06_low", CAR_VAULT + Vector((2.9, 0.6, 0.25)), CAR_VAULT + Vector((0, 0.3, 1.0)), 24, SHOTS[5][0], (2.8, 4.0))
-pov7 = []
-for f in range(SHOTS[6][0], SHOTS[6][1] + 2, 3):
-    h = head(arin, f); p_ahead, hd, _ = fB(max(0, f - R0 + 12))
-    pov7.append((f, h + Vector((0, 0, 0.06)), Vector((p_ahead.x, p_ahead.y, 1.4))))
-cam("CAM_S07_POV", pov7[0][1], pov7[0][2], 24, SHOTS[6][0], keys=pov7)
-pov8 = []
-for f in range(SHOTS[7][0], SHOTS[7][1] + 2, 3):            # glance back over the shoulder at the Driver
-    h = head(arin, f); hd_drv = head(drv, f)
-    pov8.append((f, h + Vector((0, 0, 0.06)), hd_drv))
-cam("CAM_S08_back", pov8[0][1], pov8[0][2], 24, SHOTS[7][0], keys=pov8)
-cam("CAM_S09_low", SKID_TO + fall_dir * 0.4 + Vector((0, 0, 0.12)), FALL_AT + Vector((0, 0, 0.3)), 35, SHOTS[8][0], (2.4, 2.8))
-cam("CAM_S10_top", chest_at + Vector((0.3, 0.2, 4.2)), chest_at + Vector((0, 0, 0.3)), 28, SHOTS[9][0], (4.0, 4.0))
-hf = head(arin, T(26)); hz = head(drv, T(26))
+cam("CAM_S05_vault", CAR_VAULT + Vector((0.4, -4.4, 1.0)), CAR_VAULT + Vector((0.0, 0.2, 0.9)), 35, SHOTS[4][0], (4.4, 4.0))
+cam("CAM_S06_low", CAR_VAULT + Vector((3.2, 0.9, 0.35)), CAR_VAULT + Vector((0, 0.4, 1.0)), 24, SHOTS[5][0], (3.2, 4.0))
+k7 = pov(fB, SHOTS[6][0], SHOTS[6][1], R0, lambda f: (lambda p: Vector((p[0].x, p[0].y, 1.3)))(fB(max(0, f - R0 + 14))))
+cam("CAM_S07_POV", k7[0][1], k7[0][2], 24, SHOTS[6][0], keys=k7)
+k8 = pov(fB, SHOTS[7][0], SHOTS[7][1], R0, lambda f: head(drv, f))
+cam("CAM_S08_back", k8[0][1], k8[0][2], 24, SHOTS[7][0], keys=k8)
+cam("CAM_S09_low", SKID_TO + fall_dir * 0.5 + Vector((0, 0, 0.15)), FALL_AT - fall_dir * 0.6 + Vector((0, 0, 0.45)), 35, SHOTS[8][0], (2.6, 2.8))
+cam("CAM_S10_top", FALL_AT + fall_dir * 0.5 + Vector((0.4, 0.3, 4.4)), FALL_AT + fall_dir * 0.5, 28, SHOTS[9][0], (4.3, 4.0))
+hf = head(arin, PIN + 90); hz = head(drv, PIN + 90)
 mid = (hf + hz) / 2
 side = (hz - hf).cross(Vector((0, 0, 1))).normalized()
-cam("CAM_S11_ECU", mid + side * 0.75 + Vector((0, 0, 0.05)), mid, 85, SHOTS[10][0], (0.75, 2.0))
+cam("CAM_S11_ECU", mid + side * 0.8 + Vector((0, 0, 0.05)), mid, 85, SHOTS[10][0], (0.8, 2.0))
 
 # ---------------------------------------------------------------- render
 sc.render.engine = "BLENDER_EEVEE"
