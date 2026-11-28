@@ -280,11 +280,11 @@ def forest():
 
 def far_car():
     """the car at the end of the road whose headlights come on (n7)"""
-    x = X_STOP - 60
+    x = X_STOP - 42
     body = toon("Far car", (0.12, 0.12, 0.13), 0.02)
     box((x, ROAD_Y - 1.5, 0.75), (4.4, 1.9, 1.0), body, "Far car body", bevel=0.15)
     box((x - 0.3, ROAD_Y - 1.5, 1.45), (2.2, 1.7, 0.6), body, "Far car cabin", bevel=0.12)
-    lamp_m = glow_mat("Far headlights", (1.0, 0.95, 0.8), 120.0)
+    lamp_m = glow_mat("Far headlights", (1.0, 0.95, 0.8), 400.0)
     heads = [ball((x + 2.22, ROAD_Y - 1.5 + dy, 0.8), 0.3, lamp_m, "Far headlight", scale=(0.4, 1, 0.7))
              for dy in (-0.62, 0.62)]
     bpy.ops.object.light_add(type="SPOT", location=(x + 2.4, ROAD_Y - 1.5, 0.9), rotation=(0, D(-88), 0))
@@ -619,7 +619,7 @@ def make_dog(i):
 def make_beast():
     """Tall hunched beast: black shaggy fur, long arms with claws reaching the ground, glowing white eyes,
     a wide mouth glowing red inside with rows of teeth. Faces +X (towards the bus). ~2.6 m tall."""
-    fur = toon("Beast fur", (0.05, 0.04, 0.045), 0.0)
+    fur = toon("Beast fur", (0.025, 0.02, 0.025), 0.0)
     claw_m = toon("Beast claws", (0.12, 0.1, 0.09), 0.05)
     eye_m = glow_mat("Beast eyes", (1.0, 0.97, 0.92), 60.0)
     mouth_m = glow_mat("Beast mouth", (1.0, 0.08, 0.04), 18.0)
@@ -632,7 +632,7 @@ def make_beast():
     head_piv = empty("Beast head pivot", (0.55, 0, 2.05))
     head = ball((0.78, 0, 2.05), 0.36, fur, "Beast head", scale=(1.05, 1.0, 0.95))
     jaw = ball((0.92, 0, 1.86), 0.27, fur, "Beast jaw", scale=(1.0, 1.05, 0.55))
-    mouth = ball((1.06, 0, 1.95), 0.21, mouth_m, "Beast mouth", scale=(0.45, 1.25, 0.5))
+    mouth = ball((1.06, 0, 1.95), 0.25, mouth_m, "Beast mouth", scale=(0.45, 1.35, 0.62))
     hp = [head, jaw, mouth]
     for dy in (-0.15, 0.15):
         hp.append(ball((1.07, dy, 2.16), 0.055, eye_m, "Beast eye", seg=10))
@@ -649,7 +649,7 @@ def make_beast():
         parent_keep(o, head_piv)
     parent_keep(head_piv, root)
     rnd = random.Random(77)
-    for _ in range(46):                                       # shaggy tufts over back and shoulders
+    for _ in range(90):                                       # shaggy tufts over back and shoulders
         a, b = rnd.uniform(-1.2, 1.2), rnd.uniform(-0.2, 1.4)
         c = Vector((0.6 * math.cos(b) * 0.8 - 0.1, 0.7 * math.sin(a), 1.4 + 0.6 * math.sin(b)))
         bpy.ops.mesh.primitive_cone_add(radius1=0.1, depth=0.42, location=c, vertices=6,
@@ -667,6 +667,12 @@ def make_beast():
         hand = ball((1.0, side * 0.8, 0.1), 0.14, fur, "Beast hand", scale=(1.3, 1.1, 0.5))
         for o in (up, lo, hand):
             parent_keep(o, sh)
+        for q in range(9):                                    # shaggy fur hanging off the arm
+            u_ = q / 8
+            c = Vector((0.45 + 0.4 * u_, side * (0.62 + 0.2 * u_ + 0.08), 1.85 - 1.3 * u_))
+            bpy.ops.mesh.primitive_cone_add(radius1=0.09, depth=0.34, location=c, vertices=6,
+                                            rotation=(D(side * 70) + rnd.uniform(-0.3, 0.3), D(20), 0))
+            parent_keep(finish(bpy.context.object, fur, "Beast arm tuft"), sh)
         for c in range(4):
             bpy.ops.mesh.primitive_cone_add(radius1=0.03, depth=0.26, location=(1.18, side * (0.68 + 0.08 * c), 0.07),
                                             rotation=(0, D(100), 0), vertices=6)
@@ -1109,7 +1115,7 @@ def build():
         bglow.data.energy = (60 + 25 * math.sin(t * 7.0)) if vis else 0.0
         bglow.data.keyframe_insert("energy", frame=f)
         cu = seg(t, T_LIGHTS, END + 4)                         # the car rolls slowly towards us, lights on
-        far_root.location = (X_STOP - 60 + 22 * cu, ROAD_Y - 1.5, 0)
+        far_root.location = (X_STOP - 42 + 10 * cu, ROAD_Y - 1.5, 0)
         far_root.keyframe_insert("location", frame=f)
 
     # ---------------- light & sky: grey day -> dusk -> night (keyed)
