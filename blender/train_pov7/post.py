@@ -1,10 +1,10 @@
 """
-Post-processing for «واگن آخر ۶ — سیگنال»: frames rendered on twos -> 24 fps, fisheye look, upscale to
-1080x1920, captions, searchlight flash, question card, channel branding on every frame (brand.overlay).
+Post-processing for «واگن آخر ۷ — اون طرف آب»: frames rendered on twos -> 24 fps, fisheye look, upscale to
+1080x1920, captions, question card, channel branding on every frame (brand.overlay).
 
-    python3 post.py     # frames/ -> out/last_wagon6_captions.mp4 (captions, silent), out/last_wagon6_clean.mp4
-                        #   (no captions, silent), out/last_wagon6_sfx.mp4 (captions + effects),
-                        #   out/last_wagon6_voiced.mp4 (captions + voices + effects)  [wav files from el_mix.py]
+    python3 post.py     # frames/ -> out/last_wagon7_captions.mp4 (captions, silent), out/last_wagon7_clean.mp4
+                        #   (no captions, silent), out/last_wagon7_sfx.mp4 (captions + effects),
+                        #   out/last_wagon7_voiced.mp4 (captions + voices + effects)  [wav files from el_mix.py]
 Needs ffmpeg and Pillow with raqm (right-to-left Persian shaping).
 """
 
@@ -25,7 +25,6 @@ W, H = 1080, 1920
 
 sys.path.insert(0, HERE)
 from captions import CAPTIONS, CARD_SECONDS, END, KEY_OF, NARRATION, NOTIFS, QUESTION, TITLE  # noqa: E402
-from part6_times import SEARCH_T  # noqa: E402
 sys.path.insert(0, os.path.join(HERE, "..", "brand"))
 from brand import overlay as brand_overlay  # noqa: E402
 
@@ -106,9 +105,6 @@ def notification(img, t, start, end, app, icon_col, title, body):
 
 def flash(img, t):
     """The searchlight hits our window: a white burst that fades."""
-    if SEARCH_T <= t < SEARCH_T + 1.6:
-        k = 1.0 - (t - SEARCH_T) / 1.6
-        img = Image.blend(img, Image.new("RGB", img.size, (255, 252, 240)), 0.85 * k * k)
     return img
 
 
@@ -147,8 +143,8 @@ def final_card(img, k):
         return img
     d = ImageDraw.Draw(img)
     draw_text(d, (W // 2, 520), QUESTION, int(80 * (0.8 + 0.2 * k)), stroke=12)
-    for i, (label, col) in enumerate((("کنار قطار می‌موندم", (60, 60, 70)),
-                                      ("از رودخونه رد می‌شدم", (30, 110, 170)))):
+    for i, (label, col) in enumerate((("جلو می‌رفتم", (30, 110, 170)),
+                                      ("برمی‌گشتم پیش رحیم", (60, 60, 70)))):
         y = 950 + i * 220
         d.rounded_rectangle((140, y - 80, W - 140, y + 80), radius=60, fill=col, outline=(255, 255, 255), width=8)
         d.text((W // 2 + 30, y), label, font=font(54), fill=(255, 255, 255), anchor="mm", direction="rtl", language="fa")
@@ -197,9 +193,9 @@ def main():
         subprocess.run(cmd, check=True)
         print(out)
 
-    encode("c", os.path.join(OUT, "last_wagon6_captions.mp4"))
-    encode("n", os.path.join(OUT, "last_wagon6_clean.mp4"))
-    for wav, name in (("sfx.wav", "last_wagon6_sfx.mp4"), ("voiced.wav", "last_wagon6_voiced.mp4")):
+    encode("c", os.path.join(OUT, "last_wagon7_captions.mp4"))
+    encode("n", os.path.join(OUT, "last_wagon7_clean.mp4"))
+    for wav, name in (("sfx.wav", "last_wagon7_sfx.mp4"), ("voiced.wav", "last_wagon7_voiced.mp4")):
         if os.path.exists(os.path.join(OUT, wav)):
             encode("c", os.path.join(OUT, name), os.path.join(OUT, wav))
 

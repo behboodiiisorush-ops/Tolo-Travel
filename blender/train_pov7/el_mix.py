@@ -1,40 +1,35 @@
-"""Mix the ElevenLabs voices + ElevenLabs sound effects of «واگن آخر ۶ — سیگنال» (files in el/).
+"""Sound of «واگن آخر ۷ — اون طرف آب»: the user's recording (voices/clips, cut + coloured by cut_voices.py) and
+real ElevenLabs sound effects (sfx_el/, prompts in sfx_el/PROMPTS.md), each placed on its frame.
     out/sfx.wav     effects only
-    out/voiced.wav  voices + effects
-Voices (voices.py): Me = "amir" pitched up 3 st, Lena = "Sara" pitched up 5 st (ElevenLabs will not design
-child voices), Rahim + Mom = voices designed and saved for this series.  Mom is heard through the radio.
-Each line starts at its caption start (the lips are rendered there).
+    out/voiced.wav  voices + effects (effects ducked about -13 dB under every line)
 """
 import os, subprocess, sys, wave
 import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from captions import LINES, END, KEY_OF  # noqa: E402
-import part6_times as P  # noqa: E402
-EL, OUT = os.path.join(HERE, "el"), os.path.join(HERE, "out")
+import beats as B  # noqa: E402
+FX_DIR, OUT = os.path.join(HERE, "sfx_el"), os.path.join(HERE, "out")
 SR = 48000
 TOTAL = END + 4.0
-# clarity first (the user found ep6 voices unclear): eleven_multilingual_v2 takes, every line loudness-matched,
-# gentle pitch with formants kept, a light radio colour for Mom only
-NORM = "highpass=f=80,acompressor=threshold=-24dB:ratio=3:attack=5:release=120,loudnorm=I=-16:TP=-1.5:LRA=7"
-FX = {"Me": "rubberband=pitch=1.122:formant=preserved," + NORM, "Lena": NORM, "Rahim": NORM,   # the user's «واگن آخر ۲» cast: Mard +2 st / Rashnow / Wagon-Rahim / Wagon-Mom (user takes in el_user/)
-      "Mom": "highpass=f=280,lowpass=f=4200,acompressor=threshold=-22dB:ratio=4," + NORM}   # walkie-talkie
-GAIN = {"Me": 1.0, "Lena": 1.0, "Rahim": 1.0, "Mom": 1.0}
+PAN = {"Me": 0.0, "Lena": -0.15, "Rahim": 0.2, "Mom": 0.1}
 
 
-def load(name, af=None, trim=True):
-    flt = ("silenceremove=start_periods=1:start_threshold=-45dB,areverse,"
-           "silenceremove=start_periods=1:start_threshold=-45dB,areverse") if trim else "anull"
+def load(path, af=None):
+    cmd = ["ffmpeg", "-v", "error", "-i", path]
     if af:
-        flt += "," + af
-    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", os.path.join(EL, name + ".mp3"), "-af", flt,
-                          "-ac", "1", "-ar", str(SR), "-f", "f32le", "-"], capture_output=True, check=True).stdout
+        cmd += ["-af", af]
+    raw = subprocess.run(cmd + ["-ac", "1", "-ar", str(SR), "-f", "f32le", "-"], capture_output=True, check=True).stdout
     return np.frombuffer(raw, np.float32).copy()
+
+
+def fx(name, af="loudnorm=I=-18"):
+    return load(os.path.join(FX_DIR, name + ".mp3"), af)
 
 
 def put(buf, x, t, gain=1.0, pan=0.0, length=None, fade=0.05):
     if length is not None:
-        x = x[:int(length * SR)]
+        x = x[:int(length * SR)].copy()
     x = x * gain
     nf = min(len(x) // 2, int(fade * SR))
     if nf:
@@ -53,69 +48,57 @@ def loop(x, length):
     return np.tile(x, int(np.ceil(n / len(x))) + 1)[:n]
 
 
-def voices(buf):
-    windows = []
-    for key, who, _ in LINES:
-        a, b = KEY_OF[key]
-        x = load(key, FX[who])
-        room = (b - a) + 0.5
-        if len(x) / SR > room:                      # end with the rendered lips: speed up a little (max 1.25x)
-            x = load(key, FX[who] + f",rubberband=tempo={min(1.25, len(x) / SR / room):.3f}")
-        put(buf, x, a, GAIN[who], {"Me": 0, "Lena": -0.15, "Rahim": 0.2, "Mom": 0.1}[who])
-        windows.append((a, a + len(x) / SR))
-        print(f"{key:7s} {who:6s} {a:6.2f}s {len(x) / SR:5.2f}s (window {b - a:.2f}s)")
-    return windows
-
-
 def env(n, pts):
-    """piecewise-linear gain curve from [(t, g), ...]"""
     ts = np.arange(n) / SR
     return np.interp(ts, [p[0] for p in pts], [p[1] for p in pts]).astype(np.float32)
 
 
+def voices(buf):
+    windows = []
+    for key, who, _ in LINES:
+        a, b = KEY_OF[key]
+        x = load(os.path.join(HERE, "voices", "clips", key + ".wav"))
+        put(buf, x, a, 0.9, PAN[who])
+        windows.append((a, a + len(x) / SR))
+    return windows
+
+
 def effects(buf, duck=()):
     n = buf.shape[0]
-    # train rumble: full until the brakes, gone after the stop
-    tr = loop(load("sfx_train", trim=False, af="loudnorm=I=-20"), n / SR)
-    g = env(n, [(0, 0.8), (P.BRAKE0, 0.8), (P.BRAKE1, 0.0), (TOTAL, 0.0)])
     d = np.ones(n, np.float32)
     for a, b in duck:
-        d[max(0, int((a - 0.25) * SR)):int((b + 0.25) * SR)] = 0.12
-    d = np.convolve(d, np.ones(4800) / 4800, mode="same").astype(np.float32)
-    put(buf, tr * g * d, 0.0, 1.0, fade=1.0)
-    # helicopter: far, then loud overhead while it hovers, then away
-    # helicopter: clearly audible the whole time it is over the train (the user missed it in v1)
-    he = loop(load("sfx_heli", trim=False, af="loudnorm=I=-18"), n / SR)
-    g = env(n, [(0, 0.45), (4, 0.6), (P.CURTAIN0 + 1, 0.5), (P.SEARCH_T - 1, 0.65), (P.DESC0, 0.8),
-                (P.DESC1, 1.0), (P.LEAVE_T, 0.9), (P.LEAVE_T + 1.5, 0.0), (TOTAL, 0.0)])
-    dh = 0.45 + 0.55 * d                                  # duck the helicopter less than the rest
-    put(buf, he * g * dh, 0.0, 1.0, -0.3, fade=1.0)
-    put(buf, load("sfx_heli_flyby", af="loudnorm=I=-18"), P.LEAVE_T - 3.0, 0.9, -0.3, fade=0.5)
-    put(buf, load("sfx_curtain"), P.CURTAIN0, 0.7, -0.2)
-    put(buf, load("sfx_curtain"), P.OPEN0, 0.6, -0.4)
-    click = load("sfx_click")
-    for b in P.BLINKS:
-        put(buf, click[:int(0.25 * SR)], b - 0.03, 0.8, 0.1)
-    put(buf, load("sfx_search"), P.SEARCH_T - 0.05, 0.9, -0.3)
-    put(buf, load("sfx_bag"), P.GRAB_T - 1.0, 0.85, -0.2)
-    st = load("sfx_static", trim=False)
-    put(buf, st, P.RADIO_T + 0.2, 0.35, 0.1, length=min(len(st) / SR, 6.0), fade=0.3)
+        d[max(0, int((a - 0.15) * SR)):int((b + 0.2) * SR)] = 10 ** (-13 / 20)
+    d = np.convolve(d, np.ones(5760) / 5760, mode="same").astype(np.float32)
+    # the river: far below at the bank, loud on the bridge
+    rv = loop(fx("5_river"), n / SR)
+    g = env(n, [(0, 0.35), (B.CUT2 - 0.1, 0.35), (B.CUT2, 0.6), (B.WALK0, 0.6), (B.WALK0 + 3, 0.8), (TOTAL, 0.8)])
+    put(buf, rv * g * d, 0.0, 1.0, fade=1.5)
+    # the helicopter coming down across the river, rotor running, then winding down
+    land = fx("1_heli_landing")
+    run_len = B.WIND0 + 1.0
+    hel = np.concatenate([land, loop(land[int(15 * SR):], max(0.1, run_len - len(land) / SR))])[:int(run_len * SR)]
+    g = env(len(hel), [(0, 0.55), (B.LAND1, 0.75), (B.CUT2, 0.75), (run_len, 0.75)])
+    put(buf, hel * g * d[:len(hel)], 0.0, 1.0, -0.3, fade=1.0)
+    put(buf, fx("8_heli_winddown"), B.WIND0, 0.7, -0.3, fade=0.8)
+    # over the radio: the door, the break-up, three knocks
+    put(buf, fx("2_heli_door_radio"), B.DOOR_T, 0.75, 0.1)
+    cut = fx("3_radio_cutoff")
+    put(buf, cut, B.DEAD_T - 0.2, 0.9, 0.1, length=min(len(cut) / SR, 4.0), fade=0.4)
+    hiss = cut[-int(2.5 * SR):]
     for k in ("mom1", "mom2", "mom3"):
         a, b = KEY_OF[k]
-        put(buf, st, a - 0.4, 0.02, 0.1, length=(b - a) + 0.8, fade=0.2)
-    put(buf, st, P.DEAD_T - 0.2, 0.45, 0.1, length=1.2, fade=0.1)         # the radio dies
-    put(buf, load("sfx_brake"), P.BRAKE0 - 0.2, 1.0, 0.0)
-    rv = loop(load("sfx_river", trim=False), n / SR)
-    g = env(n, [(0, 0.0), (P.BRAKE0, 0.0), (P.BRAKE1, 0.5), (TOTAL, 0.5)])
-    put(buf, rv * g, 0.0, 1.0, fade=1.0)
+        put(buf, loop(hiss, (b - a) + 0.8), a - 0.4, 0.25, 0.1, fade=0.2)
+    put(buf, loop(hiss, 6.0), B.DEAD_T + 3.5, 0.18, 0.1, fade=1.0)            # Lena keeps pressing the button
+    put(buf, fx("4_three_knocks"), B.KNOCK0, 1.0, 0.1)
+    # out on the rails: the plank, the horn behind us
+    put(buf, fx("6_plank_break"), B.PLANK_T - 0.25, 1.0, -0.1)
+    put(buf, fx("7_train_horn"), B.HORN_T, 0.95, 0.0, fade=0.3)
+    # everything fades to black with the picture
+    buf *= env(n, [(0, 1), (B.BLACK_T, 1), (B.BLACK_T + 1.5, 0), (TOTAL, 0)])[:, None]
 
 
 def write(path, buf):
     buf = buf / max(1e-9, np.abs(buf).max()) * 0.89
-    tail = int(1.5 * SR)
-    e = int(END * SR)
-    buf[e:e + tail] *= np.linspace(1, 0, min(tail, len(buf) - e))[:, None]
-    buf[e + tail:] = 0
     with wave.open(path, "wb") as w:
         w.setnchannels(2)
         w.setsampwidth(2)
@@ -129,9 +112,9 @@ if __name__ == "__main__":
     n = int(TOTAL * SR)
     v = np.zeros((n, 2), np.float32)
     win = voices(v)
-    fx = np.zeros((n, 2), np.float32)
-    effects(fx)
-    write(os.path.join(OUT, "sfx.wav"), fx.copy())
-    fx2 = np.zeros((n, 2), np.float32)
-    effects(fx2, win)
-    write(os.path.join(OUT, "voiced.wav"), fx2 * 0.55 + v)
+    e = np.zeros((n, 2), np.float32)
+    effects(e)
+    write(os.path.join(OUT, "sfx.wav"), e)
+    e2 = np.zeros((n, 2), np.float32)
+    effects(e2, win)
+    write(os.path.join(OUT, "voiced.wav"), e2 * 0.6 + v)
