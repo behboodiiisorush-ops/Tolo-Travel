@@ -2,6 +2,7 @@
 # build the scene once, then render frames A..B (default all, odd frames only); restarts the renderer if it crashes
 # usage: ./chain.sh [A B]
 cd "$(dirname "$0")"
+mkdir -p /tmp/claude-0
 PY=../cast/vendor/venv/bin/python
 N=$($PY -c "import sys; sys.path.insert(0,'.'); from captions import END; print(int(END*24))")
 A=${1:-1}; B=${2:-$N}
