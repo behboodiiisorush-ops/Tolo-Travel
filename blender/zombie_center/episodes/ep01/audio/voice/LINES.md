@@ -1,6 +1,6 @@
 # EP01 voice lines — ElevenLabs eleven_multilingual_v2, the user's own Persian voices (see ../../../../audio/VOICES.md)
 Each wav: silence-trimmed, loudnorm I=-16, 48 kHz mono; raw takes in raw/. Checked with faster-whisper (small + medium, fa).
-Voices: Arin = Arash · Nika = Amitis · Mark (caller) = «خشن».
+Voices: Arin = Mard · Nika = Rashnow (fitted to the rendered lip windows) · Mark (caller) = Wagon - Rahim.
 
 | file | speaker | line | len |
 |---|---|---|---|

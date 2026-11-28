@@ -5,9 +5,12 @@ voices; the earlier Claude-designed "ZC Arin / ZC Nika / ZC Mark" voices are NOT
 
 | Character | ElevenLabs voice | voice_id | why |
 |---|---|---|---|
-| Arin (001), 19 | Arash - Clear, Confident Narrator | `Mn0jJ3FC9Ijz7lQe8ELI` | young, clearest of the auditions (whisper lp −0.47, f0 ≈ 129 Hz) |
-| Nika (002), 16 | Amitis - Young & Soft | `C2wYIMnQQbFDm3qaosBN` | young, soft, whispery — a frightened video message |
-| Mark (the unknown caller), 52 | «خشن» | `iHeRnhwgi9L0gzVK2VUe` | low, rough, older (f0 ≈ 78 Hz); EP01: heard through a light voice changer |
+| Arin (001), 19 | Mard | `vJZ82xJdoy9JqX5RmoBD` | the user's cast for every film (CLAUDE.md, 27 Nov): main young male, no pitch shift (adult) |
+| Nika (002), 16 | Rashnow | `g36FEKq8A536osj4GuaD` | the user's cast: girl / young woman |
+| Mark (the unknown caller), 52 | Wagon - Rahim | `41Jt86rYN2Yqnjt1W6hi` | the user's cast: rough adult male (allowed by the user) |
+
+(Earlier takes with Arash / Amitis / «خشن» were replaced on 28 Nov when the user set this cast for every film.)
+Nika's lines are time-fitted (rubberband) to the windows her rendered video lips were made for.
 
 Rules: Persian lines with `eleven_multilingual_v2` (emotion in wording/punctuation); loudnorm I=-16 per line;
 effects ducked ≈ −13 dB under speech; final mix checked with faster-whisper (small/medium, fa).
